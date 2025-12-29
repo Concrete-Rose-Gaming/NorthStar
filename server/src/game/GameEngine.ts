@@ -55,10 +55,14 @@ export class GameEngine {
       players.push(player);
     }
 
-    // Assign random restaurants (3 per player)
+    // Assign random restaurants (3 per player, but player gets 1 random from those 3)
     for (const player of players) {
-      const restaurants = this.cardSystem.getRandomRestaurants(3);
-      player.restaurants = restaurants as any[];
+      const restaurantDeck = this.cardSystem.getRandomRestaurants(3);
+      // Randomly select 1 restaurant from the 3 to be active
+      const shuffled = [...restaurantDeck].sort(() => Math.random() - 0.5);
+      const activeRestaurant = shuffled[0];
+      // Store only the active restaurant (the other 2 remain in the deck but unused)
+      player.restaurants = [activeRestaurant] as any[];
     }
 
     // Create starter decks (for prototype, use predefined decks)

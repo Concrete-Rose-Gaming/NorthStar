@@ -66,11 +66,12 @@ export class AIOpponent {
 
     // Simple AI strategy based on difficulty
     switch (this.difficulty) {
-      case 'easy':
+      case 'easy': {
         // Play first available card
         return cards[0];
+      }
       
-      case 'medium':
+      case 'medium': {
         // Prefer cards that can gain stars or remove opponent stars
         const starCards = cards.filter(card => 
           card.abilities?.some(a => a.effect === 'GAIN_STAR' || a.effect === 'REMOVE_STAR') ||
@@ -85,8 +86,9 @@ export class AIOpponent {
           return characterCards[0];
         }
         return cards[0];
+      }
       
-      case 'hard':
+      case 'hard': {
         // More sophisticated: prioritize based on game state
         const opponent = gameState.players.find(p => p.id !== player.id);
         
@@ -111,12 +113,13 @@ export class AIOpponent {
         }
         
         // Then character cards
-        const characterCards = cards.filter(card => card.type === CardType.CHARACTER);
-        if (characterCards.length > 0) {
-          return characterCards[0];
+        const hardCharacterCards = cards.filter(card => card.type === CardType.CHARACTER);
+        if (hardCharacterCards.length > 0) {
+          return hardCharacterCards[0];
         }
         
         return cards[0];
+      }
     }
   }
 }
