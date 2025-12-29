@@ -46,7 +46,61 @@ cd ../server && npm install
 cd ../client && npm install
 ```
 
-### Development
+### How to Play
+
+### Option 1: Play Locally (Recommended for Testing)
+
+1. **Install dependencies** (if you haven't already):
+```bash
+npm run install:all
+```
+
+2. **Start the game**:
+```bash
+npm run dev
+```
+
+This will start both the client and server. The game will be available at:
+- **Game URL**: http://localhost:3000
+- **Server**: http://localhost:3001
+
+3. **Open your browser** and navigate to http://localhost:3000
+
+4. **Enter a username** and start playing!
+
+### Option 2: Build for Production
+
+To build the game for production:
+
+```bash
+npm run build
+```
+
+This creates:
+- `client/dist/` - Production-ready frontend
+- `server/dist/` - Production-ready backend
+
+To run the production build:
+
+```bash
+# Terminal 1 - Start server
+cd server
+npm start
+
+# Terminal 2 - Serve client (or use any static file server)
+cd client
+npm run preview
+```
+
+### Option 3: Deploy to Web Hosting
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions including:
+- Deploying to itch.io (requires separate server hosting)
+- Deploying to Railway/Render/Heroku
+- Deploying to Vercel/Netlify (client) + separate server
+- Environment variable configuration
+
+## Development
 
 Run both client and server in development mode:
 

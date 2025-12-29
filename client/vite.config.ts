@@ -14,8 +14,22 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@shared': '../shared/src',
-      '@culinary-game/shared': '../shared/src/index.ts'
+      '@shared': '../shared/src'
+    }
+  },
+  optimizeDeps: {
+    include: ['@culinary-game/shared'],
+    esbuildOptions: {
+      tsconfigRaw: {
+        compilerOptions: {
+          experimentalDecorators: true
+        }
+      }
+    }
+  },
+  build: {
+    commonjsOptions: {
+      include: [/shared/, /node_modules/]
     }
   }
 });

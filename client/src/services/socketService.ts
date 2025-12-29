@@ -4,7 +4,6 @@ import { useGameStore } from '../store/gameStore';
 
 class SocketService {
   private socket: Socket | null = null;
-  private isConnected: boolean = false;
   private username: string = '';
 
   connect(username: string) {
@@ -13,13 +12,15 @@ class SocketService {
       return;
     }
 
-    this.socket = io('http://localhost:3001', {
+    // Use environment variable or default to localhost for development
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+    
+    this.socket = io(serverUrl, {
       transports: ['websocket']
     });
 
     this.socket.on('connect', () => {
       console.log('Connected to server');
-      this.isConnected = true;
       
       // Join lobby
       this.socket?.emit('lobby-join', { username });
@@ -28,7 +29,6 @@ class SocketService {
 
     this.socket.on('disconnect', () => {
       console.log('Disconnected from server');
-      this.isConnected = false;
     });
 
     this.setupEventHandlers();
@@ -70,7 +70,7 @@ class SocketService {
       store.addPendingChallenge(challenge);
     });
 
-    this.socket.on('challenge-sent', (challenge: Challenge) => {
+    this.socket.on('challenge-sent', () => {
       // Challenge sent confirmation
     });
 
@@ -157,7 +157,6 @@ class SocketService {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
-      this.isConnected = false;
     }
   }
 

@@ -9,7 +9,7 @@ interface LobbyProps {
 }
 
 function Lobby({ username }: LobbyProps) {
-  const { playerList, pendingChallenges, setCurrentGameId } = useGameStore();
+  const { playerList, pendingChallenges } = useGameStore();
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
   useEffect(() => {
