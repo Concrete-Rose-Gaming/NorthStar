@@ -1,0 +1,137 @@
+.lobby {
+  min-height: 100vh;
+  padding: 20px;
+  background: #1a1a2e;
+}
+
+.lobby-main {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.lobby-main h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #eee;
+}
+
+.lobby-content {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 20px;
+}
+
+.player-section {
+  background: #16213e;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.player-section h2 {
+  margin-bottom: 15px;
+  color: #eee;
+}
+
+.player-list {
+  margin-bottom: 30px;
+}
+
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #0f3460;
+  border-radius: 5px;
+}
+
+.player-item button {
+  padding: 5px 15px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.player-item button:hover {
+  background: #45a049;
+}
+
+.ai-game-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #0f3460;
+}
+
+.ai-game-section select {
+  padding: 8px;
+  margin-right: 10px;
+  border-radius: 5px;
+  border: none;
+  background: #0f3460;
+  color: #eee;
+}
+
+.ai-game-section button {
+  padding: 8px 20px;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.ai-game-section button:hover {
+  background: #0b7dda;
+}
+
+.challenges-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #0f3460;
+}
+
+.challenge-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #0f3460;
+  border-radius: 5px;
+}
+
+.challenge-item button {
+  padding: 5px 15px;
+  margin-left: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.challenge-item button:first-of-type {
+  background: #4CAF50;
+  color: white;
+}
+
+.challenge-item button:first-of-type:hover {
+  background: #45a049;
+}
+
+.challenge-item button:last-of-type {
+  background: #f44336;
+  color: white;
+}
+
+.challenge-item button:last-of-type:hover {
+  background: #da190b;
+}
+
+@media (max-width: 768px) {
+  .lobby-content {
+    grid-template-columns: 1fr;
+  }
+}
+
