@@ -117,9 +117,12 @@ Build a standalone client that connects to a separate server:
 ./build-standalone.sh
 ```
 
-This creates a static build in `client/dist/` that can be deployed to:
-- **GitHub Pages**: Copy `client/dist/*` to your gh-pages branch
-- **itch.io**: Zip `client/dist/` and upload as HTML5 game
+This creates a static build in `docs/` folder that can be deployed to:
+- **GitHub Pages**: 
+  - Commit and push the `docs/` folder
+  - Enable GitHub Pages: Settings > Pages > Source: `/docs`
+  - See [GITHUB_PAGES.md](./GITHUB_PAGES.md) for details
+- **itch.io**: Zip `docs/` folder and upload as HTML5 game
 
 **How it works:**
 - Users are prompted to enter the server URL when they first load the app

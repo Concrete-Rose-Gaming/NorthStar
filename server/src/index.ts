@@ -25,11 +25,14 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Serve static files from client/dist
+// Serve static files from client/dist (for development) or docs (for production)
 // Path is relative to the compiled dist directory (server/dist/server/src/)
-// Need to go up to project root: ../../../../client/dist
+// Try docs first (GitHub Pages build), then fall back to client/dist
+const fs = require('fs');
+const docsPath = path.join(__dirname, '../../../../docs');
 const clientDistPath = path.join(__dirname, '../../../../client/dist');
-app.use(express.static(clientDistPath));
+const staticPath = fs.existsSync(docsPath) ? docsPath : clientDistPath;
+app.use(express.static(staticPath));
 
 // Handle SPA routing - serve index.html for all non-API routes
 app.get('*', (req, res, next) => {
@@ -37,7 +40,7 @@ app.get('*', (req, res, next) => {
   if (req.path.startsWith('/socket.io') || req.path.startsWith('/api')) {
     return next();
   }
-  res.sendFile(path.join(clientDistPath, 'index.html'));
+  res.sendFile(path.join(staticPath, 'index.html'));
 });
 
 // Initialize handlers

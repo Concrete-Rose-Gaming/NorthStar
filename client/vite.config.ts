@@ -38,9 +38,18 @@ export default defineConfig({
   build: {
     outDir: '../docs',
     emptyOutDir: true,
+<<<<<<< Updated upstream
+=======
+    // Use relative paths for GitHub Pages compatibility
+    // This works whether the site is at root or in a subdirectory
+    assetsDir: 'assets',
+>>>>>>> Stashed changes
     commonjsOptions: {
       include: [/shared/, /node_modules/]
     }
-  }
+  },
+  // Base path for GitHub Pages (empty for root, or '/repo-name' for subdirectory)
+  // Leave empty - Vite will use relative paths which work everywhere
+  base: './'
 });
 

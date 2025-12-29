@@ -9,3 +9,6 @@ build/
 .vscode/
 .idea/
 
+# Don't ignore docs folder - needed for GitHub Pages
+!docs/
+
