@@ -65,7 +65,7 @@ The game runs automatically - just share the URL with players!
 
 ## Game Rules
 
-1. **Setup**: Each player starts with a Chef card, 3 randomly selected Restaurant cards, and a 30-card deck
+1. **Setup**: Each player starts with a Chef card, 1 random Restaurant card (selected from their 3-restaurant deck), and a 30-card deck
 2. **Mulligan**: Players can mulligan their starting hand once
 3. **Rounds**: Players take turns playing cards from their hand
 4. **Head-to-Head**: After each round, chefs automatically battle
@@ -96,14 +96,34 @@ NorthStar/
 
 ## Deployment
 
-The game is designed to run on a single server that serves both the API and client files. Use the included `start.sh` script which automatically:
+### Option 1: Single Server (Recommended)
+
+Use the included `start.sh` script which automatically:
 
 1. Builds the project
-2. Starts the server
+2. Starts the server (serves both API and client)
 3. Creates a Cloudflare tunnel for public access
 4. Displays the game URL
 
-No complex deployment setup needed - just run `./start.sh`!
+```bash
+./start.sh
+```
+
+### Option 2: Standalone Client (GitHub Pages / itch.io)
+
+Build a standalone client that connects to a separate server:
+
+```bash
+./build-standalone.sh https://your-server-url.trycloudflare.com
+```
+
+This creates a static build in `client/dist/` that can be deployed to:
+- **GitHub Pages**: Copy `client/dist/*` to your gh-pages branch
+- **itch.io**: Zip `client/dist/` and upload as HTML5 game
+
+See [STANDALONE_DEPLOY.md](./STANDALONE_DEPLOY.md) for detailed instructions.
+
+**Note:** When using standalone deployment, make sure your server's `CORS_ORIGIN` includes your deployment URL.
 
 ## License
 

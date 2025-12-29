@@ -30,8 +30,17 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 # Kill any existing processes
+echo -e "${YELLOW}Checking for existing processes...${NC}"
 pkill -f "node.*dist/server/src/index.js" 2>/dev/null
 pkill -f "cloudflared tunnel" 2>/dev/null
+
+# Kill any process using port 3001
+if lsof -ti:3001 > /dev/null 2>&1; then
+    echo -e "${YELLOW}Killing process on port 3001...${NC}"
+    lsof -ti:3001 | xargs kill -9 2>/dev/null
+    sleep 1
+fi
+
 sleep 1
 
 # Build everything

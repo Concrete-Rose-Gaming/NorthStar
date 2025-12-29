@@ -12,9 +12,9 @@ class SocketService {
       return;
     }
 
-    // Connect to same origin since client is served from server
-    // In production, this will be the tunnel URL; in dev, localhost
-    const serverUrl = window.location.origin;
+    // Connect to server - use environment variable if set (for standalone builds),
+    // otherwise use same origin (when served from server)
+    const serverUrl = import.meta.env.VITE_SERVER_URL || window.location.origin;
     
     this.socket = io(serverUrl, {
       transports: ['websocket']
