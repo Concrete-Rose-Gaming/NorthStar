@@ -148,13 +148,13 @@ export class CardSystem {
           id: 'effect-007',
           name: 'Star Power',
           description: 'If you have 2+ legendary stars, gain +1 legendary star',
-          effect: 'GAIN_STAR',
-          activationCondition: {
-            type: 'STAR_COUNT',
-            value: 2
-          }
+          effect: 'GAIN_STAR'
         }
-      ]
+      ],
+      activationCondition: {
+        type: 'STAR_COUNT' as const,
+        value: 2
+      }
     });
 
     this.addCard({
