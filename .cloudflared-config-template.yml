@@ -1,0 +1,23 @@
+# Cloudflare Tunnel Configuration Template
+# Copy this to ~/.cloudflared/config.yml after running setup-cloudflare-tunnel.sh
+# Or create manually after running: cloudflared tunnel create culinary-game
+
+tunnel: <TUNNEL_ID>
+credentials-file: /home/northpi/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  # Option 1: Use trycloudflare.com (temporary, changes on restart)
+  # Just run: cloudflared tunnel run culinary-game
+  # It will give you a URL like: https://xxxxx.trycloudflare.com
+  
+  # Option 2: Use your own domain (permanent)
+  # - hostname: your-game-server.yourdomain.com
+  #   service: http://localhost:3001
+  
+  # Option 3: Use trycloudflare with specific subdomain (if available)
+  - hostname: culinary-game-server.trycloudflare.com
+    service: http://localhost:3001
+  
+  # Catch-all for unmatched requests
+  - service: http_status:404
+

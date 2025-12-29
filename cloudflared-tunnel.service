@@ -1,0 +1,17 @@
+[Unit]
+Description=Cloudflare Tunnel for Culinary Card Game
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=northpi
+ExecStart=/usr/local/bin/cloudflared tunnel run culinary-game
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+
