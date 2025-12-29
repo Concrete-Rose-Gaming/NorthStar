@@ -6,15 +6,26 @@ class SocketService {
   private socket: Socket | null = null;
   private username: string = '';
 
+  private getServerUrl(): string {
+    // Priority:
+    // 1. localStorage (user-entered URL)
+    // 2. Environment variable (for standalone builds)
+    // 3. Same origin (when served from server)
+    const storedUrl = localStorage.getItem('culinary-game-server-url');
+    if (storedUrl) {
+      return storedUrl;
+    }
+    return import.meta.env.VITE_SERVER_URL || window.location.origin;
+  }
+
   connect(username: string) {
     this.username = username;
     if (this.socket?.connected) {
       return;
     }
 
-    // Connect to server - use environment variable if set (for standalone builds),
-    // otherwise use same origin (when served from server)
-    const serverUrl = import.meta.env.VITE_SERVER_URL || window.location.origin;
+    // Connect to server - get URL from localStorage, env var, or same origin
+    const serverUrl = this.getServerUrl();
     
     this.socket = io(serverUrl, {
       transports: ['websocket']

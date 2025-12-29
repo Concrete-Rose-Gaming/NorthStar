@@ -11,6 +11,8 @@ interface LobbyProps {
 function Lobby({ username }: LobbyProps) {
   const { playerList, pendingChallenges } = useGameStore();
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [showServerSettings, setShowServerSettings] = useState(false);
+  const [serverUrl, setServerUrl] = useState(localStorage.getItem('culinary-game-server-url') || '');
 
   useEffect(() => {
     socketService.connect(username);
@@ -19,6 +21,17 @@ function Lobby({ username }: LobbyProps) {
       // Don't disconnect on unmount, keep connection for game
     };
   }, [username]);
+
+  const handleChangeServer = () => {
+    const url = serverUrl.trim();
+    if (url) {
+      const urlWithProtocol = url.startsWith('http') ? url : `https://${url}`;
+      localStorage.setItem('culinary-game-server-url', urlWithProtocol);
+      setShowServerSettings(false);
+      // Reload to reconnect with new URL
+      window.location.reload();
+    }
+  };
 
   const handleChallenge = (targetId: string) => {
     socketService.challengePlayer(targetId);
@@ -44,6 +57,70 @@ function Lobby({ username }: LobbyProps) {
     <div className="lobby">
       <div className="lobby-main">
         <h1>Culinary Card Game - Lobby</h1>
+        <div style={{ marginBottom: '10px', fontSize: '12px', color: '#aaa' }}>
+          Server: {localStorage.getItem('culinary-game-server-url') || 'Not set'}
+          <button 
+            onClick={() => setShowServerSettings(!showServerSettings)}
+            style={{
+              marginLeft: '10px',
+              padding: '5px 10px',
+              fontSize: '11px',
+              borderRadius: '3px',
+              border: 'none',
+              backgroundColor: '#555',
+              color: 'white',
+              cursor: 'pointer'
+            }}
+          >
+            {showServerSettings ? 'Cancel' : 'Change'}
+          </button>
+        </div>
+        {showServerSettings && (
+          <div style={{
+            marginBottom: '20px',
+            padding: '15px',
+            backgroundColor: '#2a2a3e',
+            borderRadius: '5px',
+            display: 'flex',
+            gap: '10px',
+            alignItems: 'center'
+          }}>
+            <input
+              type="text"
+              placeholder="https://xxxx-xxxx-xxxx.trycloudflare.com"
+              value={serverUrl}
+              onChange={(e) => setServerUrl(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleChangeServer();
+                }
+              }}
+              style={{
+                flex: 1,
+                padding: '8px 15px',
+                fontSize: '14px',
+                borderRadius: '5px',
+                border: '2px solid #4CAF50',
+                backgroundColor: '#1a1a2e',
+                color: '#eee'
+              }}
+            />
+            <button
+              onClick={handleChangeServer}
+              style={{
+                padding: '8px 20px',
+                fontSize: '14px',
+                borderRadius: '5px',
+                border: 'none',
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                cursor: 'pointer'
+              }}
+            >
+              Update
+            </button>
+          </div>
+        )}
         <div className="lobby-content">
           <div className="player-section">
             <h2>Players Online ({playerList.length})</h2>

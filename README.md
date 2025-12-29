@@ -114,12 +114,17 @@ Use the included `start.sh` script which automatically:
 Build a standalone client that connects to a separate server:
 
 ```bash
-./build-standalone.sh https://your-server-url.trycloudflare.com
+./build-standalone.sh
 ```
 
 This creates a static build in `client/dist/` that can be deployed to:
 - **GitHub Pages**: Copy `client/dist/*` to your gh-pages branch
 - **itch.io**: Zip `client/dist/` and upload as HTML5 game
+
+**How it works:**
+- Users are prompted to enter the server URL when they first load the app
+- The URL is saved in localStorage for convenience
+- Users can change the server URL anytime from the lobby
 
 See [STANDALONE_DEPLOY.md](./STANDALONE_DEPLOY.md) for detailed instructions.
 
