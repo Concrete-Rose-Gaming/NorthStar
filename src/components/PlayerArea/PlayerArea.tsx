@@ -1,0 +1,107 @@
+import React from 'react';
+import { Card } from '../Card/Card';
+import { getCardById } from '../../game/CardTypes';
+import { PlayerBoardState } from '../../game/Scoring';
+import './PlayerArea.css';
+
+interface PlayerAreaProps {
+  playerName: string;
+  hand: string[]; // Card IDs
+  boardState: PlayerBoardState;
+  stars: number;
+  isCurrentPlayer?: boolean;
+  onCardClick?: (cardId: string) => void;
+  onEndTurn?: () => void;
+  turnComplete?: boolean;
+}
+
+export const PlayerArea: React.FC<PlayerAreaProps> = ({
+  playerName,
+  hand,
+  boardState,
+  stars,
+  isCurrentPlayer = false,
+  onCardClick,
+  onEndTurn,
+  turnComplete = false
+}) => {
+  return (
+    <div className={`player-area ${isCurrentPlayer ? 'current-player' : ''}`}>
+      <div className="player-header">
+        <h3>{playerName}</h3>
+        <div className="player-stars">Stars: {'⭐'.repeat(stars)}</div>
+      </div>
+
+      <div className="player-board">
+        <div className="board-section">
+          <h4>Played Meals</h4>
+          <div className="cards-row">
+            {boardState.playedMeals.map(cardId => {
+              const card = getCardById(cardId);
+              return card ? <Card key={cardId} card={card} size="small" /> : null;
+            })}
+          </div>
+        </div>
+
+        <div className="board-section">
+          <h4>Played Staff</h4>
+          <div className="cards-row">
+            {boardState.playedStaff.map(cardId => {
+              const card = getCardById(cardId);
+              return card ? <Card key={cardId} card={card} size="small" /> : null;
+            })}
+          </div>
+        </div>
+
+        <div className="board-section">
+          <h4>Played Support</h4>
+          <div className="cards-row">
+            {boardState.playedSupport.map(cardId => {
+              const card = getCardById(cardId);
+              return card ? <Card key={cardId} card={card} size="small" /> : null;
+            })}
+          </div>
+        </div>
+
+        <div className="board-section">
+          <h4>Played Events</h4>
+          <div className="cards-row">
+            {boardState.playedEvents.map(cardId => {
+              const card = getCardById(cardId);
+              return card ? <Card key={cardId} card={card} size="small" /> : null;
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="player-hand">
+        <h4>Hand ({hand.length} cards)</h4>
+        <div className="cards-row">
+          {hand.map(cardId => {
+            const card = getCardById(cardId);
+            return card ? (
+              <Card
+                key={cardId}
+                card={card}
+                size="small"
+                onClick={() => onCardClick?.(cardId)}
+                disabled={!isCurrentPlayer || turnComplete}
+              />
+            ) : null;
+          })}
+        </div>
+      </div>
+
+      {isCurrentPlayer && !turnComplete && (
+        <button className="end-turn-button" onClick={onEndTurn}>
+          End Turn
+        </button>
+      )}
+
+      {turnComplete && (
+        <div className="turn-status">Turn Complete</div>
+      )}
+    </div>
+  );
+};
+

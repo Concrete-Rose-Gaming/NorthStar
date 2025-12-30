@@ -1,0 +1,73 @@
+.restaurant-card {
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+  color: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  min-width: 300px;
+}
+
+.restaurant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 12px;
+}
+
+.restaurant-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.restaurant-stars {
+  font-size: 1.5rem;
+  letter-spacing: 4px;
+}
+
+.restaurant-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.restaurant-description {
+  font-style: italic;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.restaurant-base-score,
+.restaurant-current-score {
+  font-size: 1.1rem;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+.restaurant-current-score {
+  background: rgba(255, 215, 0, 0.3);
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.restaurant-ability {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border-left: 4px solid #FFD700;
+}
+
+.ability-condition {
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: #FFD700;
+}
+
+.ability-description {
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+

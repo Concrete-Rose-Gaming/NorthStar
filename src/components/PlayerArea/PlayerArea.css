@@ -1,0 +1,99 @@
+.player-area {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 10px;
+  backdrop-filter: blur(10px);
+}
+
+.current-player {
+  border: 3px solid #FFD700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.player-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.player-header h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.player-stars {
+  font-size: 1.3rem;
+  color: #FFD700;
+}
+
+.player-board {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.board-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.board-section h4 {
+  margin: 0 0 8px 0;
+  color: white;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.player-hand {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 16px;
+}
+
+.player-hand h4 {
+  margin: 0 0 12px 0;
+  color: white;
+  font-size: 1rem;
+}
+
+.end-turn-button {
+  margin-top: 16px;
+  padding: 12px 24px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.end-turn-button:hover {
+  background: #45a049;
+}
+
+.turn-status {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(76, 175, 80, 0.3);
+  color: white;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+}
+
