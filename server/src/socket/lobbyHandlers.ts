@@ -47,15 +47,21 @@ export class LobbyHandlers {
   }
 
   private handleLobbyJoin(socket: Socket, username: string) {
+    // Update or create player entry
+    const existingPlayer = this.players.get(socket.id);
     const player: ConnectedPlayer = {
       id: socket.id,
       username,
       socket,
-      isInGame: false
+      isInGame: existingPlayer?.isInGame || false,
+      currentGameId: existingPlayer?.currentGameId
     };
 
     this.players.set(socket.id, player);
     socket.join('lobby');
+
+    // Send current player list to the joining player immediately
+    this.sendPlayerList(socket);
 
     // Notify all players in lobby
     this.broadcastPlayerList();

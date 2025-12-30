@@ -49,7 +49,12 @@ export class ChatHandlers {
       ? this.messages.filter(m => m.roomId === roomId)
       : this.messages.filter(m => !m.roomId);
 
-    socket.emit('chat-history', relevantMessages);
+    // Send messages in chronological order
+    const sortedMessages = relevantMessages.sort((a, b) => 
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+    
+    socket.emit('chat-history', sortedMessages);
   }
 }
 

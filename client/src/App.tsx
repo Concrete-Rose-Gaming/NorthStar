@@ -152,12 +152,17 @@ function App() {
           type="text"
           placeholder="Enter your username"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            setUsername(newValue);
+          }}
           onKeyPress={(e) => {
             if (e.key === 'Enter' && username.trim()) {
-              setUsername(username.trim());
+              const trimmed = username.trim();
+              setUsername(trimmed);
             }
           }}
+          autoFocus
           style={{
             padding: '10px 20px',
             fontSize: '16px',

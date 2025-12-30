@@ -21,14 +21,23 @@ class SocketService {
   connect(username: string) {
     this.username = username;
     if (this.socket?.connected) {
+      // Already connected, just join lobby if needed
+      this.socket.emit('lobby-join', { username });
+      this.socket.emit('request-player-list');
       return;
     }
 
     // Connect to server - get URL from localStorage, env var, or same origin
     const serverUrl = this.getServerUrl();
     
+    // Set up event handlers BEFORE connecting
+    this.setupEventHandlers();
+    
     this.socket = io(serverUrl, {
-      transports: ['websocket']
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5
     });
 
     this.socket.on('connect', () => {
@@ -43,7 +52,9 @@ class SocketService {
       console.log('Disconnected from server');
     });
 
-    this.setupEventHandlers();
+    this.socket.on('connect_error', (error) => {
+      console.error('Connection error:', error);
+    });
   }
 
   private setupEventHandlers() {

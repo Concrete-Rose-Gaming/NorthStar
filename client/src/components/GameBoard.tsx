@@ -70,11 +70,18 @@ function GameBoard({ username }: GameBoardProps) {
   };
 
   const renderCard = (card: AnyCard, onClick?: () => void) => {
+    const handleClick = onClick ? (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onClick();
+    } : undefined;
+    
     return (
       <div
         key={card.id}
         className={`card ${selectedCard === card.id ? 'selected' : ''} ${onClick ? 'clickable' : ''}`}
-        onClick={onClick}
+        onClick={handleClick}
+        style={onClick ? { cursor: 'pointer' } : {}}
       >
         <div className="card-name">{card.name}</div>
         <div className="card-type">{card.type}</div>

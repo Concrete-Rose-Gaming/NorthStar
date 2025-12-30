@@ -67,6 +67,19 @@ export class GameHandlers {
     if (currentState.phase !== GamePhase.SETUP || currentState.players.length > 0) {
       // Game already initialized, just send current state
       socket.emit('game-state-updated', currentState);
+      
+      // If it's an AI game and it's the AI's turn, trigger AI action
+      if (room.aiOpponent) {
+        const currentPlayer = currentState.players[currentState.currentPlayerIndex];
+        if (currentPlayer.isAI) {
+          setTimeout(() => {
+            const aiAction = room.aiOpponent!.makeDecision(currentState, room.engine);
+            if (aiAction) {
+              this.processActionForRoom(room, aiAction, null);
+            }
+          }, 1000);
+        }
+      }
     } else if (room.players.size === 2) {
       // Initialize game for 2 human players
       const playerSockets = Array.from(room.players.values());
@@ -87,30 +100,50 @@ export class GameHandlers {
   private handleGameAction(socket: Socket, action: GameAction) {
     const room = this.findRoomBySocket(socket);
     if (!room) {
-      socket.emit('error', { message: 'Not in a game room' });
-      return;
+      // If this is an AI action, find room by gameId instead
+      const roomByGameId = Array.from(this.rooms.values()).find(r => {
+        const state = r.engine.getState();
+        return state.players.some(p => p.id === action.playerId);
+      });
+      
+      if (!roomByGameId) {
+        if (socket && socket.connected) {
+          socket.emit('error', { message: 'Not in a game room' });
+        }
+        return;
+      }
+      
+      // Process AI action
+      return this.processActionForRoom(roomByGameId, action, null);
     }
 
+    return this.processActionForRoom(room, action, socket);
+  }
+
+  private processActionForRoom(room: GameRoom, action: GameAction, socket: Socket | null) {
     const result = room.engine.processAction(action);
     
     if (result.success && result.newState) {
       // Broadcast updated game state
       this.io.to(room.id).emit('game-state-updated', result.newState);
 
-      // If AI opponent's turn, make AI decision
-      if (result.newState.phase !== GamePhase.VICTORY && result.newState.phase !== GamePhase.MULLIGAN) {
+      // If AI opponent's turn, make AI decision (including mulligan phase)
+      if (result.newState.phase !== GamePhase.VICTORY) {
         const currentPlayer = result.newState.players[result.newState.currentPlayerIndex];
         if (currentPlayer.isAI && room.aiOpponent) {
           setTimeout(() => {
             const aiAction = room.aiOpponent!.makeDecision(result.newState!, room.engine);
             if (aiAction) {
-              this.handleGameAction(socket, aiAction);
+              // Process AI action directly without socket
+              this.processActionForRoom(room, aiAction, null);
             }
           }, 1000); // Delay for better UX
         }
       }
     } else {
-      socket.emit('error', { message: result.error || 'Action failed' });
+      if (socket && socket.connected) {
+        socket.emit('error', { message: result.error || 'Action failed' });
+      }
     }
   }
 
@@ -166,6 +199,17 @@ export class GameHandlers {
     const gameState = engine.initializeGame([playerId, aiId], [username, 'AI Opponent'], [false, true]);
     
     this.rooms.set(gameId, room);
+    
+    // If it's the AI's turn first, trigger AI action after a delay
+    if (gameState.players[gameState.currentPlayerIndex].isAI) {
+      setTimeout(() => {
+        const aiAction = aiOpponent.makeDecision(gameState, engine);
+        if (aiAction) {
+          this.processActionForRoom(room, aiAction, null);
+        }
+      }, 1500);
+    }
+    
     return gameId;
   }
 
