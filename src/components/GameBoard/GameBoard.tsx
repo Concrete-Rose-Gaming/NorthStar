@@ -13,6 +13,7 @@ interface GameBoardProps {
   onCardPlay: (cardId: string) => void;
   onEndTurn: () => void;
   onNextRound?: () => void;
+  onShowTutorial?: () => void;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
@@ -20,7 +21,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   currentPlayerId,
   onCardPlay,
   onEndTurn,
-  onNextRound
+  onNextRound,
+  onShowTutorial
 }) => {
   // Determine which player is "you" (current player viewing) and "opponent"
   // You (current player) always goes at bottom, opponent always at top
@@ -44,7 +46,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   return (
     <div className="game-board">
       <div className="game-header">
-        <h1>Round {gameState.currentRound}</h1>
+        <div className="header-top">
+          <h1>Round {gameState.currentRound}</h1>
+          {onShowTutorial && (
+            <button className="tutorial-button-header" onClick={onShowTutorial} title="How to Play">
+              📖
+            </button>
+          )}
+        </div>
         <div className="game-phase">Phase: {gameState.phase}</div>
         {isAI && (
           <div className="ai-indicator">🤖 Playing vs AI Opponent</div>

@@ -19,6 +19,7 @@ import {
 import { PlayerDeck } from './game/DeckManager';
 import { AIOpponent } from './game/AIOpponent';
 import { getCardById, CardType } from './game/CardTypes';
+import { Tutorial } from './components/Tutorial/Tutorial';
 import './App.css';
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
   const [playerDeck, setPlayerDeck] = useState<PlayerDeck | null>(null);
   const [mulliganCards, setMulliganCards] = useState<string[]>([]);
   const [showMulligan, setShowMulligan] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [aiOpponent] = useState<AIOpponent>(new AIOpponent('AI Chef'));
   // Current player ID - in single-player mode, always 'player1' (you are always at bottom)
   const currentPlayerId: 'player1' | 'player2' = 'player1';
@@ -220,6 +222,7 @@ function App() {
   if (!gameState) {
     return (
       <div className="App">
+        {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
         <div className="lobby-screen">
           <h1>Chef Card Game</h1>
           <div className="lobby-form">
@@ -229,6 +232,11 @@ function App() {
             </div>
             <h2>Play Against AI</h2>
             <p className="lobby-description">Build your deck and compete against an AI opponent!</p>
+            <div className="lobby-buttons-top">
+              <button onClick={() => setShowTutorial(true)} className="tutorial-button-link">
+                📖 How to Play
+              </button>
+            </div>
             <input
               type="text"
               placeholder="Enter your name"
@@ -345,12 +353,14 @@ function App() {
 
     return (
       <div className="App">
+        {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
         <GameBoard
           gameState={gameState}
           currentPlayerId={currentPlayerId}
           onCardPlay={handleCardPlay}
           onEndTurn={handleEndTurn}
           onNextRound={handleNextRound}
+          onShowTutorial={() => setShowTutorial(true)}
         />
       </div>
     );

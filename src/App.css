@@ -65,6 +65,30 @@
   text-align: center;
 }
 
+.lobby-buttons-top {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.tutorial-button-link {
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+}
+
+.tutorial-button-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
 .lobby-form {
   display: flex;
   flex-direction: column;
