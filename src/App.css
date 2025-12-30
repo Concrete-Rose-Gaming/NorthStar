@@ -21,7 +21,48 @@
 
 .lobby-screen h1 {
   font-size: 3rem;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
+}
+
+.lobby-screen h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: #FFD700;
+}
+
+.lobby-description {
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  opacity: 0.9;
+}
+
+.game-mode-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: rgba(76, 175, 80, 0.2);
+  border: 2px solid #4CAF50;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.badge-icon {
+  font-size: 1.5rem;
+}
+
+.badge-text {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+.hint-text {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  text-align: center;
 }
 
 .lobby-form {
@@ -77,6 +118,24 @@
 
 .lobby-button:hover {
   background: #45a049;
+}
+
+.ai-button {
+  font-size: 1.3rem;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.ai-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  transform: translateY(-2px);
+}
+
+.ai-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .game-id-display {

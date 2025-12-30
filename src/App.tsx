@@ -223,6 +223,12 @@ function App() {
         <div className="lobby-screen">
           <h1>Chef Card Game</h1>
           <div className="lobby-form">
+            <div className="game-mode-badge">
+              <span className="badge-icon">🤖</span>
+              <span className="badge-text">AI Opponent Mode</span>
+            </div>
+            <h2>Play Against AI</h2>
+            <p className="lobby-description">Build your deck and compete against an AI opponent!</p>
             <input
               type="text"
               placeholder="Enter your name"
@@ -232,10 +238,13 @@ function App() {
               onKeyPress={(e) => e.key === 'Enter' && handleStartGame()}
             />
             <div className="lobby-actions">
-              <button onClick={handleStartGame} className="lobby-button">
-                Start Game vs AI
+              <button onClick={handleStartGame} className="lobby-button ai-button" disabled={!playerName.trim()}>
+                🤖 Start Game vs AI
               </button>
             </div>
+            {!playerName.trim() && (
+              <p className="hint-text">Please enter your name to start</p>
+            )}
           </div>
         </div>
       </div>
