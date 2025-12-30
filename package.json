@@ -2,7 +2,7 @@
   "name": "chef-card-game",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://northpi.github.io/NorthStar",
+  "homepage": "https://concrete-rose-gaming.github.io/NorthStar",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
