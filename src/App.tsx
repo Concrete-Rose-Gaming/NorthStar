@@ -28,6 +28,8 @@ function App() {
   const [mulliganCards, setMulliganCards] = useState<string[]>([]);
   const [showMulligan, setShowMulligan] = useState(false);
   const [aiOpponent] = useState<AIOpponent>(new AIOpponent('AI Chef'));
+  // Current player ID - in single-player mode, always 'player1' (you are always at bottom)
+  const currentPlayerId: 'player1' | 'player2' = 'player1';
 
   // Handle AI turn automatically
   useEffect(() => {
@@ -81,10 +83,10 @@ function App() {
 
     setPlayerDeck(completedDeck);
     
-    // Initialize human player
+    // Player 1 is always the human player (will be displayed at bottom)
     const humanPlayer = initializePlayer('player1', playerName, completedDeck);
     
-    // Initialize AI player with default deck
+    // Player 2 is always the AI opponent (will be displayed at top)
     const aiDeck = aiOpponent.createAIDeck();
     const aiPlayer = initializePlayer('player2', aiOpponent.getName(), aiDeck);
 
@@ -336,7 +338,7 @@ function App() {
       <div className="App">
         <GameBoard
           gameState={gameState}
-          currentPlayerId="player1"
+          currentPlayerId={currentPlayerId}
           onCardPlay={handleCardPlay}
           onEndTurn={handleEndTurn}
           onNextRound={handleNextRound}

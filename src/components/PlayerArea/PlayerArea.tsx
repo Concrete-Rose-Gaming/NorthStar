@@ -13,6 +13,8 @@ interface PlayerAreaProps {
   onCardClick?: (cardId: string) => void;
   onEndTurn?: () => void;
   turnComplete?: boolean;
+  isOpponent?: boolean; // If true, hide hand details
+  showHand?: boolean; // Whether to show the hand (for human player)
 }
 
 export const PlayerArea: React.FC<PlayerAreaProps> = ({
@@ -23,7 +25,9 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
   isCurrentPlayer = false,
   onCardClick,
   onEndTurn,
-  turnComplete = false
+  turnComplete = false,
+  isOpponent = false,
+  showHand = false
 }) => {
   return (
     <div className={`player-area ${isCurrentPlayer ? 'current-player' : ''}`}>
@@ -74,23 +78,35 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
         </div>
       </div>
 
-      <div className="player-hand">
-        <h4>Hand ({hand.length} cards)</h4>
-        <div className="cards-row">
-          {hand.map(cardId => {
-            const card = getCardById(cardId);
-            return card ? (
-              <Card
-                key={cardId}
-                card={card}
-                size="small"
-                onClick={() => onCardClick?.(cardId)}
-                disabled={!isCurrentPlayer || turnComplete}
-              />
-            ) : null;
-          })}
+      {hand.length > 0 && (showHand || isOpponent) && (
+        <div className="player-hand">
+          <h4>Hand ({hand.length} cards)</h4>
+          {isOpponent ? (
+            <div className="cards-row">
+              {hand.map((_, index) => (
+                <div key={index} className="hidden-card">
+                  <div className="card-back">?</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="cards-row">
+              {hand.map(cardId => {
+                const card = getCardById(cardId);
+                return card ? (
+                  <Card
+                    key={cardId}
+                    card={card}
+                    size="small"
+                    onClick={() => onCardClick?.(cardId)}
+                    disabled={!isCurrentPlayer || turnComplete}
+                  />
+                ) : null;
+              })}
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {isCurrentPlayer && !turnComplete && (
         <button className="end-turn-button" onClick={onEndTurn}>

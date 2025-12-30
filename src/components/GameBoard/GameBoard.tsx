@@ -21,82 +21,98 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   onEndTurn,
   onNextRound
 }) => {
-  const player1 = gameState.players.player1;
-  const player2 = gameState.players.player2;
+  // Determine which player is "you" (current player viewing) and "opponent"
+  // You (current player) always goes at bottom, opponent always at top
+  const you = gameState.players[currentPlayerId];
+  const opponentId = currentPlayerId === 'player1' ? 'player2' : 'player1';
+  const opponent = gameState.players[opponentId];
 
-  const player1Score = player1 ? calculateScore(player1.boardState).totalScore : 0;
-  const player2Score = player2 ? calculateScore(player2.boardState).totalScore : 0;
+  const youScore = you ? calculateScore(you.boardState).totalScore : 0;
+  const opponentScore = opponent ? calculateScore(opponent.boardState).totalScore : 0;
 
-  const player1Restaurant = player1?.restaurantCardId ? getCardById(player1.restaurantCardId) : null;
-  const player2Restaurant = player2?.restaurantCardId ? getCardById(player2.restaurantCardId) : null;
+  const youRestaurant = you?.restaurantCardId ? getCardById(you.restaurantCardId) : null;
+  const opponentRestaurant = opponent?.restaurantCardId ? getCardById(opponent.restaurantCardId) : null;
 
   const isFaceOffPhase = gameState.phase === GamePhase.FACE_OFF;
   const showScores = isFaceOffPhase || gameState.phase === GamePhase.ROUND_END;
+  const showHands = isFaceOffPhase || gameState.phase === GamePhase.ROUND_END || gameState.phase === GamePhase.GAME_END;
+  const isAI = opponent?.name === 'AI Chef' || opponent?.name.includes('AI');
 
   return (
     <div className="game-board">
       <div className="game-header">
         <h1>Round {gameState.currentRound}</h1>
         <div className="game-phase">Phase: {gameState.phase}</div>
+        {isAI && (
+          <div className="ai-indicator">🤖 Playing vs AI Opponent</div>
+        )}
         {gameState.firstPlayer && (
-          <div className="first-player">First Player: {gameState.firstPlayer}</div>
+          <div className="first-player">First Player: {gameState.players[gameState.firstPlayer]?.name}</div>
         )}
       </div>
 
+
+      {/* Opponent (AI or other player) - Always at top */}
+      <div className="player-top">
+        {opponent && (
+          <PlayerArea
+            playerName={opponent.name}
+            hand={opponent.hand}
+            boardState={opponent.boardState}
+            stars={opponent.stars}
+            isCurrentPlayer={false}
+            onCardClick={undefined}
+            onEndTurn={undefined}
+            turnComplete={opponent.turnComplete}
+            isOpponent={true}
+            showHand={showHands} // Only show hand during face-off
+          />
+        )}
+        {opponentRestaurant && (
+          <Restaurant
+            restaurant={opponentRestaurant as any}
+            score={showScores ? opponentScore : undefined}
+            stars={opponent?.stars || 0}
+          />
+        )}
+      </div>
+
+      {/* Middle area - scores during face-off */}
       {showScores && (
-        <div className="score-comparison">
-          <div className={`score-display ${player1Score > player2Score ? 'winner' : ''}`}>
-            <h3>{player1?.name || 'Player 1'}</h3>
-            <div className="score-value">{player1Score}</div>
+        <div className="score-comparison-middle">
+          <div className={`score-display ${youScore > opponentScore ? 'winner' : ''}`}>
+            <h3>{you?.name || 'You'}</h3>
+            <div className="score-value">{youScore}</div>
           </div>
           <div className="vs">VS</div>
-          <div className={`score-display ${player2Score > player1Score ? 'winner' : ''}`}>
-            <h3>{player2?.name || 'Player 2'}</h3>
-            <div className="score-value">{player2Score}</div>
+          <div className={`score-display ${opponentScore > youScore ? 'winner' : ''}`}>
+            <h3>{opponent?.name || 'Opponent'}</h3>
+            <div className="score-value">{opponentScore}</div>
           </div>
         </div>
       )}
 
-      <div className="restaurants-row">
-        {player1Restaurant && (
+      {/* You (current player) - Always at bottom */}
+      <div className="player-bottom">
+        {youRestaurant && (
           <Restaurant
-            restaurant={player1Restaurant as any}
-            score={showScores ? player1Score : undefined}
-            stars={player1?.stars || 0}
+            restaurant={youRestaurant as any}
+            score={showScores ? youScore : undefined}
+            stars={you?.stars || 0}
           />
         )}
-        {player2Restaurant && (
-          <Restaurant
-            restaurant={player2Restaurant as any}
-            score={showScores ? player2Score : undefined}
-            stars={player2?.stars || 0}
-          />
-        )}
-      </div>
-
-      <div className="players-row">
-        {player1 && (
+        {you && (
           <PlayerArea
-            playerName={player1.name}
-            hand={player1.hand}
-            boardState={player1.boardState}
-            stars={player1.stars}
-            isCurrentPlayer={currentPlayerId === 'player1' && gameState.phase === GamePhase.TURN}
+            playerName={you.name}
+            hand={you.hand} // You always see your own hand
+            boardState={you.boardState}
+            stars={you.stars}
+            isCurrentPlayer={gameState.phase === GamePhase.TURN}
             onCardClick={onCardPlay}
             onEndTurn={onEndTurn}
-            turnComplete={player1.turnComplete}
-          />
-        )}
-        {player2 && (
-          <PlayerArea
-            playerName={player2.name}
-            hand={player2.hand}
-            boardState={player2.boardState}
-            stars={player2.stars}
-            isCurrentPlayer={currentPlayerId === 'player2' && gameState.phase === GamePhase.TURN}
-            onCardClick={onCardPlay}
-            onEndTurn={onEndTurn}
-            turnComplete={player2.turnComplete}
+            turnComplete={you.turnComplete}
+            isOpponent={false}
+            showHand={true} // You always see your hand
           />
         )}
       </div>
