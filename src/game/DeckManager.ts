@@ -3,6 +3,13 @@ import { Card, CardType, CARD_DEFINITIONS, getCardById, isValidCardId } from './
 // Deck is represented as an array of card IDs (strings)
 export type Deck = string[];
 
+// Complete player deck structure - Chef and Restaurant cards are separate from main deck
+export interface PlayerDeck {
+  mainDeck: Deck;           // 30 cards: Meals, Staff, Support, Event only
+  chefCardId: string;       // 1 Chef card (separate)
+  restaurantCardIds: string[]; // 3 Restaurant cards (separate)
+}
+
 // Deck validation result
 export interface DeckValidationResult {
   isValid: boolean;
@@ -23,20 +30,16 @@ export interface DeckStats {
 }
 
 /**
- * Validates a deck according to game rules:
- * - Must have exactly 30 cards
- * - Must have exactly 1 Chef card
- * - Must have exactly 3 Restaurant cards
- * - No more than 3 cards of the same type (by ID)
- * - All card IDs must be valid
+ * Validates the main deck (30 cards - Meals, Staff, Support, Event only)
+ * Chef and Restaurant cards are NOT part of the main deck
  */
-export function validateDeck(deck: Deck): DeckValidationResult {
+export function validateMainDeck(deck: Deck): DeckValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   // Check total card count
   if (deck.length !== 30) {
-    errors.push(`Deck must have exactly 30 cards, but has ${deck.length}`);
+    errors.push(`Main deck must have exactly 30 cards, but has ${deck.length}`);
   }
 
   // Validate all card IDs exist
@@ -48,14 +51,13 @@ export function validateDeck(deck: Deck): DeckValidationResult {
   // Count cards by type
   const stats = getDeckStats(deck);
   
-  // Check Chef card count (must be exactly 1)
-  if (stats.chefCount !== 1) {
-    errors.push(`Deck must have exactly 1 Chef card, but has ${stats.chefCount}`);
+  // Check that no Chef or Restaurant cards are in main deck
+  if (stats.chefCount > 0) {
+    errors.push(`Main deck cannot contain Chef cards. Found ${stats.chefCount}`);
   }
 
-  // Check Restaurant card count (must be exactly 3)
-  if (stats.restaurantCount !== 3) {
-    errors.push(`Deck must have exactly 3 Restaurant cards, but has ${stats.restaurantCount}`);
+  if (stats.restaurantCount > 0) {
+    errors.push(`Main deck cannot contain Restaurant cards. Found ${stats.restaurantCount}`);
   }
 
   // Check for duplicate limits (max 3 of same card ID)
@@ -65,10 +67,57 @@ export function validateDeck(deck: Deck): DeckValidationResult {
     }
   });
 
-  // Check if deck has enough non-Chef/Restaurant cards
-  const mainDeckCards = deck.length - stats.chefCount - stats.restaurantCount;
-  if (mainDeckCards < 26) {
-    warnings.push(`Deck has ${mainDeckCards} main deck cards, recommended minimum is 26`);
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+}
+
+/**
+ * Validates a complete player deck structure (main deck + Chef + Restaurants)
+ */
+export function validatePlayerDeck(playerDeck: PlayerDeck): DeckValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Validate main deck
+  const mainDeckResult = validateMainDeck(playerDeck.mainDeck);
+  errors.push(...mainDeckResult.errors);
+  warnings.push(...mainDeckResult.warnings);
+
+  // Validate Chef card
+  if (!playerDeck.chefCardId) {
+    errors.push('Chef card is required');
+  } else if (!isValidCardId(playerDeck.chefCardId)) {
+    errors.push(`Invalid Chef card ID: ${playerDeck.chefCardId}`);
+  } else {
+    const chefCard = getCardById(playerDeck.chefCardId);
+    if (chefCard && chefCard.type !== CardType.CHEF) {
+      errors.push(`Card ${playerDeck.chefCardId} is not a Chef card`);
+    }
+  }
+
+  // Validate Restaurant cards
+  if (playerDeck.restaurantCardIds.length !== 3) {
+    errors.push(`Must have exactly 3 Restaurant cards, but have ${playerDeck.restaurantCardIds.length}`);
+  } else {
+    playerDeck.restaurantCardIds.forEach((restaurantId, index) => {
+      if (!isValidCardId(restaurantId)) {
+        errors.push(`Invalid Restaurant card ID at position ${index + 1}: ${restaurantId}`);
+      } else {
+        const restaurantCard = getCardById(restaurantId);
+        if (restaurantCard && restaurantCard.type !== CardType.RESTAURANT) {
+          errors.push(`Card ${restaurantId} is not a Restaurant card`);
+        }
+      }
+    });
+
+    // Check for duplicate restaurants
+    const uniqueRestaurants = new Set(playerDeck.restaurantCardIds);
+    if (uniqueRestaurants.size !== 3) {
+      errors.push('Restaurant cards must be unique (no duplicates)');
+    }
   }
 
   return {
@@ -76,6 +125,14 @@ export function validateDeck(deck: Deck): DeckValidationResult {
     errors,
     warnings
   };
+}
+
+/**
+ * @deprecated Use validateMainDeck or validatePlayerDeck instead
+ * Kept for backward compatibility during migration
+ */
+export function validateDeck(deck: Deck): DeckValidationResult {
+  return validateMainDeck(deck);
 }
 
 /**
@@ -177,37 +234,32 @@ export function removeCards(deck: Deck, cardIds: string[]): Deck {
 }
 
 /**
- * Creates a default starter deck (for testing/quick start)
- * Includes: 1 Chef, 3 Restaurants, and fills the rest with available cards
+ * Creates a default starter player deck (for testing/quick start)
+ * Includes: 1 Chef, 3 Restaurants (separate), and 30 main deck cards
  */
-export function createDefaultDeck(): Deck {
-  const deck: Deck = [];
-
-  // Add 1 Chef (first available)
+export function createDefaultPlayerDeck(): PlayerDeck {
+  // Get Chef card
   const chefs = Object.keys(CARD_DEFINITIONS).filter(id => 
     CARD_DEFINITIONS[id].type === CardType.CHEF
   );
-  if (chefs.length > 0) {
-    deck.push(chefs[0]);
-  }
+  const chefCardId = chefs.length > 0 ? chefs[0] : '';
 
-  // Add 3 Restaurants (first 3 available)
+  // Get 3 Restaurant cards
   const restaurants = Object.keys(CARD_DEFINITIONS).filter(id => 
     CARD_DEFINITIONS[id].type === CardType.RESTAURANT
   );
-  for (let i = 0; i < 3 && i < restaurants.length; i++) {
-    deck.push(restaurants[i]);
-  }
+  const restaurantCardIds = restaurants.slice(0, 3);
 
-  // Fill remaining slots with other cards (up to 3 of each)
+  // Build main deck (30 cards - Meals, Staff, Support, Event only)
+  const mainDeck: Deck = [];
   const otherCards = Object.keys(CARD_DEFINITIONS).filter(id => {
     const card = CARD_DEFINITIONS[id];
     return card.type !== CardType.CHEF && card.type !== CardType.RESTAURANT;
   });
 
-  // Add cards up to limit, ensuring we have 30 total
+  // Add cards up to 30
   const cardCounts: Record<string, number> = {};
-  while (deck.length < 30 && otherCards.length > 0) {
+  while (mainDeck.length < 30 && otherCards.length > 0) {
     // Pick a random card from available
     const randomIndex = Math.floor(Math.random() * otherCards.length);
     const cardId = otherCards[randomIndex];
@@ -215,48 +267,38 @@ export function createDefaultDeck(): Deck {
     cardCounts[cardId] = (cardCounts[cardId] || 0) + 1;
     
     if (cardCounts[cardId] <= 3) {
-      deck.push(cardId);
+      mainDeck.push(cardId);
     } else {
       // Remove this card from available list if we've reached max
       otherCards.splice(randomIndex, 1);
     }
   }
 
-  return shuffleDeck(deck);
+  return {
+    mainDeck: shuffleDeck(mainDeck),
+    chefCardId,
+    restaurantCardIds
+  };
 }
 
 /**
- * Gets the Chef card ID from a deck
+ * @deprecated Use createDefaultPlayerDeck instead
+ * Kept for backward compatibility
  */
-export function getChefCardId(deck: Deck): string | null {
-  for (const cardId of deck) {
-    const card = getCardById(cardId);
-    if (card && card.type === CardType.CHEF) {
-      return cardId;
-    }
-  }
-  return null;
+export function createDefaultDeck(): Deck {
+  const playerDeck = createDefaultPlayerDeck();
+  // Return just the main deck for backward compatibility
+  return playerDeck.mainDeck;
 }
 
 /**
- * Gets all Restaurant card IDs from a deck
+ * Randomly selects one Restaurant card from the player's 3 Restaurant cards
  */
-export function getRestaurantCardIds(deck: Deck): string[] {
-  return deck.filter(cardId => {
-    const card = getCardById(cardId);
-    return card && card.type === CardType.RESTAURANT;
-  });
-}
-
-/**
- * Randomly selects one Restaurant card from the deck
- */
-export function selectRandomRestaurant(deck: Deck): string | null {
-  const restaurants = getRestaurantCardIds(deck);
-  if (restaurants.length === 0) {
+export function selectRandomRestaurant(restaurantCardIds: string[]): string | null {
+  if (restaurantCardIds.length === 0) {
     return null;
   }
-  const randomIndex = Math.floor(Math.random() * restaurants.length);
-  return restaurants[randomIndex];
+  const randomIndex = Math.floor(Math.random() * restaurantCardIds.length);
+  return restaurantCardIds[randomIndex];
 }
 

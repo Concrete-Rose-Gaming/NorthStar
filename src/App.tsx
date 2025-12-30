@@ -18,7 +18,7 @@ import {
   advanceToNextRound,
   resetTurnStatus
 } from './game/GameEngine';
-import { Deck } from './game/DeckManager';
+import { PlayerDeck } from './game/DeckManager';
 import { createGameRoom } from './supabase/config';
 import './App.css';
 
@@ -26,7 +26,7 @@ function App() {
   const [gameId, setGameId] = useState<string | null>(null);
   const [playerId, setPlayerId] = useState<'player1' | 'player2' | null>(null);
   const [playerName, setPlayerName] = useState('');
-  const [deck, setDeck] = useState<Deck | null>(null);
+  const [playerDeck, setPlayerDeck] = useState<PlayerDeck | null>(null);
   const [mulliganCards, setMulliganCards] = useState<string[]>([]);
   const [showMulligan, setShowMulligan] = useState(false);
   const [joiningGameId, setJoiningGameId] = useState('');
@@ -93,10 +93,10 @@ function App() {
     setGameId(joiningGameId);
   };
 
-  const handleDeckComplete = async (completedDeck: Deck) => {
+  const handleDeckComplete = async (completedDeck: PlayerDeck) => {
     if (!gameId || !playerId) return;
 
-    setDeck(completedDeck);
+    setPlayerDeck(completedDeck);
     const player = initializePlayer(playerId, playerName, completedDeck);
     await updatePlayer(playerId, player);
     
@@ -117,7 +117,7 @@ function App() {
   };
 
   const handleMulligan = async () => {
-    if (!gameId || !playerId || !deck || mulliganCards.length === 0) return;
+    if (!gameId || !playerId || !playerDeck || mulliganCards.length === 0) return;
 
     const currentPlayer = gameState?.players[playerId];
     if (!currentPlayer) return;
@@ -265,7 +265,10 @@ function App() {
         <div className="App">
           <div className="deck-building-screen">
             <h2>Build Your Deck</h2>
-            <DeckBuilder onDeckComplete={handleDeckComplete} />
+            <DeckBuilder 
+              onDeckComplete={handleDeckComplete}
+              initialDeck={playerDeck || undefined}
+            />
           </div>
         </div>
       );

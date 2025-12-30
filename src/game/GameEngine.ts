@@ -1,4 +1,4 @@
-import { Deck, shuffleDeck, drawCards, getChefCardId, selectRandomRestaurant } from './DeckManager';
+import { Deck, PlayerDeck, shuffleDeck, drawCards, selectRandomRestaurant } from './DeckManager';
 import { calculateScore, compareScores, PlayerBoardState, ScoreResult } from './Scoring';
 
 // Game phase
@@ -64,26 +64,25 @@ export function createGameState(gameId: string): GameState {
 /**
  * Initializes a player with their deck
  */
-export function initializePlayer(playerId: string, name: string, deck: Deck): Player {
-  const shuffledDeck = shuffleDeck([...deck]);
-  const chefCardId = getChefCardId(deck);
-  const restaurantCardId = selectRandomRestaurant(deck);
-
-  // Remove Chef and Restaurant from deck before drawing
-  const deckWithoutSpecial = shuffledDeck.filter(id => id !== chefCardId && id !== restaurantCardId);
+export function initializePlayer(playerId: string, name: string, playerDeck: PlayerDeck): Player {
+  // Shuffle the main deck
+  const shuffledDeck = shuffleDeck([...playerDeck.mainDeck]);
   
-  // Draw initial 5 cards
-  const { drawn: initialHand, remaining: remainingDeck } = drawCards(deckWithoutSpecial, 5);
+  // Select a random Restaurant from the 3 available
+  const restaurantCardId = selectRandomRestaurant(playerDeck.restaurantCardIds);
+  
+  // Draw initial 5 cards from main deck
+  const { drawn: initialHand, remaining: remainingDeck } = drawCards(shuffledDeck, 5);
 
   return {
     id: playerId,
     name,
     deck: remainingDeck,
     hand: initialHand,
-    chefCardId: chefCardId || null,
+    chefCardId: playerDeck.chefCardId,
     restaurantCardId: restaurantCardId || null,
     boardState: {
-      chefCardId: chefCardId || '',
+      chefCardId: playerDeck.chefCardId,
       restaurantCardId: restaurantCardId || '',
       playedMeals: [],
       playedStaff: [],
