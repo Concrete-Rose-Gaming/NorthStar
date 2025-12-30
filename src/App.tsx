@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GameBoard } from './components/GameBoard/GameBoard';
 import { DeckBuilder } from './components/DeckBuilder/DeckBuilder';
-import { useGameState } from './hooks/useGameState';
 import {
   GameState,
   GamePhase,
@@ -13,188 +12,210 @@ import {
   startRound,
   playCard,
   completeTurn,
-  bothPlayersReady,
   performFaceOff,
   advanceToNextRound,
   resetTurnStatus
 } from './game/GameEngine';
 import { PlayerDeck } from './game/DeckManager';
-import { createGameRoom } from './supabase/config';
+import { AIOpponent } from './game/AIOpponent';
+import { getCardById, CardType } from './game/CardTypes';
 import './App.css';
 
 function App() {
-  const [gameId, setGameId] = useState<string | null>(null);
-  const [playerId, setPlayerId] = useState<'player1' | 'player2' | null>(null);
+  const [gameState, setGameState] = useState<GameState | null>(null);
   const [playerName, setPlayerName] = useState('');
   const [playerDeck, setPlayerDeck] = useState<PlayerDeck | null>(null);
   const [mulliganCards, setMulliganCards] = useState<string[]>([]);
   const [showMulligan, setShowMulligan] = useState(false);
-  const [joiningGameId, setJoiningGameId] = useState('');
+  const [aiOpponent] = useState<AIOpponent>(new AIOpponent('AI Chef'));
 
-  const { gameState, loading, updateState, updatePlayer, createGame } = useGameState(gameId);
-
-  // Initialize player ID on mount
+  // Handle AI turn automatically
   useEffect(() => {
-    const storedPlayerId = localStorage.getItem('playerId');
-    if (storedPlayerId) {
-      setPlayerId(storedPlayerId as 'player1' | 'player2');
-    } else {
-      const newPlayerId = Math.random() < 0.5 ? 'player1' : 'player2';
-      setPlayerId(newPlayerId);
-      localStorage.setItem('playerId', newPlayerId);
+    if (!gameState || gameState.phase !== GamePhase.TURN) return;
+
+    const player1 = gameState.players.player1;
+    const player2 = gameState.players.player2;
+
+    // If it's player2's (AI) turn and they haven't completed it
+    if (player2 && !player2.turnComplete && player1?.turnComplete) {
+      // AI takes its turn after a short delay
+      const timer = setTimeout(() => {
+        const aiPlayer = aiOpponent.executeTurn(player2, player1);
+        const updatedState = {
+          ...gameState,
+          players: {
+            ...gameState.players,
+            player2: aiPlayer
+          }
+        };
+        setGameState(updatedState);
+      }, 1000); // 1 second delay for AI "thinking"
+
+      return () => clearTimeout(timer);
     }
-  }, []);
 
-  const handleFaceOff = useCallback(async () => {
-    if (!gameId || !gameState) return;
+    // If both players are done, trigger face-off
+    if (player1?.turnComplete && player2?.turnComplete) {
+      const timer = setTimeout(() => {
+        const faceOffState = performFaceOff(gameState);
+        setGameState(faceOffState);
+      }, 500);
 
-    const updatedState = performFaceOff(gameState);
-    await updateState(updatedState);
-  }, [gameId, gameState, updateState]);
-
-  // Handle game state changes
-  useEffect(() => {
-    if (!gameState || !playerId || !gameId) return;
-
-    // Auto-advance phases
-    if (gameState.phase === GamePhase.TURN && bothPlayersReady(gameState)) {
-      // Both players ready, trigger face-off
-      handleFaceOff();
+      return () => clearTimeout(timer);
     }
-  }, [gameState, playerId, gameId, handleFaceOff]);
+  }, [gameState, aiOpponent]);
 
-  const handleCreateGame = async () => {
+  const handleStartGame = () => {
     if (!playerName.trim()) {
       alert('Please enter your name');
       return;
     }
 
-    try {
-      const newGameId = await createGame();
-      const initialState = createGameState(newGameId);
-      await createGameRoom(newGameId, initialState);
-      setGameId(newGameId);
-    } catch (error) {
-      console.error('Failed to create game:', error);
-      alert('Failed to create game. Please check Firebase configuration.');
-    }
+    // Create a new game state
+    const newGameState = createGameState('local-game');
+    setGameState(newGameState);
   };
 
-  const handleJoinGame = async () => {
-    if (!playerName.trim()) {
-      alert('Please enter your name');
-      return;
-    }
-    if (!joiningGameId.trim()) {
-      alert('Please enter a game ID');
-      return;
-    }
-
-    setGameId(joiningGameId);
-  };
-
-  const handleDeckComplete = async (completedDeck: PlayerDeck) => {
-    if (!gameId || !playerId) return;
+  const handleDeckComplete = (completedDeck: PlayerDeck) => {
+    if (!gameState) return;
 
     setPlayerDeck(completedDeck);
-    const player = initializePlayer(playerId, playerName, completedDeck);
-    await updatePlayer(playerId, player);
     
-    // Check if both players are ready
-    const currentState = gameState;
-    if (currentState) {
-      const otherPlayerId = playerId === 'player1' ? 'player2' : 'player1';
-      const otherPlayer = currentState.players[otherPlayerId];
-      
-      if (otherPlayer?.ready) {
-        // Both players ready, move to mulligan phase
-        await updateState({ phase: GamePhase.MULLIGAN });
-      } else {
-        // Mark this player as ready
-        await updatePlayer(playerId, { ...player, ready: true });
+    // Initialize human player
+    const humanPlayer = initializePlayer('player1', playerName, completedDeck);
+    
+    // Initialize AI player with default deck
+    const aiDeck = aiOpponent.createAIDeck();
+    const aiPlayer = initializePlayer('player2', aiOpponent.getName(), aiDeck);
+
+    // Update game state
+    const updatedState = {
+      ...gameState,
+      phase: GamePhase.MULLIGAN,
+      players: {
+        player1: humanPlayer,
+        player2: aiPlayer
       }
-    }
+    };
+
+    setGameState(updatedState);
+    setShowMulligan(true);
   };
 
-  const handleMulligan = async () => {
-    if (!gameId || !playerId || !playerDeck || mulliganCards.length === 0) return;
+  const handleMulligan = () => {
+    if (!gameState || mulliganCards.length === 0) return;
 
-    const currentPlayer = gameState?.players[playerId];
-    if (!currentPlayer) return;
+    const player1 = gameState.players.player1;
+    if (!player1) return;
 
-    const updatedPlayer = performMulligan(currentPlayer, mulliganCards);
-    await updatePlayer(playerId, updatedPlayer);
+    // Human player mulligan
+    const updatedPlayer1 = performMulligan(player1, mulliganCards);
+    
+    // AI mulligan (automatic)
+    const player2 = gameState.players.player2;
+    if (!player2) return;
+    
+    const aiMulliganCards = aiOpponent.decideMulligan(player2);
+    const updatedPlayer2 = aiMulliganCards.length > 0 
+      ? performMulligan(player2, aiMulliganCards)
+      : { ...player2, ready: true };
+
     setMulliganCards([]);
     setShowMulligan(false);
 
-    // Mark mulligan complete
-    await updatePlayer(playerId, { ...updatedPlayer, ready: true });
-
-    // Check if both players done with mulligan
-    const currentState = gameState;
-    if (currentState) {
-      const otherPlayerId = playerId === 'player1' ? 'player2' : 'player1';
-      const otherPlayer = currentState.players[otherPlayerId];
-      
-      if (otherPlayer?.ready) {
-        // Both ready, move to coin flip
-        const coinResult = flipCoin();
-        await updateState(setFirstPlayer(currentState, coinResult));
+    // Move to coin flip
+    const coinResult = flipCoin();
+    const updatedState = setFirstPlayer({
+      ...gameState,
+      players: {
+        player1: { ...updatedPlayer1, ready: true },
+        player2: updatedPlayer2
       }
-    }
+    }, coinResult);
+
+    setGameState(updatedState);
   };
 
-  const handleSkipMulligan = async () => {
-    if (!gameId || !playerId) return;
+  const handleSkipMulligan = () => {
+    if (!gameState) return;
 
-    const currentPlayer = gameState?.players[playerId];
-    if (!currentPlayer) return;
+    const player1 = gameState.players.player1;
+    const player2 = gameState.players.player2;
+    if (!player1 || !player2) return;
 
-    await updatePlayer(playerId, { ...currentPlayer, ready: true });
+    // AI mulligan (automatic)
+    const aiMulliganCards = aiOpponent.decideMulligan(player2);
+    const updatedPlayer2 = aiMulliganCards.length > 0 
+      ? performMulligan(player2, aiMulliganCards)
+      : { ...player2, ready: true };
 
-    // Check if both players done
-    const currentState = gameState;
-    if (currentState) {
-      const otherPlayerId = playerId === 'player1' ? 'player2' : 'player1';
-      const otherPlayer = currentState.players[otherPlayerId];
-      
-      if (otherPlayer?.ready) {
-        const coinResult = flipCoin();
-        await updateState(setFirstPlayer(currentState, coinResult));
+    // Move to coin flip
+    const coinResult = flipCoin();
+    const updatedState = setFirstPlayer({
+      ...gameState,
+      players: {
+        player1: { ...player1, ready: true },
+        player2: updatedPlayer2
       }
-    }
+    }, coinResult);
+
+    setGameState(updatedState);
+    setShowMulligan(false);
   };
 
-  const handleCardPlay = async (cardId: string) => {
-    if (!gameId || !playerId || !gameState) return;
+  const handleCardPlay = (cardId: string) => {
+    if (!gameState) return;
 
-    const currentPlayer = gameState.players[playerId];
-    if (!currentPlayer || currentPlayer.turnComplete) return;
+    const player1 = gameState.players.player1;
+    if (!player1 || player1.turnComplete) return;
 
-    const updatedPlayer = playCard(currentPlayer, cardId);
-    await updatePlayer(playerId, updatedPlayer);
+    const card = getCardById(cardId);
+    if (!card) return;
+
+    let targetType: 'meal' | 'staff' | 'support' | 'event' | undefined;
+    if (card.type === CardType.MEAL) targetType = 'meal';
+    else if (card.type === CardType.STAFF) targetType = 'staff';
+    else if (card.type === CardType.SUPPORT) targetType = 'support';
+    else if (card.type === CardType.EVENT) targetType = 'event';
+
+    const updatedPlayer1 = playCard(player1, cardId, targetType);
+    
+    setGameState({
+      ...gameState,
+      players: {
+        ...gameState.players,
+        player1: updatedPlayer1
+      }
+    });
   };
 
-  const handleEndTurn = async () => {
-    if (!gameId || !playerId || !gameState) return;
+  const handleEndTurn = () => {
+    if (!gameState) return;
 
-    const currentPlayer = gameState.players[playerId];
-    if (!currentPlayer) return;
+    const player1 = gameState.players.player1;
+    if (!player1) return;
 
-    const updatedPlayer = completeTurn(currentPlayer);
-    await updatePlayer(playerId, updatedPlayer);
+    const updatedPlayer1 = completeTurn(player1);
+    
+    setGameState({
+      ...gameState,
+      players: {
+        ...gameState.players,
+        player1: updatedPlayer1
+      }
+    });
   };
 
-  const handleNextRound = async () => {
-    if (!gameId || !gameState) return;
+  const handleNextRound = () => {
+    if (!gameState) return;
 
     const resetState = resetTurnStatus(gameState);
     const newState = advanceToNextRound(resetState);
-    await updateState(newState);
+    setGameState(newState);
   };
 
-  // Render based on game phase
-  if (!gameId) {
+  // Initial screen - enter name and start
+  if (!gameState) {
     return (
       <div className="App">
         <div className="lobby-screen">
@@ -206,52 +227,14 @@ function App() {
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               className="name-input"
+              onKeyPress={(e) => e.key === 'Enter' && handleStartGame()}
             />
             <div className="lobby-actions">
-              <button onClick={handleCreateGame} className="lobby-button">
-                Create New Game
+              <button onClick={handleStartGame} className="lobby-button">
+                Start Game vs AI
               </button>
-              <div className="join-section">
-                <input
-                  type="text"
-                  placeholder="Enter Game ID"
-                  value={joiningGameId}
-                  onChange={(e) => setJoiningGameId(e.target.value)}
-                  className="game-id-input"
-                />
-                <button onClick={handleJoinGame} className="lobby-button">
-                  Join Game
-                </button>
-              </div>
             </div>
-            {gameId && (
-              <div className="game-id-display">
-                <p>Game ID: <strong>{gameId}</strong></p>
-                <p>Share this ID with your opponent!</p>
-              </div>
-            )}
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="App">
-        <div className="loading-screen">
-          <h2>Loading game...</h2>
-        </div>
-      </div>
-    );
-  }
-
-  if (!gameState) {
-    return (
-      <div className="App">
-        <div className="error-screen">
-          <h2>Game not found</h2>
-          <button onClick={() => setGameId(null)}>Back to Lobby</button>
         </div>
       </div>
     );
@@ -259,8 +242,8 @@ function App() {
 
   // Deck building phase
   if (gameState.phase === GamePhase.LOBBY || gameState.phase === GamePhase.DECK_BUILDING) {
-    const currentPlayer = gameState.players[playerId!];
-    if (!currentPlayer || !currentPlayer.deck || currentPlayer.deck.length === 0) {
+    const player1 = gameState.players.player1;
+    if (!player1 || !player1.deck || player1.deck.length === 0) {
       return (
         <div className="App">
           <div className="deck-building-screen">
@@ -276,36 +259,32 @@ function App() {
   }
 
   // Mulligan phase
-  if (gameState.phase === GamePhase.MULLIGAN && !showMulligan) {
-    const currentPlayer = gameState.players[playerId!];
-    if (currentPlayer && !currentPlayer.ready) {
-      setShowMulligan(true);
-    }
-  }
-
-  if (showMulligan && gameState.phase === GamePhase.MULLIGAN) {
-    const currentPlayer = gameState.players[playerId!];
+  if (gameState.phase === GamePhase.MULLIGAN && showMulligan) {
+    const player1 = gameState.players.player1;
     return (
       <div className="App">
         <div className="mulligan-screen">
           <h2>Mulligan Phase</h2>
           <p>Select cards to mulligan (or skip)</p>
           <div className="mulligan-hand">
-            {currentPlayer?.hand.map(cardId => (
-              <button
-                key={cardId}
-                className={`mulligan-card ${mulliganCards.includes(cardId) ? 'selected' : ''}`}
-                onClick={() => {
-                  if (mulliganCards.includes(cardId)) {
-                    setMulliganCards(mulliganCards.filter(id => id !== cardId));
-                  } else {
-                    setMulliganCards([...mulliganCards, cardId]);
-                  }
-                }}
-              >
-                {cardId}
-              </button>
-            ))}
+            {player1?.hand.map(cardId => {
+              const card = getCardById(cardId);
+              return (
+                <button
+                  key={cardId}
+                  className={`mulligan-card ${mulliganCards.includes(cardId) ? 'selected' : ''}`}
+                  onClick={() => {
+                    if (mulliganCards.includes(cardId)) {
+                      setMulliganCards(mulliganCards.filter(id => id !== cardId));
+                    } else {
+                      setMulliganCards([...mulliganCards, cardId]);
+                    }
+                  }}
+                >
+                  {card?.name || cardId}
+                </button>
+              );
+            })}
           </div>
           <div className="mulligan-actions">
             <button onClick={handleMulligan} disabled={mulliganCards.length === 0}>
@@ -327,7 +306,11 @@ function App() {
           {gameState.coinFlipResult && (
             <div className="coin-result">
               <p>Result: {gameState.coinFlipResult}</p>
-              <p>First Player: {gameState.firstPlayer}</p>
+              <p>First Player: {gameState.firstPlayer === 'player1' ? playerName : aiOpponent.getName()}</p>
+              <button onClick={() => {
+                const newState = startRound(gameState);
+                setGameState(newState);
+              }}>Start First Round</button>
             </div>
           )}
         </div>
@@ -346,14 +329,14 @@ function App() {
     // Start round if needed
     if (gameState.phase === GamePhase.ROUND_START) {
       const newState = startRound(gameState);
-      updateState(newState);
+      setGameState(newState);
     }
 
     return (
       <div className="App">
         <GameBoard
           gameState={gameState}
-          currentPlayerId={playerId!}
+          currentPlayerId="player1"
           onCardPlay={handleCardPlay}
           onEndTurn={handleEndTurn}
           onNextRound={handleNextRound}
