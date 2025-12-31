@@ -5,16 +5,43 @@ import { GameState } from '../game/GameEngine';
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://your-project.supabase.co';
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'your-anon-key';
 
-// Initialize Supabase client
-let supabase: SupabaseClient;
+// Initialize Supabase client lazily - only create when needed
+// This prevents initialization errors from blocking app load
+let supabaseInstance: SupabaseClient | null = null;
 
-try {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
-} catch (error) {
-  console.error('Supabase initialization error:', error);
-  // Create a dummy client to prevent crashes
-  supabase = createClient('https://placeholder.supabase.co', 'placeholder-key');
+function getSupabaseClient(): SupabaseClient {
+  if (!supabaseInstance) {
+    try {
+      // Only initialize if we have valid credentials (not placeholder values)
+      const hasValidConfig = 
+        supabaseUrl && 
+        supabaseUrl !== 'https://your-project.supabase.co' &&
+        supabaseAnonKey && 
+        supabaseAnonKey !== 'your-anon-key';
+      
+      if (hasValidConfig) {
+        supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+      } else {
+        // Create a dummy client that won't crash but won't work
+        supabaseInstance = createClient('https://placeholder.supabase.co', 'placeholder-key');
+      }
+    } catch (error) {
+      console.warn('Supabase initialization error (non-blocking):', error);
+      // Create a dummy client to prevent crashes
+      supabaseInstance = createClient('https://placeholder.supabase.co', 'placeholder-key');
+    }
+  }
+  return supabaseInstance;
 }
+
+// Export as a getter object that looks like a client but initializes lazily
+const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    const client = getSupabaseClient();
+    const value = (client as any)[prop];
+    return typeof value === 'function' ? value.bind(client) : value;
+  }
+});
 
 export { supabase };
 
