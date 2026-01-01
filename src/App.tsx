@@ -23,22 +23,6 @@ import { Tutorial } from './components/Tutorial/Tutorial';
 import './App.css';
 
 function App() {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/2931c91c-bbcd-4816-940e-f13e29404761', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      location: 'src/App.tsx:App-function-entry',
-      message: 'App component function executing',
-      data: {},
-      timestamp: Date.now(),
-      sessionId: 'debug-session',
-      runId: 'white-page-debug',
-      hypothesisId: 'B'
-    })
-  }).catch(() => {});
-  // #endregion
-  
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [playerName, setPlayerName] = useState('');
   const [playerDeck, setPlayerDeck] = useState<PlayerDeck | null>(null);
@@ -48,22 +32,6 @@ function App() {
   const [aiOpponent] = useState<AIOpponent>(new AIOpponent('AI Chef'));
   // Current player ID - in single-player mode, always 'player1' (you are always at bottom)
   const currentPlayerId: 'player1' | 'player2' = 'player1';
-  
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/2931c91c-bbcd-4816-940e-f13e29404761', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      location: 'src/App.tsx:App-state-initialized',
-      message: 'App component state initialized',
-      data: { gameStateIsNull: gameState === null },
-      timestamp: Date.now(),
-      sessionId: 'debug-session',
-      runId: 'white-page-debug',
-      hypothesisId: 'B'
-    })
-  }).catch(() => {});
-  // #endregion
 
   // Handle AI turn automatically
   useEffect(() => {
@@ -252,38 +220,6 @@ function App() {
 
   // Initial screen - enter name and start
   if (!gameState) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/2931c91c-bbcd-4816-940e-f13e29404761', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'src/App.tsx:App-lobby-render',
-        message: 'Rendering lobby screen (no gameState)',
-        data: { showTutorial },
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        runId: 'white-page-debug',
-        hypothesisId: 'B'
-      })
-    }).catch(() => {});
-    // #endregion
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/2931c91c-bbcd-4816-940e-f13e29404761', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'src/App.tsx:App-before-return',
-        message: 'About to return JSX for lobby screen',
-        data: {},
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        runId: 'white-page-debug',
-        hypothesisId: 'C'
-      })
-    }).catch(() => {});
-    // #endregion
-    
     return (
       <div className="App">
         {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
