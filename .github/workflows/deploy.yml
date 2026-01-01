@@ -40,19 +40,21 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Copy build files to root
+      - name: Prepare deployment artifact
         run: |
-          # Copy the built index.html to root (has correct paths for GitHub Pages)
-          cp build/index.html ./index.html
-          # Copy static assets to root/static
-          cp -r build/static ./static
+          # Create a clean deployment directory
+          mkdir -p deploy
+          # Copy the built index.html
+          cp build/index.html deploy/index.html
+          # Copy static assets preserving directory structure
+          cp -r build/static deploy/static
           # Copy asset manifest if it exists
-          cp build/asset-manifest.json ./asset-manifest.json 2>/dev/null || true
+          cp build/asset-manifest.json deploy/asset-manifest.json 2>/dev/null || true
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: './deploy'
 
   deploy:
     environment:

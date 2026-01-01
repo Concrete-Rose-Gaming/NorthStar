@@ -1,89 +1,57 @@
-# How to Run the Chef Card Game
+# How to Play Chef Card Game
 
-## Quick Start (Development)
+## 🎮 For Players (Once Deployed)
 
-1. **Set up Supabase credentials** in `.env` file:
-   ```env
-   REACT_APP_SUPABASE_URL=https://your-actual-project.supabase.co
-   REACT_APP_SUPABASE_ANON_KEY=your-actual-anon-key
-   ```
+**Just visit the website and play!** No setup needed.
 
-2. **Start the development server**:
-   ```bash
-   npm start
-   ```
+1. Go to: `https://concrete-rose-gaming.github.io/NorthStar`
+2. Enter your name
+3. Click "🤖 Start Game vs AI"
+4. Play!
 
-3. **Open your browser** to `http://localhost:3000`
+The game runs entirely in your browser - no accounts, no backend, no setup!
 
-The app will automatically reload when you make changes!
+## 🛠️ For Developers
 
-## Production Build (For Deployment)
+### Preferred: Development Mode (`npm start`)
 
-1. **Build the app**:
-   ```bash
-   npm run build
-   ```
+**This is what you should use for testing and development:**
 
-2. **The built files** will be in the `build/` folder. These are static HTML/CSS/JS files that can be served by any web server.
-
-3. **To test the production build locally**:
-   ```bash
-   # Install a simple server (one-time)
-   npm install -g serve
-   
-   # Serve the build folder
-   serve -s build
-   ```
-   Then open `http://localhost:3000` (or the port shown)
-
-## Understanding React Apps
-
-**Important**: You cannot just open `index.html` directly in a browser! React apps need to be:
-- **Built** (compiled from TypeScript/JSX to regular JavaScript)
-- **Served** by a web server (even a simple one)
-
-### Why?
-
-- React uses JSX (JavaScript + HTML) which browsers don't understand directly
-- The code needs to be compiled/bundled
-- Environment variables need to be injected at build time
-- The app uses modern JavaScript features that need transpilation
-
-### The `public/index.html` file
-
-This is just a **template**. React injects the compiled JavaScript into it when you build or run the dev server. The actual app code is in `src/`.
-
-## Deployment Options
-
-### Option 1: GitHub Pages (Automatic)
-- Push to GitHub
-- The GitHub Actions workflow will automatically build and deploy
-- Your game will be live at `https://yourusername.github.io/NorthStar`
-
-### Option 2: Manual Build & Deploy
-```bash
-npm run build
-# Then upload the contents of the build/ folder to any static hosting
-```
-
-### Option 3: Local Development
 ```bash
 npm start
-# Opens http://localhost:3000 automatically
 ```
 
-## Troubleshooting
+This will:
+- Start a development server at `http://localhost:3000`
+- Automatically reload when you make changes
+- Show helpful error messages
+- Use the latest code from `src/` folder
 
-### CORS Error
-- Make sure your `.env` file has the correct Supabase URL
-- Make sure you've run the SQL migration in Supabase
-- Make sure Realtime is enabled for your tables
+**This is the "source of truth"** - what you see here is what gets built and deployed.
 
-### "Cannot find module" errors
-- Run `npm install` again
-- Make sure you're in the project directory
+### Production Build (`npm run build`)
 
-### Port already in use
-- Kill the process using port 3000, or
-- Set a different port: `PORT=3001 npm start`
+This creates optimized files in the `build/` folder for deployment:
 
+```bash
+npm run build
+```
+
+**Note:** The root `index.html` file is just a placeholder. The workflow automatically copies the built `index.html` (with correct file hashes) during deployment.
+
+## 📝 Important Notes
+
+- **`npm start`** = Development mode (use this for testing)
+- **`npm run build`** = Production build (for deployment)
+- **Root `index.html`** = Placeholder (gets overwritten during deployment)
+- **GitHub Pages** = Uses the built files from `build/` folder
+
+## 🚀 Deployment
+
+When you push to GitHub:
+1. GitHub Actions runs `npm run build`
+2. Copies built files to root
+3. Deploys to GitHub Pages
+4. Game is live!
+
+The deployed version will match what you see with `npm start` (just optimized for production).
