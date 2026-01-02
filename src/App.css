@@ -19,6 +19,111 @@
   color: white;
 }
 
+.lobby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 20px;
+}
+
+.lobby-header h1 {
+  font-size: 3rem;
+  margin: 0;
+}
+
+.lobby-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-info {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+}
+
+.deck-manager-button,
+.login-button-header,
+.logout-button {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.deck-manager-button:hover,
+.login-button-header:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.logout-button {
+  background: rgba(244, 67, 54, 0.2);
+  border-color: rgba(244, 67, 54, 0.5);
+}
+
+.logout-button:hover {
+  background: rgba(244, 67, 54, 0.3);
+  border-color: rgba(244, 67, 54, 0.7);
+}
+
+.deck-building-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 20px;
+}
+
+.deck-building-header h2 {
+  margin: 0;
+}
+
+.deck-building-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.back-button {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.deck-status {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(76, 175, 80, 0.2);
+  border: 2px solid #4CAF50;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.deck-status-text {
+  margin: 0;
+  color: #4CAF50;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .lobby-screen h1 {
   font-size: 3rem;
   margin-bottom: 20px;

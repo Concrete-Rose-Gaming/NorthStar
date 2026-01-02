@@ -2,8 +2,20 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { GameState } from '../game/GameEngine';
 
 // Supabase configuration
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || '';
+
+// Check if Supabase is properly configured
+export const isSupabaseConfigured = (): boolean => {
+  return !!(
+    supabaseUrl && 
+    supabaseUrl !== '' &&
+    supabaseUrl !== 'https://your-project.supabase.co' &&
+    supabaseAnonKey && 
+    supabaseAnonKey !== '' &&
+    supabaseAnonKey !== 'your-anon-key'
+  );
+};
 
 // Initialize Supabase client lazily - only create when needed
 // This prevents initialization errors from blocking app load
@@ -12,23 +24,24 @@ let supabaseInstance: SupabaseClient | null = null;
 function getSupabaseClient(): SupabaseClient {
   if (!supabaseInstance) {
     try {
-      // Only initialize if we have valid credentials (not placeholder values)
-      const hasValidConfig = 
-        supabaseUrl && 
-        supabaseUrl !== 'https://your-project.supabase.co' &&
-        supabaseAnonKey && 
-        supabaseAnonKey !== 'your-anon-key';
-      
-      if (hasValidConfig) {
+      // Only initialize if we have valid credentials
+      if (isSupabaseConfigured()) {
         supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+        console.log('Supabase client initialized successfully');
       } else {
-        // Create a dummy client that won't crash but won't work
-        supabaseInstance = createClient('https://placeholder.supabase.co', 'placeholder-key');
+        // Create a no-op client that returns errors instead of making requests
+        // This prevents CORS errors from placeholder URLs
+        console.warn('Supabase not configured. Please set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY in your .env file');
+        // Create a client with empty strings - it will fail gracefully
+        supabaseInstance = createClient(
+          supabaseUrl || 'https://not-configured.supabase.co',
+          supabaseAnonKey || 'not-configured'
+        );
       }
     } catch (error) {
       console.warn('Supabase initialization error (non-blocking):', error);
-      // Create a dummy client to prevent crashes
-      supabaseInstance = createClient('https://placeholder.supabase.co', 'placeholder-key');
+      // Create a minimal client that will fail gracefully
+      supabaseInstance = createClient('https://not-configured.supabase.co', 'not-configured');
     }
   }
   return supabaseInstance;
@@ -48,7 +61,11 @@ export { supabase };
 // Database table names
 export const TABLES = {
   GAMES: 'games',
-  PLAYERS: 'players'
+  PLAYERS: 'players',
+  PROFILES: 'profiles',
+  USER_DECKS: 'user_decks',
+  CARDS: 'cards',
+  CARD_STATS: 'card_stats'
 };
 
 /**

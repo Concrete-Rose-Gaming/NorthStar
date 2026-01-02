@@ -20,18 +20,32 @@ import { PlayerDeck } from './game/DeckManager';
 import { AIOpponent } from './game/AIOpponent';
 import { getCardById, CardType } from './game/CardTypes';
 import { Tutorial } from './components/Tutorial/Tutorial';
+import { Login } from './components/Login/Login';
+import { DeckManager } from './components/DeckManager/DeckManager';
+import { AuthUser, getCurrentUser, onAuthStateChange, signOut } from './supabase/auth';
 import './App.css';
 
 function App() {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showDeckManager, setShowDeckManager] = useState(false);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [playerName, setPlayerName] = useState('');
   const [playerDeck, setPlayerDeck] = useState<PlayerDeck | null>(null);
   const [mulliganCards, setMulliganCards] = useState<string[]>([]);
   const [showMulligan, setShowMulligan] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showDeckBuilder, setShowDeckBuilder] = useState(false);
   const [aiOpponent] = useState<AIOpponent>(new AIOpponent('AI Chef'));
   // Current player ID - in single-player mode, always 'player1' (you are always at bottom)
   const currentPlayerId: 'player1' | 'player2' = 'player1';
+
+  // Check auth state on mount
+  useEffect(() => {
+    getCurrentUser().then(setUser);
+    const unsubscribe = onAuthStateChange(setUser);
+    return () => unsubscribe();
+  }, []);
 
   // Handle AI turn automatically
   useEffect(() => {
@@ -75,18 +89,16 @@ function App() {
       return;
     }
 
+    if (!playerDeck) {
+      alert('Please build a deck first');
+      return;
+    }
+
     // Create a new game state
     const newGameState = createGameState('local-game');
-    setGameState(newGameState);
-  };
-
-  const handleDeckComplete = (completedDeck: PlayerDeck) => {
-    if (!gameState) return;
-
-    setPlayerDeck(completedDeck);
     
     // Player 1 is always the human player (will be displayed at bottom)
-    const humanPlayer = initializePlayer('player1', playerName, completedDeck);
+    const humanPlayer = initializePlayer('player1', playerName, playerDeck);
     
     // Player 2 is always the AI opponent (will be displayed at top)
     const aiDeck = aiOpponent.createAIDeck();
@@ -94,7 +106,7 @@ function App() {
 
     // Update game state
     const updatedState = {
-      ...gameState,
+      ...newGameState,
       phase: GamePhase.MULLIGAN,
       players: {
         player1: humanPlayer,
@@ -104,6 +116,11 @@ function App() {
 
     setGameState(updatedState);
     setShowMulligan(true);
+  };
+
+  const handleDeckComplete = (completedDeck: PlayerDeck) => {
+    setPlayerDeck(completedDeck);
+    setShowDeckBuilder(false);
   };
 
   const handleMulligan = () => {
@@ -218,13 +235,101 @@ function App() {
     setGameState(newState);
   };
 
+  const handleLogin = (loggedInUser: AuthUser) => {
+    setUser(loggedInUser);
+    setShowLogin(false);
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    setUser(null);
+  };
+
+  const handleLoadDeck = (deck: PlayerDeck) => {
+    setPlayerDeck(deck);
+    setShowDeckManager(false);
+    setShowDeckBuilder(false);
+  };
+
+  // Show login screen if user wants to login (optional)
+  if (showLogin) {
+    return (
+      <div className="App">
+        <Login
+          onLogin={handleLogin}
+          onSkip={() => setShowLogin(false)}
+        />
+      </div>
+    );
+  }
+
+  // Show deck builder if user wants to build/edit deck
+  if (showDeckBuilder) {
+    return (
+      <div className="App">
+        {showDeckManager && user && (
+          <DeckManager
+            currentDeck={playerDeck || undefined}
+            onLoadDeck={handleLoadDeck}
+            onClose={() => setShowDeckManager(false)}
+          />
+        )}
+        <div className="deck-building-screen">
+          <div className="deck-building-header">
+            <h2>Build Your Deck</h2>
+            <div className="deck-building-actions">
+              {user && (
+                <button onClick={() => setShowDeckManager(true)} className="deck-manager-button">
+                  📚 My Decks
+                </button>
+              )}
+              <button onClick={() => setShowDeckBuilder(false)} className="back-button">
+                ← Back to Lobby
+              </button>
+            </div>
+          </div>
+          <DeckBuilder 
+            onDeckComplete={handleDeckComplete}
+            initialDeck={playerDeck || undefined}
+          />
+        </div>
+      </div>
+    );
+  }
+
   // Initial screen - enter name and start
   if (!gameState) {
     return (
       <div className="App">
         {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
+        {showDeckManager && user && (
+          <DeckManager
+            currentDeck={playerDeck || undefined}
+            onLoadDeck={handleLoadDeck}
+            onClose={() => setShowDeckManager(false)}
+          />
+        )}
         <div className="lobby-screen">
-          <h1>Chef Card Game</h1>
+          <div className="lobby-header">
+            <h1>Chef Card Game</h1>
+            <div className="lobby-user-actions">
+              {user ? (
+                <>
+                  <span className="user-info">Welcome, {user.name || user.email}!</span>
+                  <button onClick={() => setShowDeckManager(true)} className="deck-manager-button">
+                    📚 My Decks
+                  </button>
+                  <button onClick={handleLogout} className="logout-button">
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <button onClick={() => setShowLogin(true)} className="login-button-header">
+                  Sign In / Sign Up
+                </button>
+              )}
+            </div>
+          </div>
           <div className="lobby-form">
             <div className="game-mode-badge">
               <span className="badge-icon">🤖</span>
@@ -243,15 +348,33 @@ function App() {
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               className="name-input"
-              onKeyPress={(e) => e.key === 'Enter' && handleStartGame()}
+              onKeyPress={(e) => e.key === 'Enter' && playerDeck && handleStartGame()}
             />
             <div className="lobby-actions">
-              <button onClick={handleStartGame} className="lobby-button ai-button" disabled={!playerName.trim()}>
+              <button 
+                onClick={() => setShowDeckBuilder(true)} 
+                className="lobby-button"
+              >
+                🎴 Build Deck
+              </button>
+              <button 
+                onClick={handleStartGame} 
+                className="lobby-button ai-button" 
+                disabled={!playerName.trim() || !playerDeck}
+              >
                 🤖 Start Game vs AI
               </button>
             </div>
             {!playerName.trim() && (
               <p className="hint-text">Please enter your name to start</p>
+            )}
+            {!playerDeck && (
+              <p className="hint-text">Please build a deck before starting the game</p>
+            )}
+            {playerDeck && (
+              <div className="deck-status">
+                <p className="deck-status-text">✓ Deck ready ({playerDeck.mainDeck.length} cards)</p>
+              </div>
             )}
           </div>
         </div>
@@ -259,23 +382,6 @@ function App() {
     );
   }
 
-  // Deck building phase
-  if (gameState.phase === GamePhase.LOBBY || gameState.phase === GamePhase.DECK_BUILDING) {
-    const player1 = gameState.players.player1;
-    if (!player1 || !player1.deck || player1.deck.length === 0) {
-      return (
-        <div className="App">
-          <div className="deck-building-screen">
-            <h2>Build Your Deck</h2>
-            <DeckBuilder 
-              onDeckComplete={handleDeckComplete}
-              initialDeck={playerDeck || undefined}
-            />
-          </div>
-        </div>
-      );
-    }
-  }
 
   // Mulligan phase
   if (gameState.phase === GamePhase.MULLIGAN && showMulligan) {

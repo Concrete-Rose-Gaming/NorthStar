@@ -1,0 +1,244 @@
+.deck-manager-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.deck-manager-modal {
+  background: white;
+  border-radius: 12px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.deck-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid #eee;
+}
+
+.deck-manager-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+.deck-manager-error {
+  background: #fee;
+  color: #c33;
+  padding: 12px 20px;
+  margin: 0 20px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.deck-manager-tabs {
+  display: flex;
+  border-bottom: 2px solid #eee;
+  padding: 0 20px;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s;
+}
+
+.tab-button:hover {
+  color: #333;
+}
+
+.tab-button.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  font-weight: 600;
+}
+
+.deck-manager-content {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.save-section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #eee;
+}
+
+.save-dialog {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.save-dialog input {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 16px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.save-dialog input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.save-dialog-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-button.primary {
+  background: #667eea;
+  color: white;
+}
+
+.action-button.primary:hover {
+  background: #5568d3;
+}
+
+.action-button.secondary {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.action-button.secondary:hover {
+  background: #d0d0d0;
+}
+
+.action-button.small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.action-button.danger {
+  background: #f44336;
+  color: white;
+}
+
+.action-button.danger:hover {
+  background: #d32f2f;
+}
+
+.decks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.deck-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.deck-info h3 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.deck-meta {
+  margin: 0;
+  color: #666;
+  font-size: 12px;
+}
+
+.deck-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.import-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.import-section label {
+  font-weight: 600;
+  color: #333;
+}
+
+.import-section textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.import-section textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.loading,
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
