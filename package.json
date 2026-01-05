@@ -23,6 +23,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "postbuild": "node scripts/sync-index-html.js",
+    "sync-html": "node scripts/sync-index-html.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
