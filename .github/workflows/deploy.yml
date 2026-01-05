@@ -52,6 +52,12 @@ jobs:
           cp build/asset-manifest.json deploy/asset-manifest.json 2>/dev/null || true
           # Create .nojekyll to ensure GitHub Pages serves all files correctly
           touch deploy/.nojekyll
+          # Verify files are in place
+          echo "Deployment structure:"
+          find deploy -type f | head -10
+          echo "Verifying static files exist:"
+          test -f deploy/static/js/main.*.js && echo "✓ JS file found" || echo "✗ JS file missing"
+          test -f deploy/static/css/main.*.css && echo "✓ CSS file found" || echo "✗ CSS file missing"
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
