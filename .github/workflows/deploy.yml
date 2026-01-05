@@ -42,27 +42,18 @@ jobs:
 
       - name: Prepare deployment artifact
         run: |
-          # Create a clean deployment directory
-          mkdir -p deploy
-          # Copy the built index.html
-          cp build/index.html deploy/index.html
-          # Copy static assets preserving directory structure
-          cp -r build/static deploy/static
+          # Copy the built index.html to root (overwrites existing)
+          cp build/index.html index.html
+          # Remove old static directory if it exists and copy new one
+          rm -rf static
+          cp -r build/static static
           # Copy asset manifest if it exists
-          cp build/asset-manifest.json deploy/asset-manifest.json 2>/dev/null || true
-          # Create .nojekyll to ensure GitHub Pages serves all files correctly
-          touch deploy/.nojekyll
-          # Verify files are in place
-          echo "Deployment structure:"
-          find deploy -type f | head -10
-          echo "Verifying static files exist:"
-          test -f deploy/static/js/main.*.js && echo "✓ JS file found" || echo "✗ JS file missing"
-          test -f deploy/static/css/main.*.css && echo "✓ CSS file found" || echo "✗ CSS file missing"
+          cp build/asset-manifest.json asset-manifest.json 2>/dev/null || true
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './deploy'
+          path: '.'
 
   deploy:
     environment:
