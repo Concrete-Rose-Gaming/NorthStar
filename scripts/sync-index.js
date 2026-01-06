@@ -251,4 +251,3 @@ safeLog({
 // #endregion
 
 console.log('✓ Synced all index.html files with current build references');
-

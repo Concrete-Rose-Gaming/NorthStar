@@ -25,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
           cache: 'npm'
 
       - name: Install dependencies
@@ -42,19 +42,19 @@ jobs:
 
       - name: Prepare deployment artifact
         run: |
-          # Run sync script to create root/index.html with relative paths
-          # (postbuild already ran, but we ensure it's correct)
-          node scripts/sync-index.js
-          # Remove old static directory if it exists and copy new one
-          rm -rf static
-          cp -r build/static static
+          # Create a clean deployment directory
+          mkdir -p deploy
+          # Copy the built index.html
+          cp build/index.html deploy/index.html
+          # Copy static assets preserving directory structure
+          cp -r build/static deploy/static
           # Copy asset manifest if it exists
-          cp build/asset-manifest.json asset-manifest.json 2>/dev/null || true
+          cp build/asset-manifest.json deploy/asset-manifest.json 2>/dev/null || true
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: './deploy'
 
   deploy:
     environment:
