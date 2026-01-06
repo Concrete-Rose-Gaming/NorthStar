@@ -42,8 +42,9 @@ jobs:
 
       - name: Prepare deployment artifact
         run: |
-          # Copy the built index.html to root (overwrites existing)
-          cp build/index.html index.html
+          # Run sync script to create root/index.html with relative paths
+          # (postbuild already ran, but we ensure it's correct)
+          node scripts/sync-index.js
           # Remove old static directory if it exists and copy new one
           rm -rf static
           cp -r build/static static
