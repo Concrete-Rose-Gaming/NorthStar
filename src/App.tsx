@@ -26,6 +26,10 @@ import { AuthUser, getCurrentUser, onAuthStateChange, signOut } from './supabase
 import './App.css';
 
 function App() {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/App.tsx:App-function-entry',message:'App component function executing',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'white-page-debug',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+  
   const [user, setUser] = useState<AuthUser | null>(null);
   const [showLogin, setShowLogin] = useState(false);
   const [showDeckManager, setShowDeckManager] = useState(false);
@@ -35,6 +39,10 @@ function App() {
   const [mulliganCards, setMulliganCards] = useState<string[]>([]);
   const [showMulligan, setShowMulligan] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/App.tsx:App-state-initialized',message:'App component state initialized',data:{gameStateIsNull:gameState===null},timestamp:Date.now(),sessionId:'debug-session',runId:'white-page-debug',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   const [showDeckBuilder, setShowDeckBuilder] = useState(false);
   const [aiOpponent] = useState<AIOpponent>(new AIOpponent('AI Chef'));
   // Current player ID - in single-player mode, always 'player1' (you are always at bottom)
@@ -299,6 +307,12 @@ function App() {
 
   // Initial screen - enter name and start
   if (!gameState) {
+    // #region agent log
+    const computedStyle = window.getComputedStyle(document.body);
+    const rootElement = document.getElementById('root');
+    const rootComputedStyle = rootElement ? window.getComputedStyle(rootElement) : null;
+    fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/App.tsx:App-lobby-render',message:'Rendering lobby screen (no gameState)',data:{showTutorial,bodyBg:computedStyle.background,rootExists:!!rootElement,rootDisplay:rootComputedStyle?.display,rootMinHeight:rootComputedStyle?.minHeight},timestamp:Date.now(),sessionId:'debug-session',runId:'white-page-debug',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     return (
       <div className="App">
         {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
