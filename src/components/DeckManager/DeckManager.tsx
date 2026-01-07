@@ -42,7 +42,7 @@ export function DeckManager({ currentDeck, onLoadDeck, onClose }: DeckManagerPro
     }
 
     setError(null);
-    const { deck, error: saveError } = await saveDeck(saveName.trim(), currentDeck, editingDeckId || undefined);
+    const { error: saveError } = await saveDeck(saveName.trim(), currentDeck, editingDeckId || undefined);
     if (saveError) {
       setError(saveError.message);
     } else {
@@ -86,7 +86,7 @@ export function DeckManager({ currentDeck, onLoadDeck, onClose }: DeckManagerPro
       return;
     }
 
-    const { name, deck, error: importError } = importDeck(importText);
+    const { deck, error: importError } = importDeck(importText);
     if (importError) {
       setError(importError.message);
     } else {

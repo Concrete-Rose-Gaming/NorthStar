@@ -1,4 +1,4 @@
-import { Card, getCardById, ChefCard, RestaurantCard, MealCard, StaffCard, SupportCard, EventCard } from './CardTypes';
+import { getCardById, ChefCard, RestaurantCard, MealCard, StaffCard, SupportCard, EventCard } from './CardTypes';
 
 // Player's board state during a round
 export interface PlayerBoardState {

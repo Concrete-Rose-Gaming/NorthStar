@@ -1,4 +1,4 @@
-import { Card, CardType, CARD_DEFINITIONS, getCardById, isValidCardId } from './CardTypes';
+import { CardType, CARD_DEFINITIONS, getCardById, isValidCardId } from './CardTypes';
 
 // Deck is represented as an array of card IDs (strings)
 export type Deck = string[];

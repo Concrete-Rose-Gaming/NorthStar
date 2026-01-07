@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card } from '../Card/Card';
 import { CardType, CARD_DEFINITIONS, getCardsByType } from '../../game/CardTypes';
-import { PlayerDeck, validatePlayerDeck, validateMainDeck, getDeckStats } from '../../game/DeckManager';
+import { PlayerDeck, validatePlayerDeck, getDeckStats } from '../../game/DeckManager';
 import './DeckBuilder.css';
 
 interface DeckBuilderProps {
@@ -62,7 +62,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
     }
   };
 
-  const validateDeck = () => {
+  const validateDeck = useCallback(() => {
     const playerDeck: PlayerDeck = {
       mainDeck,
       chefCardId,
@@ -70,7 +70,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
     };
     const result = validatePlayerDeck(playerDeck);
     setValidationResult(result);
-  };
+  }, [mainDeck, chefCardId, restaurantCardIds]);
 
   const getCardCount = (cardId: string) => {
     return mainDeck.filter(id => id === cardId).length;
@@ -110,7 +110,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
 
   React.useEffect(() => {
     validateDeck();
-  }, [chefCardId, restaurantCardIds, mainDeck]);
+  }, [validateDeck]);
 
   return (
     <div className="deck-builder">
