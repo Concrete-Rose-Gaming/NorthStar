@@ -1,4 +1,4 @@
-import { Card, CardType, getCardById, ChefCard, RestaurantCard, MealCard, StaffCard, SupportCard, EventCard } from './CardTypes';
+import { Card, getCardById, ChefCard, RestaurantCard, MealCard, StaffCard, SupportCard, EventCard } from './CardTypes';
 
 // Player's board state during a round
 export interface PlayerBoardState {
@@ -164,7 +164,6 @@ function checkRestaurantAbility(
   stats: { mealCount: number; staffCount: number }
 ): number {
   const condition = restaurant.abilityCondition.toLowerCase();
-  const ability = restaurant.ability.toLowerCase();
 
   // Check various conditions
   if (condition.includes('play 3 or more meal cards')) {
