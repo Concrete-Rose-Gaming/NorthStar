@@ -2,7 +2,7 @@
   "name": "chef-card-game",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/NorthStar",
+  "homepage": "https://concrete-rose-gaming.github.io/NorthStar",
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
     "react": "^18.2.0",
@@ -17,13 +17,12 @@
     "eslint": "^8.55.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "react-scripts": "^5.0.1",
+    "react-scripts": "5.0.1",
     "typescript": "^4.9.5"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "postbuild": "node scripts/sync-index.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

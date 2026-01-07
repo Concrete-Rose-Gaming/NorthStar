@@ -1,5 +1,5 @@
 import { Deck, PlayerDeck, shuffleDeck, drawCards, selectRandomRestaurant } from './DeckManager';
-import { calculateScore, compareScores, PlayerBoardState, ScoreResult } from './Scoring';
+import { calculateScore, compareScores, PlayerBoardState } from './Scoring';
 
 // Game phase
 export enum GamePhase {
