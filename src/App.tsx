@@ -19,7 +19,7 @@ import {
 import { PlayerDeck } from './game/DeckManager';
 import { AIOpponent } from './game/AIOpponent';
 import { getCardById, CardType } from './game/CardTypes';
-import { loadCardsFromSupabase, areCardsLoaded } from './game/CardLoader';
+import { loadCardsFromSupabase } from './game/CardLoader';
 import { Tutorial } from './components/Tutorial/Tutorial';
 import { Login } from './components/Login/Login';
 import { DeckManager } from './components/DeckManager/DeckManager';

@@ -5,7 +5,6 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 
 // #region agent log
-const logPath = '/home/kt/Desktop/NorthStar/.cursor/debug.log';
 fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/index.tsx:entry',message:'index.tsx script started executing',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
 // #endregion
 
