@@ -1,0 +1,186 @@
+import { getAllCards } from '../supabase/cards';
+import { Card as SupabaseCard } from '../supabase/cards';
+import { Card, CardType, CardRegistry, ChefCard, RestaurantCard, MealCard, StaffCard, SupportCard, EventCard } from './CardTypes';
+
+/**
+ * Converts a Supabase card to a game card
+ */
+function convertSupabaseCardToGameCard(supabaseCard: SupabaseCard): Card {
+  const baseCard = {
+    id: supabaseCard.code, // Use code as ID
+    name: supabaseCard.name,
+    description: supabaseCard.description,
+    type: supabaseCard.card_type as CardType
+  };
+
+  switch (supabaseCard.card_type) {
+    case 'CHEF':
+      return {
+        ...baseCard,
+        type: CardType.CHEF,
+        baseValue: supabaseCard.value || 0,
+        ability: supabaseCard.effect || '',
+        abilityDescription: supabaseCard.description // Use description as ability description for now
+      } as ChefCard;
+
+    case 'RESTAURANT':
+      // For restaurants, effect field contains the ability name
+      // abilityCondition and abilityDescription might need to be stored separately
+      // For now, we'll use description for abilityDescription
+      return {
+        ...baseCard,
+        type: CardType.RESTAURANT,
+        baseScore: supabaseCard.value || 0,
+        ability: supabaseCard.effect || '',
+        abilityCondition: '', // TODO: Add abilityCondition field to Supabase schema
+        abilityDescription: supabaseCard.description // TODO: Store separately in Supabase
+      } as RestaurantCard;
+
+    case 'MEAL':
+      return {
+        ...baseCard,
+        type: CardType.MEAL,
+        value: supabaseCard.value || 0,
+        effect: supabaseCard.effect || undefined,
+        effectDescription: supabaseCard.effect ? supabaseCard.description : undefined
+      } as MealCard;
+
+    case 'STAFF':
+      return {
+        ...baseCard,
+        type: CardType.STAFF,
+        ability: supabaseCard.effect || '',
+        abilityDescription: supabaseCard.description,
+        modifier: supabaseCard.value || undefined
+      } as StaffCard;
+
+    case 'SUPPORT':
+      return {
+        ...baseCard,
+        type: CardType.SUPPORT,
+        ability: supabaseCard.effect || '',
+        abilityDescription: supabaseCard.description,
+        duration: 'instant' as const // Default, could be stored in effect field
+      } as SupportCard;
+
+    case 'EVENT':
+      return {
+        ...baseCard,
+        type: CardType.EVENT,
+        effect: supabaseCard.effect || '',
+        effectDescription: supabaseCard.description,
+        target: 'opponent' as const // Default, could be parsed from effect
+      } as EventCard;
+
+    default:
+      throw new Error(`Unknown card type: ${supabaseCard.card_type}`);
+  }
+}
+
+/**
+ * Card registry that's populated from Supabase
+ */
+let cardRegistry: CardRegistry = {};
+let cardRegistryPromise: Promise<CardRegistry> | null = null;
+let isLoaded = false;
+
+/**
+ * Loads all cards from Supabase and populates the registry
+ */
+export async function loadCardsFromSupabase(): Promise<CardRegistry> {
+  // If already loaded, return cached registry
+  if (isLoaded) {
+    return cardRegistry;
+  }
+
+  // If loading in progress, return the same promise
+  if (cardRegistryPromise) {
+    return cardRegistryPromise;
+  }
+
+  // Start loading
+  cardRegistryPromise = (async () => {
+    try {
+      const { cards, error } = await getAllCards();
+
+      if (error) {
+        console.error('Failed to load cards from Supabase:', error);
+        // Fallback to local cards if Supabase fails
+        console.warn('Falling back to local card definitions');
+        const { CARD_DEFINITIONS } = require('./CardTypes');
+        cardRegistry = CARD_DEFINITIONS;
+        isLoaded = true;
+        return CARD_DEFINITIONS;
+      }
+
+      // Convert Supabase cards to game cards
+      const registry: CardRegistry = {};
+      for (const supabaseCard of cards) {
+        try {
+          const gameCard = convertSupabaseCardToGameCard(supabaseCard);
+          registry[gameCard.id] = gameCard;
+        } catch (err) {
+          console.error(`Failed to convert card ${supabaseCard.code}:`, err);
+        }
+      }
+
+      // If no cards were loaded from Supabase, fallback to local
+      if (Object.keys(registry).length === 0) {
+        console.warn('No cards loaded from Supabase, falling back to local definitions');
+        const { CARD_DEFINITIONS } = require('./CardTypes');
+        cardRegistry = CARD_DEFINITIONS;
+        isLoaded = true;
+        return CARD_DEFINITIONS;
+      }
+
+      cardRegistry = registry;
+      isLoaded = true;
+      console.log(`Loaded ${Object.keys(registry).length} cards from Supabase`);
+      return registry;
+    } catch (error) {
+      console.error('Error loading cards:', error);
+      // Fallback to local cards on any error
+      try {
+        const { CARD_DEFINITIONS } = require('./CardTypes');
+        cardRegistry = CARD_DEFINITIONS;
+        isLoaded = true;
+        console.warn('Using local card definitions as fallback');
+        return CARD_DEFINITIONS;
+      } catch (fallbackError) {
+        console.error('Failed to load fallback cards:', fallbackError);
+        cardRegistryPromise = null; // Reset so we can retry
+        throw error;
+      }
+    }
+  })();
+
+  return cardRegistryPromise;
+}
+
+/**
+ * Gets the card registry (returns empty registry if not loaded yet)
+ */
+export function getCardRegistry(): CardRegistry {
+  if (!isLoaded) {
+    console.warn('Cards not loaded yet. Returning empty registry.');
+    return {};
+  }
+  return cardRegistry;
+}
+
+/**
+ * Checks if cards are loaded
+ */
+export function areCardsLoaded(): boolean {
+  return isLoaded;
+}
+
+/**
+ * Resets the card registry (useful for testing or reloading)
+ */
+export function resetCardRegistry(): void {
+  cardRegistry = {};
+  cardRegistryPromise = null;
+  isLoaded = false;
+}
+
