@@ -5,6 +5,26 @@ import { getCardRegistry } from '../../game/CardLoader';
 import { PlayerDeck, validatePlayerDeck, getDeckStats } from '../../game/DeckManager';
 import './DeckBuilder.css';
 
+// Helper function to get background color for card type
+function getCardTypeColor(type: CardType): string {
+  switch (type) {
+    case CardType.MEAL:
+      return 'rgba(255, 99, 71, 0.6)'; // Tomato red - increased opacity
+    case CardType.STAFF:
+      return 'rgba(65, 105, 225, 0.6)'; // Royal Blue - increased opacity
+    case CardType.SUPPORT:
+      return 'rgba(50, 205, 50, 0.6)'; // Lime Green - increased opacity
+    case CardType.EVENT:
+      return 'rgba(147, 112, 219, 0.6)'; // Medium Purple - increased opacity
+    case CardType.CHEF:
+      return 'rgba(255, 215, 0, 0.6)'; // Gold - increased opacity
+    case CardType.RESTAURANT:
+      return 'rgba(139, 69, 19, 0.6)'; // Brown - increased opacity
+    default:
+      return 'rgba(255, 255, 255, 0.1)';
+  }
+}
+
 interface DeckBuilderProps {
   onDeckComplete: (playerDeck: PlayerDeck) => void;
   initialDeck?: PlayerDeck;
@@ -304,9 +324,15 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
                   const registry = getCardRegistry();
                   const card = registry[cardId];
                   if (!card) return null;
-                  const cardTypeClass = `deck-item-${card.type.toLowerCase()}`;
+                  // Get the string value of the card type enum
+                  // CardType enum values are strings like 'MEAL', 'STAFF', etc.
+                  const cardTypeValue = card.type as string;
+                  const cardTypeClass = `deck-item-${cardTypeValue.toLowerCase()}`;
+                  // #region agent log
+                  fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DeckBuilder.tsx:deck-item',message:'Deck item class generation',data:{cardId,cardName:card.name,cardType:card.type,cardTypeValue,cardTypeClass,expectedClass:'deck-item-' + cardTypeValue.toLowerCase()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                  // #endregion
                   return (
-                    <div key={cardId} className={`deck-item ${cardTypeClass}`}>
+                    <div key={cardId} className={`deck-item ${cardTypeClass}`} style={{ backgroundColor: getCardTypeColor(card.type) }}>
                       <span>{card.name} x{count}</span>
                       <button onClick={() => handleRemoveFromMainDeck(cardId)}>Remove</button>
                     </div>
