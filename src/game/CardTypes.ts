@@ -72,7 +72,9 @@ export type Card = ChefCard | RestaurantCard | MealCard | StaffCard | SupportCar
 // Card registry - stores all card definitions by ID
 export type CardRegistry = Record<string, Card>;
 
-// Placeholder card data
+// Card data is now loaded from Supabase via CardLoader
+// This constant is kept for backward compatibility during migration
+// DO NOT USE - use getCardRegistry() from CardLoader instead
 export const CARD_DEFINITIONS: CardRegistry = {
   // Chef Cards
   'chef_001': {
@@ -526,17 +528,62 @@ export const CARD_DEFINITIONS: CardRegistry = {
 };
 
 // Helper function to get card by ID
+// Now uses CardLoader registry instead of local CARD_DEFINITIONS
 export function getCardById(id: string): Card | undefined {
-  return CARD_DEFINITIONS[id];
+  try {
+    // Use dynamic import to avoid circular dependency issues
+    const cardLoader = require('./CardLoader');
+    const registry: CardRegistry = cardLoader.getCardRegistry();
+    const card = registry[id];
+    // Fallback to local definitions if card not found in registry
+    return card || CARD_DEFINITIONS[id];
+  } catch (error) {
+    // Fallback to local definitions if loader not available (for migration period)
+    console.warn('CardLoader not available, using local definitions');
+    return CARD_DEFINITIONS[id];
+  }
 }
 
 // Helper function to get all cards of a type
+// Now uses CardLoader registry instead of local CARD_DEFINITIONS
 export function getCardsByType(type: CardType): Card[] {
-  return Object.values(CARD_DEFINITIONS).filter(card => card.type === type);
+  try {
+    // Use dynamic import to avoid circular dependency issues
+    const cardLoader = require('./CardLoader');
+    const registry: CardRegistry = cardLoader.getCardRegistry();
+    const cards = Object.values(registry).filter((card: Card) => card.type === type);
+    // If registry is empty (cards not loaded), fallback to local definitions
+    if (cards.length === 0 && Object.keys(registry).length === 0) {
+      return Object.values(CARD_DEFINITIONS).filter(card => card.type === type);
+    }
+    return cards;
+  } catch (error) {
+    // Fallback to local definitions if loader not available (for migration period)
+    console.warn('CardLoader not available, using local definitions');
+    return Object.values(CARD_DEFINITIONS).filter(card => card.type === type);
+  }
 }
 
 // Helper function to validate card ID exists
+// Now uses CardLoader registry instead of local CARD_DEFINITIONS
 export function isValidCardId(id: string): boolean {
-  return id in CARD_DEFINITIONS;
+  try {
+    // Use dynamic import to avoid circular dependency issues
+    const cardLoader = require('./CardLoader');
+    const registry: CardRegistry = cardLoader.getCardRegistry();
+    // Check registry first, fallback to local definitions if registry is empty
+    if (id in registry) {
+      return true;
+    }
+    if (Object.keys(registry).length === 0) {
+      // Registry is empty (cards not loaded), check local definitions
+      return id in CARD_DEFINITIONS;
+    }
+    return false;
+  } catch (error) {
+    // Fallback to local definitions if loader not available (for migration period)
+    console.warn('CardLoader not available, using local definitions');
+    return id in CARD_DEFINITIONS;
+  }
 }
 

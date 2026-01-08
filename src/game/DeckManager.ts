@@ -1,4 +1,5 @@
-import { CardType, CARD_DEFINITIONS, getCardById, isValidCardId } from './CardTypes';
+import { CardType, getCardById, isValidCardId } from './CardTypes';
+import { getCardRegistry } from './CardLoader';
 
 // Deck is represented as an array of card IDs (strings)
 export type Deck = string[];
@@ -238,22 +239,24 @@ export function removeCards(deck: Deck, cardIds: string[]): Deck {
  * Includes: 1 Chef, 3 Restaurants (separate), and 30 main deck cards
  */
 export function createDefaultPlayerDeck(): PlayerDeck {
+  const registry = getCardRegistry();
+  
   // Get Chef card
-  const chefs = Object.keys(CARD_DEFINITIONS).filter(id => 
-    CARD_DEFINITIONS[id].type === CardType.CHEF
+  const chefs = Object.keys(registry).filter(id => 
+    registry[id].type === CardType.CHEF
   );
   const chefCardId = chefs.length > 0 ? chefs[0] : '';
 
   // Get 3 Restaurant cards
-  const restaurants = Object.keys(CARD_DEFINITIONS).filter(id => 
-    CARD_DEFINITIONS[id].type === CardType.RESTAURANT
+  const restaurants = Object.keys(registry).filter(id => 
+    registry[id].type === CardType.RESTAURANT
   );
   const restaurantCardIds = restaurants.slice(0, 3);
 
   // Build main deck (30 cards - Meals, Staff, Support, Event only)
   const mainDeck: Deck = [];
-  const otherCards = Object.keys(CARD_DEFINITIONS).filter(id => {
-    const card = CARD_DEFINITIONS[id];
+  const otherCards = Object.keys(registry).filter(id => {
+    const card = registry[id];
     return card.type !== CardType.CHEF && card.type !== CardType.RESTAURANT;
   });
 

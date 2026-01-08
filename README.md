@@ -119,3 +119,4 @@ This project is a prototype and is available for educational purposes.
 ## 🤝 Contributing
 
 This is a prototype project. Feel free to fork and modify for your own use!
+

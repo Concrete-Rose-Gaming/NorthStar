@@ -19,6 +19,7 @@ import {
 import { PlayerDeck } from './game/DeckManager';
 import { AIOpponent } from './game/AIOpponent';
 import { getCardById, CardType } from './game/CardTypes';
+import { loadCardsFromSupabase, areCardsLoaded } from './game/CardLoader';
 import { Tutorial } from './components/Tutorial/Tutorial';
 import { Login } from './components/Login/Login';
 import { DeckManager } from './components/DeckManager/DeckManager';
@@ -26,6 +27,22 @@ import { AuthUser, getCurrentUser, onAuthStateChange, signOut } from './supabase
 import './App.css';
 
 function App() {
+  const [cardsLoaded, setCardsLoaded] = useState(false);
+  const [cardsError, setCardsError] = useState<Error | null>(null);
+
+  // Load cards from Supabase on mount
+  useEffect(() => {
+    loadCardsFromSupabase()
+      .then(() => {
+        setCardsLoaded(true);
+      })
+      .catch((error) => {
+        console.error('Failed to load cards:', error);
+        setCardsError(error);
+        // Still set loaded to true to allow app to continue (with fallback to local cards)
+        setCardsLoaded(true);
+      });
+  }, []);
   // #region agent log
   fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/App.tsx:App-function-entry',message:'App component function executing',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'white-page-debug',hypothesisId:'B'})}).catch(()=>{});
   // #endregion
@@ -258,6 +275,21 @@ function App() {
     setShowDeckManager(false);
     setShowDeckBuilder(false);
   };
+
+  // Show loading screen while cards are loading
+  if (!cardsLoaded) {
+    return (
+      <div className="App">
+        <div className="loading-screen">
+          <h1>Chef Card Game</h1>
+          <p>Loading cards...</p>
+          {cardsError && (
+            <p className="error-text">Warning: Failed to load cards from database. Using fallback.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // Show login screen if user wants to login (optional)
   if (showLogin) {
