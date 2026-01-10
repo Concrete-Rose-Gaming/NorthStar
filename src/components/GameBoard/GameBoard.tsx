@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GameState, GamePhase, canAffordCard } from '../../game/GameEngine';
+import { GameState, GamePhase } from '../../game/GameEngine';
 import { PlayerArea } from '../PlayerArea/PlayerArea';
 import { Restaurant } from '../Restaurant/Restaurant';
 import { Card } from '../Card/Card';
@@ -14,6 +14,10 @@ interface GameBoardProps {
   onEndTurn: () => void;
   onNextRound?: () => void;
   onShowTutorial?: () => void;
+  mulliganCards?: string[];
+  onMulliganCardToggle?: (cardId: string) => void;
+  onMulligan?: () => void;
+  onSkipMulligan?: () => void;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
@@ -22,7 +26,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   onCardPlay,
   onEndTurn,
   onNextRound,
-  onShowTutorial
+  onShowTutorial,
+  mulliganCards = [],
+  onMulliganCardToggle,
+  onMulligan,
+  onSkipMulligan
 }) => {
   const [handPanelVisible, setHandPanelVisible] = useState(true);
   
@@ -41,25 +49,71 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const opponentChef = opponent?.chefCardId ? getCardById(opponent.chefCardId) : null;
 
   const isFaceOffPhase = gameState.phase === GamePhase.FACE_OFF;
+  const isMulliganPhase = gameState.phase === GamePhase.MULLIGAN;
   const showScores = isFaceOffPhase || gameState.phase === GamePhase.ROUND_END;
   const showHands = isFaceOffPhase || gameState.phase === GamePhase.ROUND_END || gameState.phase === GamePhase.GAME_END;
   const isAI = opponent?.name === 'AI Chef' || opponent?.name.includes('AI');
 
-  // Count cards played this round by each player
+  // Count cards played this round by each player (excluding meals which are attached permanently)
   const opponentCardsPlayed = opponent ? 
-    opponent.boardState.playedMeals.length + 
     opponent.boardState.playedStaff.length + 
     opponent.boardState.playedSupport.length + 
     opponent.boardState.playedEvents.length : 0;
   
   const youCardsPlayed = you ? 
-    you.boardState.playedMeals.length + 
     you.boardState.playedStaff.length + 
     you.boardState.playedSupport.length + 
     you.boardState.playedEvents.length : 0;
 
   return (
     <div className="game-board">
+      {/* Mulligan overlay modal */}
+      {isMulliganPhase && you && (
+        <div className="mulligan-overlay">
+          <div className="mulligan-overlay-content">
+            <h2>Mulligan Phase</h2>
+            <p>Select cards to mulligan (or skip)</p>
+            
+            {/* Display restaurant that was drawn */}
+            {youRestaurant && (
+              <div className="mulligan-restaurant-section">
+                <h3>Your Restaurant</h3>
+                <div className="mulligan-restaurant-card">
+                  <Restaurant 
+                    restaurant={youRestaurant as any} 
+                    size="medium"
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className="mulligan-hand">
+              <h3>Your Hand ({you.hand.length || 0} cards)</h3>
+              <div className="mulligan-hand-cards">
+                {you.hand.map(cardId => {
+                  const card = getCardById(cardId);
+                  return (
+                    <button
+                      key={cardId}
+                      className={`mulligan-card ${mulliganCards.includes(cardId) ? 'selected' : ''}`}
+                      onClick={() => onMulliganCardToggle?.(cardId)}
+                    >
+                      {card?.name || cardId}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="mulligan-actions">
+              <button onClick={onMulligan} disabled={!mulliganCards || mulliganCards.length === 0}>
+                Mulligan Selected ({mulliganCards?.length || 0})
+              </button>
+              <button onClick={onSkipMulligan}>Skip Mulligan</button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="game-header">
         <div className="header-top">
           <h1>Round {gameState.currentRound}</h1>
@@ -88,8 +142,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               hand={opponent.hand}
               boardState={opponent.boardState}
               stars={opponent.stars}
-              influence={opponent.influence}
-              maxInfluence={opponent.maxInfluence}
               isCurrentPlayer={false}
               onCardClick={undefined}
               onEndTurn={undefined}
@@ -97,6 +149,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               isOpponent={true}
               showHand={showHands} // Show cards only during face-off, but count always visible in header
               cardsPlayed={opponentCardsPlayed}
+              influence={opponent.influence}
+              maxInfluence={opponent.maxInfluence}
             />
           )}
         </div>
@@ -129,6 +183,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   score={showScores ? opponentScore : undefined}
                   stars={opponent?.stars || 0}
                   size="medium"
+                  attachedMeals={opponent?.boardState.attachedMeals || []}
                 />
               </div>
             )}
@@ -160,6 +215,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   score={showScores ? youScore : undefined}
                   stars={you?.stars || 0}
                   size="medium"
+                  attachedMeals={you?.boardState.attachedMeals || []}
                 />
               </div>
             )}
@@ -174,8 +230,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               hand={[]} // Hand is shown separately at bottom
               boardState={you.boardState}
               stars={you.stars}
-              influence={you.influence}
-              maxInfluence={you.maxInfluence}
               isCurrentPlayer={gameState.phase === GamePhase.TURN}
               onCardClick={undefined}
               onEndTurn={undefined}
@@ -183,7 +237,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               isOpponent={false}
               showHand={false} // Hand shown separately
               cardsPlayed={youCardsPlayed}
-              player={you}
+              influence={you.influence}
+              maxInfluence={you.maxInfluence}
             />
           )}
         </div>
@@ -218,7 +273,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             <div className="cards-row">
               {you.hand.map(cardId => {
                 const card = getCardById(cardId);
-                const canAfford = canAffordCard(you, cardId);
                 return card ? (
                   <Card
                     key={cardId}
@@ -226,7 +280,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     size="small"
                     onClick={() => onCardPlay(cardId)}
                     disabled={gameState.phase !== GamePhase.TURN || you.turnComplete}
-                    canAfford={canAfford}
                   />
                 ) : null;
               })}

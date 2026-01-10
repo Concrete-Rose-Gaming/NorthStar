@@ -24,9 +24,11 @@
 }
 
 .opponent-area .cards-played-badge,
-.opponent-area .hand-count-badge {
-  font-size: 0.8rem;
-  padding: 3px 10px;
+.opponent-area .hand-count-badge,
+.opponent-area .influence-badge {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 4px;
 }
 
 .opponent-area .board-section {
@@ -79,20 +81,20 @@
   color: #FFD700;
 }
 
-.player-influence {
-  font-size: 1rem;
-  color: #87CEEB;
-  font-weight: bold;
-  background: rgba(135, 206, 235, 0.2);
-  border: 2px solid rgba(135, 206, 235, 0.5);
-  border-radius: 6px;
-  padding: 4px 12px;
-  white-space: nowrap;
-}
-
 .hand-count-badge {
   background: rgba(147, 112, 219, 0.3);
   border: 2px solid rgba(147, 112, 219, 0.6);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #E0BBE4;
+  white-space: nowrap;
+}
+
+.influence-badge {
+  background: rgba(138, 43, 226, 0.3);
+  border: 2px solid rgba(138, 43, 226, 0.6);
   border-radius: 6px;
   padding: 4px 12px;
   font-size: 0.9rem;

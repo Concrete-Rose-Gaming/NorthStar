@@ -181,3 +181,67 @@
   font-size: clamp(0.65em, 0.8vw, 0.75em);
 }
 
+.restaurant-attached-meals {
+  margin-top: clamp(4px, 0.5vw, 6px);
+  padding: clamp(4px, 0.5vw, 6px);
+  background: rgba(255, 215, 0, 0.15);
+  border-radius: 6px;
+  border-left: 2px solid #FFD700;
+  font-size: clamp(0.7em, 0.85vw, 0.8em);
+  flex-shrink: 0;
+}
+
+.restaurant-small .restaurant-attached-meals {
+  padding: 4px;
+  font-size: clamp(0.65em, 0.75vw, 0.7em);
+  border-left-width: 1px;
+}
+
+.attached-meals-label {
+  font-weight: bold;
+  margin-bottom: clamp(2px, 0.3vw, 4px);
+  color: #FFD700;
+  font-size: clamp(0.75em, 0.9vw, 0.85em);
+}
+
+.restaurant-small .attached-meals-label {
+  font-size: clamp(0.7em, 0.85vw, 0.8em);
+  margin-bottom: 2px;
+}
+
+.attached-meals-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.3vw, 3px);
+}
+
+.attached-meal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(2px, 0.3vw, 3px) clamp(4px, 0.5vw, 6px);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  font-size: clamp(0.7em, 0.85vw, 0.8em);
+  line-height: 1.2;
+}
+
+.restaurant-small .attached-meal-item {
+  padding: 2px 4px;
+  font-size: clamp(0.65em, 0.75vw, 0.75em);
+}
+
+.attached-meal-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: clamp(4px, 0.5vw, 6px);
+}
+
+.attached-meal-value {
+  font-weight: bold;
+  color: #FFD700;
+  flex-shrink: 0;
+}
+

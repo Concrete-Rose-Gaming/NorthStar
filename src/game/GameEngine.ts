@@ -22,6 +22,7 @@ export interface Player {
   name: string;
   deck: Deck;
   hand: Deck; // Card IDs in hand
+  discardPile: Deck; // Card IDs in discard pile (for discarded meals)
   chefCardId: string | null;
   restaurantCardId: string | null;
   boardState: PlayerBoardState;
@@ -101,11 +102,13 @@ export function initializePlayer(playerId: string, name: string, playerDeck: Pla
     name,
     deck: remainingDeck,
     hand: initialHand,
+    discardPile: [],
     chefCardId: playerDeck.chefCardId,
     restaurantCardId: restaurantCardId || null,
     boardState: {
       chefCardId: playerDeck.chefCardId,
       restaurantCardId: restaurantCardId || '',
+      attachedMeals: [],
       playedMeals: [],
       playedStaff: [],
       playedSupport: [],
@@ -176,13 +179,14 @@ export function startRound(gameState: GameState): GameState {
   const newRound = gameState.currentRound + 1;
   
   // Both players reset board state, event card flag, and draw cards
+  // Note: attachedMeals persist between rounds (they are permanent equipment)
   const player1 = gameState.players.player1 ? {
     ...gameState.players.player1,
     deck: gameState.players.player1.deck,
     hand: [...gameState.players.player1.hand],
     boardState: {
       ...gameState.players.player1.boardState,
-      playedMeals: [],
+      // Keep attachedMeals - they persist between rounds
       playedStaff: [],
       playedSupport: [],
       playedEvents: []
@@ -197,7 +201,7 @@ export function startRound(gameState: GameState): GameState {
     hand: [...gameState.players.player2.hand],
     boardState: {
       ...gameState.players.player2.boardState,
-      playedMeals: [],
+      // Keep attachedMeals - they persist between rounds
       playedStaff: [],
       playedSupport: [],
       playedEvents: []
@@ -227,21 +231,15 @@ export function startRound(gameState: GameState): GameState {
     }
   }
 
-  // Recalculate and grant influence for new round (influence persists but max may increase)
+  // Recalculate and reset influence to max for new round
   if (player1) {
     player1.maxInfluence = calculateMaxInfluence(player1);
-    // Influence persists between rounds, but if max increased, grant the difference
-    if (player1.maxInfluence > player1.influence) {
-      // Don't automatically refill - let influence persist, but cap at max
-      player1.influence = Math.min(player1.influence, player1.maxInfluence);
-    }
+    player1.influence = player1.maxInfluence; // Reset to max at round start
   }
 
   if (player2) {
     player2.maxInfluence = calculateMaxInfluence(player2);
-    if (player2.maxInfluence > player2.influence) {
-      player2.influence = Math.min(player2.influence, player2.maxInfluence);
-    }
+    player2.influence = player2.maxInfluence; // Reset to max at round start
   }
 
   return {
@@ -302,11 +300,13 @@ export function getCardInfluenceCost(cardId: string): number {
 /**
  * Plays a card from hand to board
  * Returns null if the card cannot be played (insufficient influence or event card limit)
+ * For meal cards: attaches to restaurant permanently (max 3). If at capacity, requires mealToDiscard parameter.
  */
 export function playCard(
   player: Player,
   cardId: string,
-  targetType?: 'meal' | 'staff' | 'support' | 'event'
+  targetType?: 'meal' | 'staff' | 'support' | 'event',
+  mealToDiscard?: string // Required when attaching a meal to a restaurant that already has 3 meals
 ): Player | null {
   const card = getCardById(cardId);
   if (!card) {
@@ -321,6 +321,85 @@ export function playCard(
     return null; // Cannot play - event already played this round
   }
 
+  // Check if this is a meal card
+  const isMealCard = targetType === 'meal' || card.type === CardType.MEAL || cardId.startsWith('meal_');
+
+  // Special handling for meal cards - attach to restaurant
+  if (isMealCard) {
+    // Check if restaurant already has 3 meals attached
+    const currentAttachedMeals = player.boardState.attachedMeals || [];
+    
+    if (currentAttachedMeals.length >= 3) {
+      // Restaurant is at capacity - need to discard one meal
+      if (!mealToDiscard) {
+        // UI should handle showing selection - return null to indicate replacement needed
+        return null;
+      }
+      
+      // Validate that mealToDiscard is actually attached
+      if (!currentAttachedMeals.includes(mealToDiscard)) {
+        return null; // Invalid meal to discard
+      }
+      
+      // Remove the meal to discard from attached meals and add to discard pile
+      const newAttachedMeals = currentAttachedMeals.filter(id => id !== mealToDiscard);
+      const newDiscardPile = [...player.discardPile, mealToDiscard];
+      
+      // Add the new meal to attached meals
+      newAttachedMeals.push(cardId);
+      
+      // Remove card from hand
+      const newHand = player.hand.filter(id => id !== cardId);
+      
+      // Check if player can afford the card (influence cost)
+      if (!canAffordCard(player, cardId)) {
+        return null; // Cannot afford
+      }
+      
+      // Get and deduct influence cost
+      const cost = getCardInfluenceCost(cardId);
+      const newInfluence = player.influence - cost;
+      
+      return {
+        ...player,
+        hand: newHand,
+        discardPile: newDiscardPile,
+        influence: newInfluence,
+        boardState: {
+          ...player.boardState,
+          attachedMeals: newAttachedMeals
+        }
+      };
+    } else {
+      // Restaurant has space - attach meal directly
+      // Check if player can afford the card (influence cost)
+      if (!canAffordCard(player, cardId)) {
+        return null; // Cannot afford
+      }
+      
+      // Get and deduct influence cost
+      const cost = getCardInfluenceCost(cardId);
+      const newInfluence = player.influence - cost;
+      
+      // Remove card from hand
+      const newHand = player.hand.filter(id => id !== cardId);
+      
+      // Add to attached meals
+      const newAttachedMeals = [...currentAttachedMeals, cardId];
+      
+      return {
+        ...player,
+        hand: newHand,
+        influence: newInfluence,
+        boardState: {
+          ...player.boardState,
+          attachedMeals: newAttachedMeals
+        }
+      };
+    }
+  }
+
+  // For non-meal cards, use the original logic
   // Check if player can afford the card (influence cost)
   if (!canAffordCard(player, cardId)) {
     return null; // Cannot afford
@@ -339,9 +418,7 @@ export function playCard(
   // Determine card type and add to appropriate area
   if (!targetType) {
     // Infer from card type
-    if (card.type === 'MEAL') {
-      newBoardState.playedMeals.push(cardId);
-    } else if (card.type === 'STAFF') {
+    if (card.type === 'STAFF') {
       newBoardState.playedStaff.push(cardId);
     } else if (card.type === 'SUPPORT') {
       newBoardState.playedSupport.push(cardId);
@@ -350,9 +427,6 @@ export function playCard(
     }
   } else {
     switch (targetType) {
-      case 'meal':
-        newBoardState.playedMeals.push(cardId);
-        break;
       case 'staff':
         newBoardState.playedStaff.push(cardId);
         break;

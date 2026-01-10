@@ -59,55 +59,11 @@
   text-transform: uppercase;
 }
 
-.card-header-values {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
 .card-value {
   font-size: 1.2em;
   background: rgba(255, 255, 255, 0.3);
   padding: 2px 8px;
   border-radius: 12px;
-}
-
-.card-influence-cost {
-  font-size: 0.9em;
-  background: rgba(255, 255, 255, 0.3);
-  padding: 2px 6px;
-  border-radius: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.card-influence-cost.cost-unaffordable {
-  background: rgba(255, 0, 0, 0.5);
-  color: #FFD700;
-  font-weight: bold;
-}
-
-.card-unaffordable {
-  opacity: 0.6;
-  position: relative;
-}
-
-.card-unaffordable::after {
-  content: 'Insufficient Influence';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 0, 0, 0.9);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.7em;
-  font-weight: bold;
-  pointer-events: none;
-  z-index: 10;
-  white-space: nowrap;
 }
 
 .card-body {
@@ -151,10 +107,3 @@
   color: #000;
 }
 
-.card-archetypes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin: 8px 0;
-  align-items: center;
-}

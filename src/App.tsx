@@ -209,7 +209,12 @@ function App() {
     setShowMulligan(false);
   };
 
-  const handleCardPlay = (cardId: string) => {
+  const [mealReplacementState, setMealReplacementState] = useState<{
+    newMealId: string;
+    attachedMeals: string[];
+  } | null>(null);
+
+  const handleCardPlay = (cardId: string, mealToDiscard?: string) => {
     if (!gameState) return;
 
     const player1 = gameState.players.player1;
@@ -231,7 +236,24 @@ function App() {
     else if (card.type === CardType.SUPPORT) targetType = 'support';
     else if (card.type === CardType.EVENT) targetType = 'event';
 
-    const updatedPlayer1 = playCard(player1, cardId, targetType);
+    const updatedPlayer1 = playCard(player1, cardId, targetType, mealToDiscard);
+    
+    // If meal card requires replacement (restaurant has 3 meals), show selection UI
+    if (card.type === CardType.MEAL && !updatedPlayer1 && player1.boardState.attachedMeals?.length >= 3) {
+      setMealReplacementState({
+        newMealId: cardId,
+        attachedMeals: player1.boardState.attachedMeals || []
+      });
+      return;
+    }
+    
+    if (!updatedPlayer1) {
+      // Card couldn't be played for some reason
+      return;
+    }
+
+    // Clear meal replacement state if it was set
+    setMealReplacementState(null);
     
     setGameState({
       ...gameState,
@@ -240,6 +262,12 @@ function App() {
         player1: updatedPlayer1
       }
     });
+  };
+
+  const handleMealReplacement = (mealToDiscard: string) => {
+    if (!mealReplacementState) return;
+    
+    handleCardPlay(mealReplacementState.newMealId, mealToDiscard);
   };
 
   const handleEndTurn = () => {
@@ -504,44 +532,7 @@ function App() {
   }
 
 
-  // Mulligan phase
-  if (gameState.phase === GamePhase.MULLIGAN && showMulligan) {
-    const player1 = gameState.players.player1;
-    return (
-      <div className="App">
-        <div className="mulligan-screen">
-          <h2>Mulligan Phase</h2>
-          <p>Select cards to mulligan (or skip)</p>
-          <div className="mulligan-hand">
-            {player1?.hand.map(cardId => {
-              const card = getCardById(cardId);
-              return (
-                <button
-                  key={cardId}
-                  className={`mulligan-card ${mulliganCards.includes(cardId) ? 'selected' : ''}`}
-                  onClick={() => {
-                    if (mulliganCards.includes(cardId)) {
-                      setMulliganCards(mulliganCards.filter(id => id !== cardId));
-                    } else {
-                      setMulliganCards([...mulliganCards, cardId]);
-                    }
-                  }}
-                >
-                  {card?.name || cardId}
-                </button>
-              );
-            })}
-          </div>
-          <div className="mulligan-actions">
-            <button onClick={handleMulligan} disabled={mulliganCards.length === 0}>
-              Mulligan Selected ({mulliganCards.length})
-            </button>
-            <button onClick={handleSkipMulligan}>Skip Mulligan</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Mulligan phase is now handled within GameBoard
 
   // Coin flip phase
   if (gameState.phase === GamePhase.COIN_FLIP) {
@@ -564,8 +555,9 @@ function App() {
     );
   }
 
-  // Main game phases
+  // Main game phases (including mulligan, which shows as overlay on game board)
   if (
+    gameState.phase === GamePhase.MULLIGAN ||
     gameState.phase === GamePhase.ROUND_START ||
     gameState.phase === GamePhase.TURN ||
     gameState.phase === GamePhase.FACE_OFF ||
@@ -581,6 +573,36 @@ function App() {
     return (
       <div className="App">
         {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
+        {mealReplacementState && (
+          <div className="meal-replacement-modal">
+            <div className="meal-replacement-content">
+              <h3>Replace a Meal</h3>
+              <p>Your restaurant already has 3 meals attached. Select a meal to discard:</p>
+              <div className="meal-replacement-options">
+                {mealReplacementState.attachedMeals.map(mealId => {
+                  const mealCard = getCardById(mealId);
+                  if (!mealCard) return null;
+                  return (
+                    <button
+                      key={mealId}
+                      className="meal-replacement-button"
+                      onClick={() => handleMealReplacement(mealId)}
+                    >
+                      <div className="meal-replacement-name">{mealCard.name}</div>
+                      <div className="meal-replacement-value">Value: +{(mealCard as any).value || 0}</div>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                className="cancel-button"
+                onClick={() => setMealReplacementState(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
         <GameBoard
           gameState={gameState}
           currentPlayerId={currentPlayerId}
@@ -588,6 +610,16 @@ function App() {
           onEndTurn={handleEndTurn}
           onNextRound={handleNextRound}
           onShowTutorial={() => setShowTutorial(true)}
+          mulliganCards={gameState.phase === GamePhase.MULLIGAN ? mulliganCards : undefined}
+          onMulliganCardToggle={gameState.phase === GamePhase.MULLIGAN ? (cardId: string) => {
+            if (mulliganCards.includes(cardId)) {
+              setMulliganCards(mulliganCards.filter(id => id !== cardId));
+            } else {
+              setMulliganCards([...mulliganCards, cardId]);
+            }
+          } : undefined}
+          onMulligan={gameState.phase === GamePhase.MULLIGAN ? handleMulligan : undefined}
+          onSkipMulligan={gameState.phase === GamePhase.MULLIGAN ? handleSkipMulligan : undefined}
         />
       </div>
     );
