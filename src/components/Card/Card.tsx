@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card as CardType, CardType as CardTypeEnum } from '../../game/CardTypes';
+import { Card as CardType, CardType as CardTypeEnum, ChefCard, MealCard, StaffCard, EventCard, RestaurantCard } from '../../game/CardTypes';
+import { ArchetypeBadge, DualArchetypeBadge } from '../ArchetypeBadge/ArchetypeBadge';
 import './Card.css';
 
 interface CardProps {
@@ -8,6 +9,7 @@ interface CardProps {
   selected?: boolean;
   disabled?: boolean;
   size?: 'small' | 'medium' | 'large';
+  canAfford?: boolean;  // Whether the player can afford to play this card (has enough influence)
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -15,7 +17,8 @@ export const Card: React.FC<CardProps> = ({
   onClick,
   selected = false,
   disabled = false,
-  size = 'medium'
+  size = 'medium',
+  canAfford = true
 }) => {
   const getCardColor = () => {
     switch (card.type) {
@@ -49,20 +52,86 @@ export const Card: React.FC<CardProps> = ({
     return null;
   };
 
+  const getInfluenceCost = (): number | null => {
+    if ('influenceCost' in card) {
+      return (card as MealCard | StaffCard | EventCard).influenceCost;
+    }
+    return null;
+  };
+
   const cardValue = getCardValue();
+  const influenceCost = getInfluenceCost();
+  // Only disable if explicitly disabled OR if influence cost exists and can't afford
+  const isDisabled = disabled || (influenceCost !== null && !canAfford);
+
+  // Get archetype information
+  const chefCard = card.type === CardTypeEnum.CHEF ? card as ChefCard : null;
+  const restaurantCard = card.type === CardTypeEnum.RESTAURANT ? card as RestaurantCard : null;
+  const mealCard = card.type === CardTypeEnum.MEAL ? card as MealCard : null;
+  const staffCard = card.type === CardTypeEnum.STAFF ? card as StaffCard : null;
 
   return (
     <div
-      className={`card card-${size} ${selected ? 'card-selected' : ''} ${disabled ? 'card-disabled' : ''}`}
-      onClick={disabled ? undefined : onClick}
+      className={`card card-${size} ${selected ? 'card-selected' : ''} ${isDisabled ? 'card-disabled' : ''} ${!canAfford ? 'card-unaffordable' : ''}`}
+      onClick={isDisabled ? undefined : onClick}
       style={{ borderColor: getCardColor() }}
     >
       <div className="card-header" style={{ backgroundColor: getCardColor() }}>
         <span className="card-type">{card.type}</span>
+        <div className="card-header-values">
         {cardValue !== null && <span className="card-value">{cardValue}</span>}
+          {influenceCost !== null && (
+            <span className={`card-influence-cost ${!canAfford ? 'cost-unaffordable' : ''}`}>
+              {influenceCost}⚡
+            </span>
+          )}
+        </div>
       </div>
       <div className="card-body">
         <h3 className="card-name">{card.name}</h3>
+        
+        {/* Archetype badges */}
+        {chefCard && (
+          <div className="card-archetypes">
+            {chefCard.secondaryArchetype ? (
+              <DualArchetypeBadge 
+                primary={chefCard.primaryArchetype} 
+                secondary={chefCard.secondaryArchetype}
+                size={size === 'large' ? 'large' : size === 'small' ? 'small' : 'medium'}
+              />
+            ) : (
+              <ArchetypeBadge 
+                archetype={chefCard.primaryArchetype}
+                size={size === 'large' ? 'large' : size === 'small' ? 'small' : 'medium'}
+              />
+            )}
+          </div>
+        )}
+        {restaurantCard?.primaryArchetype && (
+          <div className="card-archetypes">
+            <ArchetypeBadge 
+              archetype={restaurantCard.primaryArchetype}
+              size={size === 'large' ? 'large' : size === 'small' ? 'small' : 'medium'}
+            />
+          </div>
+        )}
+        {mealCard?.mealArchetype && (
+          <div className="card-archetypes">
+            <ArchetypeBadge 
+              archetype={mealCard.mealArchetype}
+              size={size === 'large' ? 'large' : size === 'small' ? 'small' : 'medium'}
+            />
+          </div>
+        )}
+        {staffCard?.staffArchetype && (
+          <div className="card-archetypes">
+            <ArchetypeBadge 
+              archetype={staffCard.staffArchetype}
+              size={size === 'large' ? 'large' : size === 'small' ? 'small' : 'medium'}
+            />
+          </div>
+        )}
+
         <p className="card-description">{card.description}</p>
         {'abilityDescription' in card && (
           <div className="card-ability">

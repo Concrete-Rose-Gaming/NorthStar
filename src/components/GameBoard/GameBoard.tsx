@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GameState, GamePhase } from '../../game/GameEngine';
+import { GameState, GamePhase, canAffordCard } from '../../game/GameEngine';
 import { PlayerArea } from '../PlayerArea/PlayerArea';
 import { Restaurant } from '../Restaurant/Restaurant';
 import { Card } from '../Card/Card';
@@ -88,6 +88,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               hand={opponent.hand}
               boardState={opponent.boardState}
               stars={opponent.stars}
+              influence={opponent.influence}
+              maxInfluence={opponent.maxInfluence}
               isCurrentPlayer={false}
               onCardClick={undefined}
               onEndTurn={undefined}
@@ -139,6 +141,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               hand={[]} // Hand is shown separately at bottom
               boardState={you.boardState}
               stars={you.stars}
+              influence={you.influence}
+              maxInfluence={you.maxInfluence}
               isCurrentPlayer={gameState.phase === GamePhase.TURN}
               onCardClick={undefined}
               onEndTurn={undefined}
@@ -146,6 +150,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               isOpponent={false}
               showHand={false} // Hand shown separately
               cardsPlayed={youCardsPlayed}
+              player={you}
             />
           )}
           {/* Your Chef and Restaurant */}
@@ -197,6 +202,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             <div className="cards-row">
               {you.hand.map(cardId => {
                 const card = getCardById(cardId);
+                const canAfford = canAffordCard(you, cardId);
                 return card ? (
                   <Card
                     key={cardId}
@@ -204,6 +210,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     size="small"
                     onClick={() => onCardPlay(cardId)}
                     disabled={gameState.phase !== GamePhase.TURN || you.turnComplete}
+                    canAfford={canAfford}
                   />
                 ) : null;
               })}

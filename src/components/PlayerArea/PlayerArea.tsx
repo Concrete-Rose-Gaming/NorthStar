@@ -2,6 +2,7 @@ import React from 'react';
 import { Card } from '../Card/Card';
 import { getCardById } from '../../game/CardTypes';
 import { PlayerBoardState } from '../../game/Scoring';
+import { canAffordCard } from '../../game/GameEngine';
 import './PlayerArea.css';
 
 interface PlayerAreaProps {
@@ -9,6 +10,8 @@ interface PlayerAreaProps {
   hand: string[]; // Card IDs
   boardState: PlayerBoardState;
   stars: number;
+  influence?: number; // Current influence available
+  maxInfluence?: number; // Maximum influence this round
   isCurrentPlayer?: boolean;
   onCardClick?: (cardId: string) => void;
   onEndTurn?: () => void;
@@ -16,6 +19,7 @@ interface PlayerAreaProps {
   isOpponent?: boolean; // If true, hide hand details
   showHand?: boolean; // Whether to show the hand (for human player)
   cardsPlayed?: number; // Number of cards played this round
+  player?: any; // Player object for canAffordCard check (optional)
 }
 
 export const PlayerArea: React.FC<PlayerAreaProps> = ({
@@ -23,13 +27,16 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
   hand,
   boardState,
   stars,
+  influence,
+  maxInfluence,
   isCurrentPlayer = false,
   onCardClick,
   onEndTurn,
   turnComplete = false,
   isOpponent = false,
   showHand = false,
-  cardsPlayed = 0
+  cardsPlayed = 0,
+  player
 }) => {
   return (
     <div className={`player-area ${isCurrentPlayer ? 'current-player' : ''} ${isOpponent ? 'opponent-area' : ''}`}>
@@ -37,6 +44,11 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
         <h3>{playerName}</h3>
         <div className="header-info">
           <div className="player-stars">Stars: {'⭐'.repeat(stars)}</div>
+          {(influence !== undefined && maxInfluence !== undefined) && (
+            <div className="player-influence">
+              Influence: {influence}/{maxInfluence}⚡
+            </div>
+          )}
           {isOpponent && hand.length > 0 && (
             <div className="hand-count-badge">Hand: {hand.length} cards</div>
           )}
@@ -92,6 +104,7 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
           <div className="cards-row">
             {hand.map(cardId => {
               const card = getCardById(cardId);
+              const canAfford = player ? canAffordCard(player, cardId) : true;
               return card ? (
                 <Card
                   key={cardId}
@@ -99,6 +112,7 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
                   size="small"
                   onClick={() => onCardClick?.(cardId)}
                   disabled={!isCurrentPlayer || turnComplete}
+                  canAfford={canAfford}
                 />
               ) : null;
             })}

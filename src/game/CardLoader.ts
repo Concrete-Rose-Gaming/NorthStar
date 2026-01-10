@@ -4,6 +4,7 @@ import { Card, CardType, CardRegistry, ChefCard, RestaurantCard, MealCard, Staff
 
 /**
  * Converts a Supabase card to a game card
+ * Extracts data from nested feeder table structures (from JOIN queries)
  */
 function convertSupabaseCardToGameCard(supabaseCard: SupabaseCard): Card {
   const baseCard = {
@@ -14,45 +15,59 @@ function convertSupabaseCardToGameCard(supabaseCard: SupabaseCard): Card {
   };
 
   switch (supabaseCard.card_type) {
-    case 'CHEF':
+    case 'CHEF': {
+      const chefData = supabaseCard.chef_data;
       return {
         ...baseCard,
         type: CardType.CHEF,
         baseValue: supabaseCard.value || 0,
         ability: supabaseCard.effect || '',
-        abilityDescription: supabaseCard.description // Use description as ability description for now
+        abilityDescription: supabaseCard.description,
+        startingInfluence: chefData?.starting_influence ?? 3, // Default 3, from feeder table
+        starBonusInfluence: chefData?.star_bonus_influence ?? 1, // Default 1, from feeder table
+        primaryArchetype: chefData?.employee_type || undefined, // Primary archetype from employee_type
+        secondaryArchetype: chefData?.second_enum || undefined // Secondary archetype from second_enum (optional)
       } as ChefCard;
+    }
 
-    case 'RESTAURANT':
-      // For restaurants, effect field contains the ability name
-      // abilityCondition and abilityDescription might need to be stored separately
-      // For now, we'll use description for abilityDescription
+    case 'RESTAURANT': {
+      const restaurantData = supabaseCard.restaurant_data;
       return {
         ...baseCard,
         type: CardType.RESTAURANT,
         baseScore: supabaseCard.value || 0,
         ability: supabaseCard.effect || '',
         abilityCondition: '', // TODO: Add abilityCondition field to Supabase schema
-        abilityDescription: supabaseCard.description // TODO: Store separately in Supabase
+        abilityDescription: supabaseCard.description,
+        primaryArchetype: restaurantData?.restaurant_type || undefined // Restaurant archetype
       } as RestaurantCard;
+    }
 
-    case 'MEAL':
+    case 'MEAL': {
+      const mealData = supabaseCard.meal_data;
       return {
         ...baseCard,
         type: CardType.MEAL,
         value: supabaseCard.value || 0,
         effect: supabaseCard.effect || undefined,
-        effectDescription: supabaseCard.effect ? supabaseCard.description : undefined
+        effectDescription: supabaseCard.effect ? supabaseCard.description : undefined,
+        influenceCost: mealData?.influence_cost ?? 1, // Default 1, from feeder table
+        mealArchetype: mealData?.food_type || undefined // Food type enum maps to meal archetype
       } as MealCard;
+    }
 
-    case 'STAFF':
+    case 'STAFF': {
+      const staffData = supabaseCard.staff_data;
       return {
         ...baseCard,
         type: CardType.STAFF,
         ability: supabaseCard.effect || '',
         abilityDescription: supabaseCard.description,
-        modifier: supabaseCard.value || undefined
+        modifier: supabaseCard.value || undefined,
+        influenceCost: staffData?.influence_cost ?? 2, // Default 2, from feeder table
+        staffArchetype: staffData?.employee_type || undefined // Employee type enum maps to staff archetype
       } as StaffCard;
+    }
 
     case 'SUPPORT':
       return {
@@ -63,14 +78,17 @@ function convertSupabaseCardToGameCard(supabaseCard: SupabaseCard): Card {
         duration: 'instant' as const // Default, could be stored in effect field
       } as SupportCard;
 
-    case 'EVENT':
+    case 'EVENT': {
+      const eventData = supabaseCard.event_data;
       return {
         ...baseCard,
         type: CardType.EVENT,
         effect: supabaseCard.effect || '',
         effectDescription: supabaseCard.description,
-        target: 'opponent' as const // Default, could be parsed from effect
+        target: 'opponent' as const, // Default, could be parsed from effect
+        influenceCost: eventData?.influence_cost ?? 2 // Default 2, from feeder table
       } as EventCard;
+    }
 
     default:
       throw new Error(`Unknown card type: ${supabaseCard.card_type}`);

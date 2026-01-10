@@ -1,4 +1,5 @@
 import { getCardById, ChefCard, RestaurantCard, MealCard, StaffCard, SupportCard, EventCard } from './CardTypes';
+import { calculateArchetypeBonus } from './ArchetypeSystem';
 
 // Player's board state during a round
 export interface PlayerBoardState {
@@ -19,6 +20,7 @@ export interface ScoreResult {
   restaurantBonus: number;
   chefBonus: number;
   eventModifiers: number;
+  archetypeBonus: number;  // NEW: Bonus from archetype synergies
   totalScore: number;
   breakdown: string[];
 }
@@ -35,6 +37,7 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
   let restaurantBonus = 0;
   let chefBonus = 0;
   let eventModifiers = 0;
+  let archetypeBonus = 0;
 
   // Get Chef card
   const chefCard = getCardById(boardState.chefCardId) as ChefCard | undefined;
@@ -129,18 +132,54 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
 
   // Check Restaurant ability conditions
   if (restaurantCard) {
-    const restaurantBonus = checkRestaurantAbility(
+    const restBonus = checkRestaurantAbility(
       restaurantCard,
       boardState,
       { mealCount: boardState.playedMeals.length, staffCount: boardState.playedStaff.length }
     );
-    if (restaurantBonus > 0) {
-      breakdown.push(`Restaurant ability (${restaurantCard.ability}): +${restaurantBonus}`);
+    restaurantBonus = restBonus;
+    if (restBonus > 0) {
+      breakdown.push(`Restaurant ability (${restaurantCard.ability}): +${restBonus}`);
+    }
+  }
+
+  // Calculate Archetype synergy bonuses
+  if (chefCard) {
+    const chefArchetypes: string[] = [chefCard.primaryArchetype];
+    if (chefCard.secondaryArchetype) {
+      chefArchetypes.push(chefCard.secondaryArchetype);
+    }
+
+    const cardArchetypes: string[] = [];
+    
+    // Collect archetypes from played cards
+    boardState.playedMeals.forEach(mealId => {
+      const mealCard = getCardById(mealId) as MealCard | undefined;
+      if (mealCard?.mealArchetype) {
+        cardArchetypes.push(mealCard.mealArchetype);
+      }
+    });
+
+    boardState.playedStaff.forEach(staffId => {
+      const staffCard = getCardById(staffId) as StaffCard | undefined;
+      if (staffCard?.staffArchetype) {
+        cardArchetypes.push(staffCard.staffArchetype);
+      }
+    });
+
+    archetypeBonus = calculateArchetypeBonus(
+      chefArchetypes,
+      restaurantCard?.primaryArchetype,
+      cardArchetypes
+    );
+
+    if (archetypeBonus > 0) {
+      breakdown.push(`Archetype Synergy: +${archetypeBonus}`);
     }
   }
 
   const totalScore = baseScore + mealPoints + staffModifiers + supportModifiers + 
-                     restaurantBonus + chefBonus + eventModifiers;
+                     restaurantBonus + chefBonus + eventModifiers + archetypeBonus;
 
   return {
     baseScore,
@@ -150,6 +189,7 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
     restaurantBonus,
     chefBonus,
     eventModifiers,
+    archetypeBonus,
     totalScore,
     breakdown
   };

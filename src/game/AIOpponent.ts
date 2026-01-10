@@ -1,4 +1,4 @@
-import { Player } from './GameEngine';
+import { Player, canAffordCard } from './GameEngine';
 import { PlayerDeck, createDefaultPlayerDeck } from './DeckManager';
 import { CardType, getCardById } from './CardTypes';
 import { playCard, completeTurn } from './GameEngine';
@@ -74,8 +74,14 @@ export class AIOpponent {
     const supportCards = currentPlayer.hand.filter(id => id.startsWith('support_'));
     const eventCards = currentPlayer.hand.filter(id => id.startsWith('event_'));
 
-    // Play meal cards (prioritize higher value)
-    const sortedMeals = mealCards.sort((a, b) => {
+    // Filter cards that can be afforded (have enough influence)
+    const affordableMeals = mealCards.filter(id => canAffordCard(currentPlayer, id));
+    const affordableStaff = staffCards.filter(id => canAffordCard(currentPlayer, id));
+    const affordableSupport = supportCards.filter(id => canAffordCard(currentPlayer, id));
+    const affordableEvents = eventCards.filter(id => canAffordCard(currentPlayer, id));
+
+    // Play meal cards (prioritize higher value, but only affordable ones)
+    const sortedMeals = affordableMeals.sort((a, b) => {
       const cardA = getCardById(a);
       const cardB = getCardById(b);
       const valueA = (cardA as any)?.value || 0;
@@ -83,36 +89,41 @@ export class AIOpponent {
       return valueB - valueA; // Higher value first
     });
 
-    // Play 2-3 meal cards
+    // Play 2-3 meal cards (as many as can afford)
     const mealsToPlay = sortedMeals.slice(0, Math.min(3, sortedMeals.length));
     cardsToPlay.push(...mealsToPlay);
 
-    // Play 1 staff card if available
-    if (staffCards.length > 0 && cardsToPlay.length < maxCardsToPlay) {
-      cardsToPlay.push(staffCards[0]);
+    // Play 1 staff card if available and can afford
+    if (affordableStaff.length > 0 && cardsToPlay.length < maxCardsToPlay) {
+      cardsToPlay.push(affordableStaff[0]);
     }
 
-    // Play 1 support card if available
-    if (supportCards.length > 0 && cardsToPlay.length < maxCardsToPlay) {
-      cardsToPlay.push(supportCards[0]);
+    // Play 1 support card if available and can afford
+    if (affordableSupport.length > 0 && cardsToPlay.length < maxCardsToPlay) {
+      cardsToPlay.push(affordableSupport[0]);
     }
 
     // Play 1 event card if available (prefer opponent-targeting) and if one hasn't been played this round
-    if (eventCards.length > 0 && cardsToPlay.length < maxCardsToPlay && !currentPlayer.eventCardPlayedThisRound) {
+    if (affordableEvents.length > 0 && cardsToPlay.length < maxCardsToPlay && !currentPlayer.eventCardPlayedThisRound) {
       // Prefer event cards that target opponent
-      const opponentEvents = eventCards.filter(id => {
+      const opponentEvents = affordableEvents.filter(id => {
         const card = getCardById(id);
         return (card as any)?.target === 'opponent';
       });
       if (opponentEvents.length > 0) {
         cardsToPlay.push(opponentEvents[0]);
       } else {
-        cardsToPlay.push(eventCards[0]);
+        cardsToPlay.push(affordableEvents[0]);
       }
     }
 
-    // Play the selected cards
+    // Play the selected cards (only as many as can afford based on current influence)
     for (const cardId of cardsToPlay.slice(0, maxCardsToPlay)) {
+      // Double-check affordability (influence may have been spent on previous cards)
+      if (!canAffordCard(currentPlayer, cardId)) {
+        continue; // Skip if can't afford after previous plays
+      }
+
       const card = getCardById(cardId);
       if (!card) continue;
 
@@ -122,7 +133,12 @@ export class AIOpponent {
       else if (card.type === CardType.SUPPORT) targetType = 'support';
       else if (card.type === CardType.EVENT) targetType = 'event';
 
-      currentPlayer = playCard(currentPlayer, cardId, targetType);
+      const result = playCard(currentPlayer, cardId, targetType);
+      if (result === null) {
+        // Card couldn't be played (insufficient influence or event limit)
+        continue;
+      }
+      currentPlayer = result;
     }
 
     // End the turn

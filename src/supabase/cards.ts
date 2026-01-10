@@ -14,6 +14,37 @@ export interface Card {
   worth: number;
   created_at: string;
   updated_at: string;
+  // Feeder table data (from LEFT JOINs - will be null if no matching feeder entry)
+  chef_data?: {
+    code: string;
+    starting_influence?: number;
+    star_bonus_influence?: number;
+    employee_type?: string; // Primary archetype
+    second_enum?: string; // Secondary archetype (if dual)
+  } | null;
+  restaurant_data?: {
+    code: string;
+    restaurant_type?: string;
+    second_enum?: string;
+  } | null;
+  meal_data?: {
+    code: string;
+    food_type?: string;
+    influence_cost?: number;
+    second_enum?: string;
+  } | null;
+  staff_data?: {
+    code: string;
+    employee_type?: string;
+    influence_cost?: number;
+    second_enum?: string;
+  } | null;
+  event_data?: {
+    code: string;
+    influence_cost?: number;
+    first_enum?: string;
+    second_enum?: string;
+  } | null;
 }
 
 export interface CardStats {
@@ -55,13 +86,20 @@ export function parseCardCode(code: string): { expansion: string; cardType: stri
 }
 
 /**
- * Gets all cards
+ * Gets all cards with feeder table data using LEFT JOINs
  */
 export async function getAllCards(): Promise<{ cards: Card[]; error: Error | null }> {
   try {
     const { data, error } = await supabase
       .from('cards')
-      .select('*')
+      .select(`
+        *,
+        chef_data:chef_cards(code, starting_influence, star_bonus_influence, employee_type, second_enum),
+        restaurant_data:restaurant_cards(code, restaurant_type, second_enum),
+        meal_data:meal_cards(code, food_type, influence_cost, second_enum),
+        staff_data:staff_cards(code, employee_type, influence_cost, second_enum),
+        event_data:event_cards(code, influence_cost, first_enum, second_enum)
+      `)
       .order('expansion', { ascending: true })
       .order('card_type', { ascending: true })
       .order('card_number', { ascending: true });

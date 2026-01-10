@@ -9,6 +9,18 @@ export enum CardType {
   EVENT = 'EVENT'
 }
 
+// Archetype system
+export type Archetype = 'Breakfast' | 'Food Truck' | 'Diner' | 'Fast Casual' | 'Sit Down' | 'Buffet' | 'Brunch' | 'Lunch' | 'Dinner';
+
+export interface ArchetypeDefinition {
+  name: string;
+  displayName: string;
+  color: string;
+  icon?: string;
+  description: string;
+  synergies: string[]; // Other archetypes that synergize
+}
+
 // Base card interface
 export interface BaseCard {
   id: string;
@@ -23,6 +35,10 @@ export interface ChefCard extends BaseCard {
   baseValue: number;
   ability: string;
   abilityDescription: string;
+  startingInfluence: number;        // Base influence chef provides
+  starBonusInfluence: number;       // Bonus influence per star earned
+  primaryArchetype: string;         // Main archetype (e.g., 'Breakfast', 'Food Truck')
+  secondaryArchetype?: string;      // Optional second archetype for dual-archetype chefs
 }
 
 // Restaurant card - cannot be removed, has base score and conditional ability
@@ -32,6 +48,7 @@ export interface RestaurantCard extends BaseCard {
   ability: string;
   abilityCondition: string;
   abilityDescription: string;
+  primaryArchetype?: string;        // Optional archetype for restaurants
 }
 
 // Meal card - contributes to restaurant score
@@ -40,6 +57,8 @@ export interface MealCard extends BaseCard {
   value: number;
   effect?: string;
   effectDescription?: string;
+  influenceCost: number;            // Influence cost to play this card
+  mealArchetype?: string;           // Optional archetype for meal synergies
 }
 
 // Staff card - provides support abilities and modifiers
@@ -48,6 +67,8 @@ export interface StaffCard extends BaseCard {
   ability: string;
   abilityDescription: string;
   modifier?: number;
+  influenceCost: number;            // Influence cost to play this card
+  staffArchetype?: string;          // Optional archetype for staff synergies
 }
 
 // Support card - utility and enhancement effects
@@ -64,6 +85,7 @@ export interface EventCard extends BaseCard {
   effect: string;
   effectDescription: string;
   target?: 'self' | 'opponent' | 'both';
+  influenceCost: number;            // Influence cost to play this card
 }
 
 // Union type for all cards
@@ -84,7 +106,11 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.CHEF,
     baseValue: 5,
     ability: 'perfectionist',
-    abilityDescription: 'Add +2 to all Meal cards you play'
+    abilityDescription: 'Add +2 to all Meal cards you play',
+    startingInfluence: 3,
+    starBonusInfluence: 1,
+    primaryArchetype: 'Sit Down',
+    secondaryArchetype: undefined
   },
   'chef_002': {
     id: 'chef_002',
@@ -93,7 +119,11 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.CHEF,
     baseValue: 4,
     ability: 'innovation',
-    abilityDescription: 'Once per round, double the value of one Meal card'
+    abilityDescription: 'Once per round, double the value of one Meal card',
+    startingInfluence: 4,
+    starBonusInfluence: 1,
+    primaryArchetype: 'Fast Casual',
+    secondaryArchetype: undefined
   },
   'chef_003': {
     id: 'chef_003',
@@ -102,7 +132,11 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.CHEF,
     baseValue: 3,
     ability: 'speed',
-    abilityDescription: 'Draw an extra card at the start of each round'
+    abilityDescription: 'Draw an extra card at the start of each round',
+    startingInfluence: 5,
+    starBonusInfluence: 0,
+    primaryArchetype: 'Food Truck',
+    secondaryArchetype: undefined
   },
   'chef_004': {
     id: 'chef_004',
@@ -111,7 +145,11 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.CHEF,
     baseValue: 4,
     ability: 'presentation',
-    abilityDescription: 'Your Restaurant gains +1 base score'
+    abilityDescription: 'Your Restaurant gains +1 base score',
+    startingInfluence: 3,
+    starBonusInfluence: 1,
+    primaryArchetype: 'Sit Down',
+    secondaryArchetype: undefined
   },
   'chef_005': {
     id: 'chef_005',
@@ -120,7 +158,11 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.CHEF,
     baseValue: 5,
     ability: 'bold',
-    abilityDescription: 'When you win a round, gain an extra star'
+    abilityDescription: 'When you win a round, gain an extra star',
+    startingInfluence: 3,
+    starBonusInfluence: 2,
+    primaryArchetype: 'Dinner',
+    secondaryArchetype: undefined
   },
 
   // Restaurant Cards
@@ -221,7 +263,9 @@ export const CARD_DEFINITIONS: CardRegistry = {
     name: 'Signature Burger',
     description: 'A classic favorite',
     type: CardType.MEAL,
-    value: 3
+    value: 3,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_002': {
     id: 'meal_002',
