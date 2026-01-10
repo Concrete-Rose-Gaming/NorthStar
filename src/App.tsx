@@ -16,7 +16,7 @@ import {
   advanceToNextRound,
   resetTurnStatus
 } from './game/GameEngine';
-import { PlayerDeck } from './game/DeckManager';
+import { PlayerDeck, createStarterDeck1, createStarterDeck2 } from './game/DeckManager';
 import { AIOpponent } from './game/AIOpponent';
 import { getCardById, CardType } from './game/CardTypes';
 import { loadCardsFromSupabase } from './game/CardLoader';
@@ -218,6 +218,13 @@ function App() {
     const card = getCardById(cardId);
     if (!card) return;
 
+    // Check if trying to play an event card when one was already played this round
+    if (card.type === CardType.EVENT && player1.eventCardPlayedThisRound) {
+      // Prevent playing second event card - provide feedback
+      alert('You can only play one event card per round.');
+      return;
+    }
+
     let targetType: 'meal' | 'staff' | 'support' | 'event' | undefined;
     if (card.type === CardType.MEAL) targetType = 'meal';
     else if (card.type === CardType.STAFF) targetType = 'staff';
@@ -382,7 +389,7 @@ function App() {
               <span className="badge-text">AI Opponent Mode</span>
             </div>
             <h2>Play Against AI</h2>
-            <p className="lobby-description">Build your deck and compete against an AI opponent!</p>
+            <p className="lobby-description">Choose a starter deck or build your own!</p>
             <div className="lobby-buttons-top">
               <button onClick={() => setShowTutorial(true)} className="tutorial-button-link">
                 📖 How to Play
@@ -396,31 +403,99 @@ function App() {
               className="name-input"
               onKeyPress={(e) => e.key === 'Enter' && playerDeck && handleStartGame()}
             />
-            <div className="lobby-actions">
-              <button 
-                onClick={() => setShowDeckBuilder(true)} 
-                className="lobby-button"
-              >
-                🎴 Build Deck
-              </button>
-              <button 
-                onClick={handleStartGame} 
-                className="lobby-button ai-button" 
-                disabled={!playerName.trim() || !playerDeck}
-              >
-                🤖 Start Game vs AI
-              </button>
-            </div>
-            {!playerName.trim() && (
-              <p className="hint-text">Please enter your name to start</p>
-            )}
-            {!playerDeck && (
-              <p className="hint-text">Please build a deck before starting the game</p>
-            )}
-            {playerDeck && (
-              <div className="deck-status">
-                <p className="deck-status-text">✓ Deck ready ({playerDeck.mainDeck.length} cards)</p>
+            
+            {!playerDeck ? (
+              <div className="starter-decks-section">
+                <h3 className="starter-decks-title">Choose a Starter Deck</h3>
+                <div className="starter-decks-grid">
+                  <div className="starter-deck-card" onClick={() => {
+                    const deck = createStarterDeck1();
+                    handleDeckComplete(deck);
+                  }}>
+                    <div className="starter-deck-header">
+                      <h4>The Balanced Chef</h4>
+                      <span className="starter-deck-badge">📊 Balanced</span>
+                    </div>
+                    <p className="starter-deck-description">
+                      A well-rounded deck with a good mix of Meals, Staff, Support, and Events. 
+                      Perfect for learning the game!
+                    </p>
+                    <div className="starter-deck-stats">
+                      <div className="starter-deck-stat">
+                        <span className="stat-label">Chef:</span>
+                        <span className="stat-value">Master Chef Pierre</span>
+                      </div>
+                      <div className="starter-deck-stat">
+                        <span className="stat-label">Focus:</span>
+                        <span className="stat-value">Versatile Strategy</span>
+                      </div>
+                    </div>
+                    <button className="select-deck-button">Select This Deck</button>
+                  </div>
+                  
+                  <div className="starter-deck-card" onClick={() => {
+                    const deck = createStarterDeck2();
+                    handleDeckComplete(deck);
+                  }}>
+                    <div className="starter-deck-header">
+                      <h4>The High Roller</h4>
+                      <span className="starter-deck-badge aggressive">⚡ Aggressive</span>
+                    </div>
+                    <p className="starter-deck-description">
+                      Focus on high-value meals and powerful combos. 
+                      Aggressive playstyle for maximum impact!
+                    </p>
+                    <div className="starter-deck-stats">
+                      <div className="starter-deck-stat">
+                        <span className="stat-label">Chef:</span>
+                        <span className="stat-value">Chef Marcus</span>
+                      </div>
+                      <div className="starter-deck-stat">
+                        <span className="stat-label">Focus:</span>
+                        <span className="stat-value">High-Value Meals</span>
+                      </div>
+                    </div>
+                    <button className="select-deck-button">Select This Deck</button>
+                  </div>
+                </div>
+                <div className="or-divider">
+                  <span>OR</span>
+                </div>
+                <button 
+                  onClick={() => setShowDeckBuilder(true)} 
+                  className="build-deck-button"
+                >
+                  🎴 Build Custom Deck
+                </button>
               </div>
+            ) : (
+              <>
+                <div className="lobby-actions">
+                  <button 
+                    onClick={() => {
+                      setPlayerDeck(null);
+                      setShowDeckBuilder(false);
+                    }} 
+                    className="lobby-button secondary"
+                  >
+                    ↻ Change Deck
+                  </button>
+                  <button 
+                    onClick={handleStartGame} 
+                    className="lobby-button ai-button" 
+                    disabled={!playerName.trim()}
+                  >
+                    🤖 Start Game vs AI
+                  </button>
+                </div>
+                <div className="deck-status">
+                  <p className="deck-status-text">✓ Deck ready ({playerDeck.mainDeck.length} cards)</p>
+                </div>
+              </>
+            )}
+            
+            {!playerName.trim() && playerDeck && (
+              <p className="hint-text">Please enter your name to start</p>
             )}
           </div>
         </div>

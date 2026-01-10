@@ -1,5 +1,6 @@
 import { Deck, PlayerDeck, shuffleDeck, drawCards, selectRandomRestaurant } from './DeckManager';
 import { calculateScore, compareScores, PlayerBoardState } from './Scoring';
+import { CardType, getCardById } from './CardTypes';
 
 // Game phase
 export enum GamePhase {
@@ -27,6 +28,7 @@ export interface Player {
   stars: number;
   ready: boolean;
   turnComplete: boolean;
+  eventCardPlayedThisRound: boolean;
 }
 
 // Game state
@@ -91,7 +93,8 @@ export function initializePlayer(playerId: string, name: string, playerDeck: Pla
     },
     stars: 0,
     ready: false,
-    turnComplete: false
+    turnComplete: false,
+    eventCardPlayedThisRound: false
   };
 }
 
@@ -144,7 +147,7 @@ export function setFirstPlayer(gameState: GameState, coinResult: 'heads' | 'tail
 export function startRound(gameState: GameState): GameState {
   const newRound = gameState.currentRound + 1;
   
-  // Both players draw a card
+  // Both players reset board state and event card flag
   const player1 = gameState.players.player1 ? {
     ...gameState.players.player1,
     deck: gameState.players.player1.deck,
@@ -156,7 +159,8 @@ export function startRound(gameState: GameState): GameState {
       playedSupport: [],
       playedEvents: []
     },
-    turnComplete: false
+    turnComplete: false,
+    eventCardPlayedThisRound: false
   } : null;
 
   const player2 = gameState.players.player2 ? {
@@ -170,20 +174,29 @@ export function startRound(gameState: GameState): GameState {
       playedSupport: [],
       playedEvents: []
     },
-    turnComplete: false
+    turnComplete: false,
+    eventCardPlayedThisRound: false
   } : null;
 
-  // Draw cards
-  if (player1 && player1.deck.length > 0) {
-    const { drawn, remaining } = drawCards(player1.deck, 1);
-    player1.hand.push(...drawn);
-    player1.deck = remaining;
+  // Draw cards until each player has 5 cards (or deck runs out)
+  if (player1) {
+    const cardsNeeded = Math.max(0, 5 - player1.hand.length);
+    if (cardsNeeded > 0 && player1.deck.length > 0) {
+      const cardsToDraw = Math.min(cardsNeeded, player1.deck.length);
+      const { drawn, remaining } = drawCards(player1.deck, cardsToDraw);
+      player1.hand.push(...drawn);
+      player1.deck = remaining;
+    }
   }
 
-  if (player2 && player2.deck.length > 0) {
-    const { drawn, remaining } = drawCards(player2.deck, 1);
-    player2.hand.push(...drawn);
-    player2.deck = remaining;
+  if (player2) {
+    const cardsNeeded = Math.max(0, 5 - player2.hand.length);
+    if (cardsNeeded > 0 && player2.deck.length > 0) {
+      const cardsToDraw = Math.min(cardsNeeded, player2.deck.length);
+      const { drawn, remaining } = drawCards(player2.deck, cardsToDraw);
+      player2.hand.push(...drawn);
+      player2.deck = remaining;
+    }
   }
 
   return {
@@ -205,6 +218,16 @@ export function playCard(
   cardId: string,
   targetType?: 'meal' | 'staff' | 'support' | 'event'
 ): Player {
+  // Check if this is an event card
+  const card = getCardById(cardId);
+  const isEventCard = targetType === 'event' || card?.type === CardType.EVENT || cardId.startsWith('event_');
+  
+  // Prevent playing multiple event cards per round
+  if (isEventCard && player.eventCardPlayedThisRound) {
+    // Return player unchanged - card cannot be played
+    return player;
+  }
+  
   // Remove card from hand
   const newHand = player.hand.filter(id => id !== cardId);
   
@@ -245,7 +268,8 @@ export function playCard(
   return {
     ...player,
     hand: newHand,
-    boardState: newBoardState
+    boardState: newBoardState,
+    eventCardPlayedThisRound: isEventCard ? true : player.eventCardPlayedThisRound
   };
 }
 

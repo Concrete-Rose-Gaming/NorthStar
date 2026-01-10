@@ -46,4 +46,3 @@ setTimeout(() => {
   fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/index.tsx:render-complete',message:'React render call completed - checking CSS',data:{stylesheetsCount:stylesheets.length,stylesheets,bodyBg:computedStyle.background,bodyColor:computedStyle.color,baseHref:document.querySelector('base')?.href},timestamp:Date.now(),sessionId:'debug-session',runId:'white-page-debug',hypothesisId:'D'})}).catch(()=>{});
 }, 100);
 // #endregion
-

@@ -97,8 +97,8 @@ export class AIOpponent {
       cardsToPlay.push(supportCards[0]);
     }
 
-    // Play 1 event card if available (prefer opponent-targeting)
-    if (eventCards.length > 0 && cardsToPlay.length < maxCardsToPlay) {
+    // Play 1 event card if available (prefer opponent-targeting) and if one hasn't been played this round
+    if (eventCards.length > 0 && cardsToPlay.length < maxCardsToPlay && !currentPlayer.eventCardPlayedThisRound) {
       // Prefer event cards that target opponent
       const opponentEvents = eventCards.filter(id => {
         const card = getCardById(id);

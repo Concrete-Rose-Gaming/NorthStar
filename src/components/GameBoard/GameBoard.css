@@ -1,11 +1,18 @@
 .game-board {
-  padding: 20px;
+  padding: 12px;
   color: white;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .game-header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .header-top {
@@ -39,8 +46,8 @@
 }
 
 .game-header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
+  font-size: 2rem;
+  margin-bottom: 6px;
 }
 
 .game-phase {
@@ -102,6 +109,68 @@
   font-size: 1rem;
   color: #4CAF50;
   font-weight: bold;
+}
+
+/* Main content area - split screen */
+.main-content-area {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+  align-items: start;
+  min-height: 0;
+  max-height: calc(100vh - 250px);
+}
+
+.opponent-section,
+.player-section {
+  flex: 1;
+  min-width: 0;
+  max-width: 50%;
+}
+
+.score-comparison-middle {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* Opponent section (left side - compact) */
+.opponent-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  max-width: 45%;
+}
+
+/* Player section (right side) */
+.player-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  max-width: 45%;
+}
+
+/* Compact card layouts */
+.opponent-cards-compact,
+.player-cards-compact {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.chef-card-wrapper-small,
+.restaurant-card-wrapper-small {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .player-top {
@@ -168,14 +237,35 @@
 
 .score-comparison-middle {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 40px;
-  margin: 20px 0;
-  padding: 20px;
+  gap: 10px;
+  padding: 10px 16px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  width: 100%;
+  border-radius: 8px;
+  align-self: center;
+  min-width: 160px;
+  flex-shrink: 0;
+}
+
+.score-comparison-middle .score-display {
+  padding: 8px;
+  min-width: 100px;
+}
+
+.score-comparison-middle .score-display h3 {
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+.score-comparison-middle .score-value {
+  font-size: 1.5rem;
+}
+
+.score-comparison-middle .vs {
+  font-size: 1.2rem;
+  margin: 4px 0;
 }
 
 .restaurants-row {
@@ -184,6 +274,89 @@
   gap: 40px;
   margin: 30px 0;
   flex-wrap: wrap;
+}
+
+/* Fixed player hand area at bottom */
+.player-hand-fixed {
+  position: sticky;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 20px;
+  margin-top: auto;
+  z-index: 100;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  transition: padding 0.3s ease;
+  flex-shrink: 0;
+}
+
+.player-hand-fixed.collapsed {
+  padding: 6px 20px;
+}
+
+.hand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.hand-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hand-toggle-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  padding: 0;
+}
+
+.hand-toggle-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.hand-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hand-header h4 {
+  margin: 0;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.player-hand-fixed .cards-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 8px 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.player-hand-fixed.collapsed .cards-row {
+  max-height: 0;
+  overflow: hidden;
+  padding: 0;
+  opacity: 0;
 }
 
 .round-end-actions {
@@ -232,9 +405,78 @@
   color: #FFD700;
 }
 
-@media (max-width: 1200px) {
-  .players-row {
-    grid-template-columns: 1fr;
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .main-content-area {
+    gap: 16px;
+  }
+  
+  .score-comparison-middle {
+    flex-direction: row;
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  
+  .score-comparison-middle .score-value {
+    font-size: 1.8rem;
+  }
+  
+  .score-comparison-middle .vs {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .main-content-area {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .opponent-section,
+  .player-section {
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .score-comparison-middle {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+  }
+  
+  .opponent-cards-compact,
+  .player-cards-compact {
+    justify-content: center;
+  }
+  
+  .player-hand-fixed {
+    position: relative;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .game-board {
+    padding: 10px;
+  }
+  
+  .game-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .opponent-area {
+    padding: 12px;
+  }
+  
+  .player-hand-fixed {
+    padding: 12px;
+  }
+  
+  .hand-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
 
