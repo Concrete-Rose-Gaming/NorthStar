@@ -6,15 +6,17 @@ interface RestaurantProps {
   restaurant: RestaurantCard;
   score?: number;
   stars?: number;
+  size?: 'small' | 'medium' | 'large';
 }
 
 export const Restaurant: React.FC<RestaurantProps> = ({
   restaurant,
   score,
-  stars = 0
+  stars = 0,
+  size = 'medium'
 }) => {
   return (
-    <div className="restaurant-card">
+    <div className={`restaurant-card restaurant-${size}`}>
       <div className="restaurant-header">
         <h2>{restaurant.name}</h2>
         <div className="restaurant-stars">

@@ -58,39 +58,14 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
 
       <div className="player-board">
         <div className="board-section">
-          <h4>Played Meals</h4>
+          <h4>Played Cards</h4>
           <div className="cards-row">
-            {boardState.playedMeals.map(cardId => {
-              const card = getCardById(cardId);
-              return card ? <Card key={cardId} card={card} size="small" /> : null;
-            })}
-          </div>
-        </div>
-
-        <div className="board-section">
-          <h4>Played Staff</h4>
-          <div className="cards-row">
-            {boardState.playedStaff.map(cardId => {
-              const card = getCardById(cardId);
-              return card ? <Card key={cardId} card={card} size="small" /> : null;
-            })}
-          </div>
-        </div>
-
-        <div className="board-section">
-          <h4>Played Support</h4>
-          <div className="cards-row">
-            {boardState.playedSupport.map(cardId => {
-              const card = getCardById(cardId);
-              return card ? <Card key={cardId} card={card} size="small" /> : null;
-            })}
-          </div>
-        </div>
-
-        <div className="board-section">
-          <h4>Played Events</h4>
-          <div className="cards-row">
-            {boardState.playedEvents.map(cardId => {
+            {[
+              ...boardState.playedMeals,
+              ...boardState.playedStaff,
+              ...boardState.playedSupport,
+              ...boardState.playedEvents
+            ].map(cardId => {
               const card = getCardById(cardId);
               return card ? <Card key={cardId} card={card} size="small" /> : null;
             })}

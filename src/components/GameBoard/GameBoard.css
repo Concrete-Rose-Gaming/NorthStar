@@ -1,5 +1,5 @@
 .game-board {
-  padding: 12px;
+  padding: clamp(8px, 1vw, 12px);
   color: white;
   display: flex;
   flex-direction: column;
@@ -7,6 +7,7 @@
   max-height: 100vh;
   box-sizing: border-box;
   overflow: hidden;
+  font-size: clamp(14px, 1.2vw, 16px);
 }
 
 .game-header {
@@ -46,18 +47,18 @@
 }
 
 .game-header h1 {
-  font-size: 2rem;
-  margin-bottom: 6px;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: clamp(4px, 0.6vw, 6px);
 }
 
 .game-phase {
-  font-size: 1.1rem;
+  font-size: clamp(0.9rem, 1.2vw, 1.1rem);
   opacity: 0.9;
 }
 
 .first-player {
-  margin-top: 8px;
-  font-size: 1rem;
+  margin-top: clamp(4px, 0.8vw, 8px);
+  font-size: clamp(0.85rem, 1.1vw, 1rem);
   color: #FFD700;
 }
 
@@ -111,7 +112,7 @@
   font-weight: bold;
 }
 
-/* Main content area - split screen */
+/* Main content area - three column layout */
 .main-content-area {
   display: flex;
   gap: 12px;
@@ -124,18 +125,6 @@
   max-height: calc(100vh - 250px);
 }
 
-.opponent-section,
-.player-section {
-  flex: 1;
-  min-width: 0;
-  max-width: 50%;
-}
-
-.score-comparison-middle {
-  flex-shrink: 0;
-  align-self: center;
-}
-
 /* Opponent section (left side - compact) */
 .opponent-section {
   display: flex;
@@ -143,7 +132,67 @@
   gap: 10px;
   min-width: 0;
   flex: 1;
-  max-width: 45%;
+  max-width: 30%;
+}
+
+/* Middle section - Chef and Restaurant cards */
+.middle-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  flex: 0 1 auto;
+  width: auto;
+  min-width: min-content;
+  max-width: 100%;
+  align-items: center;
+  padding: 8px;
+  justify-content: center;
+}
+
+.middle-cards-row-single {
+  display: flex;
+  gap: clamp(8px, 1.5vw, 12px);
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 100%;
+}
+
+.middle-card-label {
+  font-size: clamp(0.7rem, 1vw, 0.85rem);
+  font-weight: bold;
+  color: #FFD700;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.chef-card-wrapper-middle,
+.restaurant-card-wrapper-middle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 25%;
+  justify-content: flex-start;
+}
+
+.chef-card-wrapper-middle .card-medium,
+.restaurant-card-wrapper-middle .restaurant-medium {
+  width: 160px;
+  height: 240px;
+  flex-shrink: 1;
+  flex-grow: 0;
+}
+
+.chef-card-wrapper-middle .card-label {
+  font-size: clamp(0.7rem, 1vw, 0.8rem);
+  margin-top: 2px;
 }
 
 /* Player section (right side) */
@@ -153,24 +202,12 @@
   gap: 10px;
   min-width: 0;
   flex: 1;
-  max-width: 45%;
+  max-width: 30%;
 }
 
-/* Compact card layouts */
-.opponent-cards-compact,
-.player-cards-compact {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
-.chef-card-wrapper-small,
-.restaurant-card-wrapper-small {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.score-comparison-middle {
+  width: 100%;
+  margin-bottom: 8px;
 }
 
 .player-top {
@@ -237,35 +274,36 @@
 
 .score-comparison-middle {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
+  gap: 12px;
+  padding: 12px 16px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  align-self: center;
-  min-width: 160px;
-  flex-shrink: 0;
+  width: 100%;
+  margin-bottom: 12px;
 }
 
 .score-comparison-middle .score-display {
-  padding: 8px;
-  min-width: 100px;
+  padding: 8px 12px;
+  min-width: 90px;
+  flex: 1;
 }
 
 .score-comparison-middle .score-display h3 {
-  font-size: 1rem;
-  margin-bottom: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
 }
 
 .score-comparison-middle .score-value {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
 }
 
 .score-comparison-middle .vs {
-  font-size: 1.2rem;
-  margin: 4px 0;
+  font-size: 1.3rem;
+  margin: 0;
+  font-weight: bold;
 }
 
 .restaurants-row {
@@ -408,45 +446,76 @@
 /* Responsive adjustments */
 @media (max-width: 1400px) {
   .main-content-area {
-    gap: 16px;
+    gap: 10px;
   }
   
-  .score-comparison-middle {
-    flex-direction: row;
-    padding: 12px 16px;
-    gap: 12px;
+  .middle-section {
+    width: auto;
+    min-width: min-content;
   }
   
-  .score-comparison-middle .score-value {
-    font-size: 1.8rem;
+  .opponent-section,
+  .player-section {
+    max-width: 32.5%;
   }
   
-  .score-comparison-middle .vs {
-    font-size: 1.2rem;
+  .middle-cards-row-single {
+    gap: 8px;
+  }
+  
+  .chef-card-wrapper-middle .card-medium,
+  .restaurant-card-wrapper-middle .restaurant-medium {
+    width: clamp(140px, 12vw, 160px);
+    height: clamp(210px, 18vw, 240px);
   }
 }
 
 @media (max-width: 1024px) {
   .main-content-area {
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
   }
   
   .opponent-section,
-  .player-section {
+  .player-section,
+  .middle-section {
     max-width: 100%;
     width: 100%;
   }
   
-  .score-comparison-middle {
-    width: 100%;
-    flex-direction: row;
-    justify-content: center;
+  .middle-section {
+    order: 1;
   }
   
-  .opponent-cards-compact,
-  .player-cards-compact {
+  .opponent-section {
+    order: 0;
+  }
+  
+  .player-section {
+    order: 2;
+  }
+  
+  .score-comparison-middle {
+    width: 100%;
+  }
+  
+  .middle-cards-row-single {
     justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .chef-card-wrapper-middle,
+  .restaurant-card-wrapper-middle {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 50%;
+  }
+  
+  .chef-card-wrapper-middle .card-medium,
+  .restaurant-card-wrapper-middle .restaurant-medium {
+    width: clamp(120px, 20vw, 160px);
+    height: clamp(180px, 30vw, 240px);
   }
   
   .player-hand-fixed {

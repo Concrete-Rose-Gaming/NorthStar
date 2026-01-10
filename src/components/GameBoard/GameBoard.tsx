@@ -99,39 +99,72 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               cardsPlayed={opponentCardsPlayed}
             />
           )}
-          {/* Opponent Chef and Restaurant */}
-          <div className="opponent-cards-compact">
-            {opponentChef && (
-              <div className="chef-card-wrapper-small">
-                <Card card={opponentChef} size="small" />
+        </div>
+
+        {/* Middle section - Chef and Restaurant cards in one row */}
+        <div className="middle-section">
+          {/* Scores during face-off */}
+          {showScores && (
+            <div className="score-comparison-middle">
+              <div className={`score-display ${youScore > opponentScore ? 'winner' : ''}`}>
+                <h3>{you?.name || 'You'}</h3>
+                <div className="score-value">{youScore}</div>
               </div>
-            )}
+              <div className="vs">VS</div>
+              <div className={`score-display ${opponentScore > youScore ? 'winner' : ''}`}>
+                <h3>{opponent?.name || 'Opponent'}</h3>
+                <div className="score-value">{opponentScore}</div>
+              </div>
+            </div>
+          )}
+          
+          {/* All four cards in one row: Restaurant (opponent) - Chef (opponent) - Chef (you) - Restaurant (you) */}
+          <div className="middle-cards-row-single">
+            {/* Opponent Restaurant */}
             {opponentRestaurant && (
-              <div className="restaurant-card-wrapper-small">
+              <div className="restaurant-card-wrapper-middle">
+                <div className="middle-card-label">{opponent?.name || 'Opponent'}</div>
                 <Restaurant
                   restaurant={opponentRestaurant as any}
                   score={showScores ? opponentScore : undefined}
                   stars={opponent?.stars || 0}
+                  size="medium"
+                />
+              </div>
+            )}
+            
+            {/* Opponent Chef */}
+            {opponentChef && (
+              <div className="chef-card-wrapper-middle">
+                <div className="middle-card-label">{opponent?.name || 'Opponent'}</div>
+                <Card card={opponentChef} size="medium" />
+                <div className="card-label">Chef</div>
+              </div>
+            )}
+            
+            {/* Your Chef */}
+            {youChef && (
+              <div className="chef-card-wrapper-middle">
+                <div className="middle-card-label">{you?.name || 'You'}</div>
+                <Card card={youChef} size="medium" />
+                <div className="card-label">Chef</div>
+              </div>
+            )}
+            
+            {/* Your Restaurant */}
+            {youRestaurant && (
+              <div className="restaurant-card-wrapper-middle">
+                <div className="middle-card-label">{you?.name || 'You'}</div>
+                <Restaurant
+                  restaurant={youRestaurant as any}
+                  score={showScores ? youScore : undefined}
+                  stars={you?.stars || 0}
+                  size="medium"
                 />
               </div>
             )}
           </div>
         </div>
-
-        {/* Middle section - Scores (if face-off) */}
-        {showScores && (
-          <div className="score-comparison-middle">
-            <div className={`score-display ${youScore > opponentScore ? 'winner' : ''}`}>
-              <h3>{you?.name || 'You'}</h3>
-              <div className="score-value">{youScore}</div>
-            </div>
-            <div className="vs">VS</div>
-            <div className={`score-display ${opponentScore > youScore ? 'winner' : ''}`}>
-              <h3>{opponent?.name || 'Opponent'}</h3>
-              <div className="score-value">{opponentScore}</div>
-            </div>
-          </div>
-        )}
 
         {/* Right side - Current player */}
         <div className="player-section">
@@ -153,23 +186,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               player={you}
             />
           )}
-          {/* Your Chef and Restaurant */}
-          <div className="player-cards-compact">
-            {youChef && (
-              <div className="chef-card-wrapper-small">
-                <Card card={youChef} size="small" />
-              </div>
-            )}
-            {youRestaurant && (
-              <div className="restaurant-card-wrapper-small">
-                <Restaurant
-                  restaurant={youRestaurant as any}
-                  score={showScores ? youScore : undefined}
-                  stars={you?.stars || 0}
-                />
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
