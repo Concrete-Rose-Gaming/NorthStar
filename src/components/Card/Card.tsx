@@ -107,13 +107,22 @@ export const Card: React.FC<CardProps> = ({
             )}
           </div>
         )}
-        {restaurantCard?.primaryArchetype && (
-          <div className="card-archetypes">
-            <ArchetypeBadge 
-              archetype={restaurantCard.primaryArchetype}
-              size={size === 'large' ? 'large' : size === 'small' ? 'small' : 'medium'}
-            />
-          </div>
+        {restaurantCard && (
+          <>
+            {/* #region agent log */}
+            {(() => { fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Card.tsx:110',message:'Restaurant card render',data:{cardId:restaurantCard.id,cardName:restaurantCard.name,primaryArchetype:restaurantCard.primaryArchetype,hasPrimaryArchetype:!!restaurantCard.primaryArchetype},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{}); return null; })()}
+            {/* #endregion */}
+            <div className="card-archetypes">
+              {restaurantCard.primaryArchetype ? (
+                <ArchetypeBadge 
+                  archetype={restaurantCard.primaryArchetype}
+                  size={size === 'large' ? 'large' : size === 'small' ? 'small' : 'medium'}
+                />
+              ) : (
+                <span className="archetype-missing">No Type</span>
+              )}
+            </div>
+          </>
         )}
         {mealCard?.mealArchetype && (
           <div className="card-archetypes">

@@ -29,7 +29,7 @@ export interface ScoreResult {
 /**
  * Calculates the total score for a player's restaurant
  */
-export function calculateScore(boardState: PlayerBoardState): ScoreResult {
+export function calculateScore(boardState: PlayerBoardState, playerStars: number = 0): ScoreResult {
   const breakdown: string[] = [];
   let baseScore = 0;
   let mealPoints = 0;
@@ -139,7 +139,8 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
     const restBonus = checkRestaurantAbility(
       restaurantCard,
       boardState,
-      { mealCount: attachedMeals.length, staffCount: boardState.playedStaff.length }
+      { mealCount: attachedMeals.length, staffCount: boardState.playedStaff.length },
+      playerStars
     );
     restaurantBonus = restBonus;
     if (restBonus > 0) {
@@ -205,8 +206,15 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
 function checkRestaurantAbility(
   restaurant: RestaurantCard,
   boardState: PlayerBoardState,
-  stats: { mealCount: number; staffCount: number }
+  stats: { mealCount: number; staffCount: number },
+  playerStars: number
 ): number {
+  // Check star requirement first - if not met, effect doesn't activate
+  const requiredStars = restaurant.requiredStars ?? 0;
+  if (playerStars < requiredStars) {
+    return 0; // Effect doesn't activate if player doesn't have enough stars
+  }
+
   const condition = restaurant.abilityCondition.toLowerCase();
 
   // Check various conditions (note: conditions now check attached meals, not played meals)

@@ -1,5 +1,6 @@
 import React from 'react';
 import { RestaurantCard, MealCard, getCardById } from '../../game/CardTypes';
+import { ArchetypeBadge } from '../ArchetypeBadge/ArchetypeBadge';
 import './Restaurant.css';
 
 interface RestaurantProps {
@@ -26,6 +27,16 @@ export const Restaurant: React.FC<RestaurantProps> = ({
         </div>
       </div>
       <div className="restaurant-body">
+        <div className="restaurant-archetype">
+          {restaurant.primaryArchetype ? (
+            <ArchetypeBadge 
+              archetype={restaurant.primaryArchetype}
+              size={size === 'large' ? 'large' : size === 'small' ? 'small' : 'medium'}
+            />
+          ) : (
+            <span className="archetype-missing">No Type</span>
+          )}
+        </div>
         <p className="restaurant-description">{restaurant.description}</p>
         <div className="restaurant-base-score">
           Base Score: <strong>{restaurant.baseScore}</strong>
@@ -53,6 +64,12 @@ export const Restaurant: React.FC<RestaurantProps> = ({
           </div>
         )}
         <div className="restaurant-ability">
+          {restaurant.requiredStars !== undefined && restaurant.requiredStars > 0 && (
+            <div className={`ability-star-requirement ${stars >= restaurant.requiredStars ? 'requirement-met' : 'requirement-unmet'}`}>
+              Requires {restaurant.requiredStars} {restaurant.requiredStars === 1 ? 'star' : 'stars'} {'⭐'.repeat(restaurant.requiredStars)}
+              {stars < restaurant.requiredStars && ` (You have ${stars})`}
+            </div>
+          )}
           <div className="ability-condition">{restaurant.abilityCondition}</div>
           <div className="ability-description">{restaurant.abilityDescription}</div>
         </div>

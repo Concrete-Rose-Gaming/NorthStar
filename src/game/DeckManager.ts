@@ -1,4 +1,4 @@
-import { CardType, getCardById, isValidCardId } from './CardTypes';
+import { CardType, getCardById, isValidCardId, ChefCard, RestaurantCard, MealCard, StaffCard } from './CardTypes';
 import { getCardRegistry } from './CardLoader';
 
 // Deck is represented as an array of card IDs (strings)
@@ -377,3 +377,67 @@ export function selectRandomRestaurant(restaurantCardIds: string[]): string | nu
   return restaurantCardIds[randomIndex];
 }
 
+/**
+ * Checks if a restaurant matches any of the chef's archetypes
+ */
+export function restaurantMatchesChefArchetype(
+  restaurantCard: RestaurantCard,
+  chefCard: ChefCard
+): boolean {
+  // Archetype matching disabled - allow all restaurants for deck building
+  return true;
+}
+
+/**
+ * Checks if a meal card matches any of the chef's archetypes
+ */
+export function mealMatchesChefArchetype(
+  mealCard: MealCard,
+  chefCard: ChefCard
+): boolean {
+  if (!mealCard.mealArchetype) {
+    return false; // Meal must have an archetype to match
+  }
+  
+  const chefArchetypes = [chefCard.primaryArchetype];
+  if (chefCard.secondaryArchetype) {
+    chefArchetypes.push(chefCard.secondaryArchetype);
+  }
+  
+  return chefArchetypes.includes(mealCard.mealArchetype);
+}
+
+/**
+ * Checks if a staff card matches any of the chef's archetypes
+ */
+export function staffMatchesChefArchetype(
+  staffCard: StaffCard,
+  chefCard: ChefCard
+): boolean {
+  if (!staffCard.staffArchetype) {
+    return false; // Staff must have an archetype to match
+  }
+  
+  const chefArchetypes = [chefCard.primaryArchetype];
+  if (chefCard.secondaryArchetype) {
+    chefArchetypes.push(chefCard.secondaryArchetype);
+  }
+  
+  return chefArchetypes.includes(staffCard.staffArchetype);
+}
+
+/**
+ * Checks if a card (meal/staff) matches chef archetypes, or is universal (support/event)
+ */
+export function cardAllowedForChef(cardId: string, chefCard: ChefCard | null): boolean {
+  const card = getCardById(cardId);
+  if (!card) return false;
+  
+  // Don't allow Chef or Restaurant cards in main deck (handled separately)
+  if (card.type === CardType.CHEF || card.type === CardType.RESTAURANT) {
+    return false;
+  }
+  
+  // Archetype matching disabled - allow all other cards for deck building
+  return true;
+}

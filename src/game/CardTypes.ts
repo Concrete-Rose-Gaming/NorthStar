@@ -49,6 +49,7 @@ export interface RestaurantCard extends BaseCard {
   abilityCondition: string;
   abilityDescription: string;
   primaryArchetype?: string;        // Optional archetype for restaurants
+  requiredStars?: number;            // Minimum star ranking required for effect to activate
 }
 
 // Meal card - contributes to restaurant score

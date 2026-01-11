@@ -40,8 +40,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const opponentId = currentPlayerId === 'player1' ? 'player2' : 'player1';
   const opponent = gameState.players[opponentId];
 
-  const youScore = you ? calculateScore(you.boardState).totalScore : 0;
-  const opponentScore = opponent ? calculateScore(opponent.boardState).totalScore : 0;
+  const youScore = you ? calculateScore(you.boardState, you.stars).totalScore : 0;
+  const opponentScore = opponent ? calculateScore(opponent.boardState, opponent.stars).totalScore : 0;
 
   const youRestaurant = you?.restaurantCardId ? getCardById(you.restaurantCardId) : null;
   const opponentRestaurant = opponent?.restaurantCardId ? getCardById(opponent.restaurantCardId) : null;

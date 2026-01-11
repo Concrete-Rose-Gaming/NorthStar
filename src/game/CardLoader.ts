@@ -25,13 +25,16 @@ function convertSupabaseCardToGameCard(supabaseCard: SupabaseCard): Card {
         abilityDescription: supabaseCard.description,
         startingInfluence: chefData?.starting_influence ?? 3, // Default 3, from feeder table
         starBonusInfluence: chefData?.star_bonus_influence ?? 1, // Default 1, from feeder table
-        primaryArchetype: chefData?.employee_type || undefined, // Primary archetype from employee_type
-        secondaryArchetype: chefData?.second_enum || undefined // Secondary archetype from second_enum (optional)
+        primaryArchetype: chefData?.Restaurant_Focus_1 || undefined, // Primary archetype from Restaurant_Focus_1
+        secondaryArchetype: chefData?.Restaurant_Focus_2 || undefined // Secondary archetype from Restaurant_Focus_2 (optional)
       } as ChefCard;
     }
 
     case 'RESTAURANT': {
       const restaurantData = supabaseCard.restaurant_data;
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:34',message:'RESTAURANT card conversion',data:{cardCode:supabaseCard.code,restaurantData:restaurantData,RestaurantFocus1:restaurantData?.Restaurant_Focus_1,allKeys:restaurantData?Object.keys(restaurantData):null},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       return {
         ...baseCard,
         type: CardType.RESTAURANT,
@@ -39,7 +42,8 @@ function convertSupabaseCardToGameCard(supabaseCard: SupabaseCard): Card {
         ability: supabaseCard.effect || '',
         abilityCondition: '', // TODO: Add abilityCondition field to Supabase schema
         abilityDescription: supabaseCard.description,
-        primaryArchetype: restaurantData?.restaurant_type || undefined // Restaurant archetype
+        primaryArchetype: restaurantData?.Restaurant_Focus_1 || undefined, // Restaurant archetype from Restaurant_Focus_1
+        requiredStars: restaurantData?.required_stars ?? 0 // Default to 0 if not specified
       } as RestaurantCard;
     }
 
@@ -119,12 +123,21 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
   // Start loading
   cardRegistryPromise = (async () => {
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:123',message:'loadCardsFromSupabase starting',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
       const { cards, error } = await getAllCards();
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:126',message:'getAllCards result',data:{cardCount:cards?.length||0,error:error?.message||null,hasError:!!error},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
 
       if (error) {
         console.error('Failed to load cards from Supabase:', error);
         // Fallback to local cards if Supabase fails
         console.warn('Falling back to local card definitions');
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:131',message:'Using local fallback',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
         const { CARD_DEFINITIONS } = require('./CardTypes');
         cardRegistry = CARD_DEFINITIONS;
         isLoaded = true;
@@ -133,6 +146,9 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
 
       // Convert Supabase cards to game cards
       const registry: CardRegistry = {};
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:141',message:'Starting card conversion',data:{totalCards:cards.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
       for (const supabaseCard of cards) {
         try {
           const gameCard = convertSupabaseCardToGameCard(supabaseCard);
@@ -145,6 +161,9 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
       // If no cards were loaded from Supabase, fallback to local
       if (Object.keys(registry).length === 0) {
         console.warn('No cards loaded from Supabase, falling back to local definitions');
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:152',message:'No cards converted, using local fallback',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
         const { CARD_DEFINITIONS } = require('./CardTypes');
         cardRegistry = CARD_DEFINITIONS;
         isLoaded = true;
@@ -154,6 +173,9 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
       cardRegistry = registry;
       isLoaded = true;
       console.log(`Loaded ${Object.keys(registry).length} cards from Supabase`);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:161',message:'Cards loaded from Supabase',data:{cardCount:Object.keys(registry).length,restaurantCount:Object.values(registry).filter(c=>c.type===CardType.RESTAURANT).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
       return registry;
     } catch (error) {
       console.error('Error loading cards:', error);

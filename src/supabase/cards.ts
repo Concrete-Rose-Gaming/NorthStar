@@ -19,13 +19,14 @@ export interface Card {
     code: string;
     starting_influence?: number;
     star_bonus_influence?: number;
-    employee_type?: string; // Primary archetype
-    second_enum?: string; // Secondary archetype (if dual)
+    Restaurant_Focus_1?: string; // Primary archetype
+    Restaurant_Focus_2?: string; // Secondary archetype (if dual)
   } | null;
   restaurant_data?: {
     code: string;
-    restaurant_type?: string;
-    second_enum?: string;
+    Restaurant_Focus_1?: string; // Primary archetype
+    Restaurant_Focus_2?: string; // Secondary archetype (if dual)
+    required_stars?: number; // Minimum star ranking required for effect to activate
   } | null;
   meal_data?: {
     code: string;
@@ -94,15 +95,24 @@ export async function getAllCards(): Promise<{ cards: Card[]; error: Error | nul
       .from('cards')
       .select(`
         *,
-        chef_data:chef_cards(code, starting_influence, star_bonus_influence, employee_type, second_enum),
-        restaurant_data:restaurant_cards(code, restaurant_type, second_enum),
-        meal_data:meal_cards(code, food_type, influence_cost, second_enum),
-        staff_data:staff_cards(code, employee_type, influence_cost, second_enum),
-        event_data:event_cards(code, influence_cost, first_enum, second_enum)
+        chef_data:chef_cards(code, starting_influence, star_bonus_influence, Restaurant_Focus_1, Restaurant_Focus_2),
+        restaurant_data:restaurant_cards(code, Restaurant_Focus_1, Restaurant_Focus_2, required_stars),
+        meal_data:meal_cards(code, food_type, influence_cost, restaurant_type_1, restaurant_type_2),
+        staff_data:staff_cards(code, employee_type, influence_cost, restaurant_type),
+        event_data:event_cards(code, influence_cost)
       `)
       .order('expansion', { ascending: true })
       .order('card_type', { ascending: true })
       .order('card_number', { ascending: true });
+
+    // #region agent log
+    if (data) {
+      const restaurantCards = data.filter((c: any) => c.card_type === 'RESTAURANT').slice(0, 3);
+      restaurantCards.forEach((card: any) => {
+          fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'cards.ts:96',message:'getAllCards restaurant data',data:{cardCode:card.code,restaurantData:card.restaurant_data,restaurantDataKeys:card.restaurant_data?Object.keys(card.restaurant_data):null,RestaurantFocus1:card.restaurant_data?.Restaurant_Focus_1},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'A'})}).catch(()=>{});
+      });
+    }
+    // #endregion
 
     if (error) {
       return { cards: [], error: error as Error };

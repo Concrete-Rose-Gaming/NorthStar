@@ -480,8 +480,8 @@ export function performFaceOff(gameState: GameState): GameState {
   }
 
   // Calculate scores
-  const score1 = calculateScore(p1.boardState);
-  const score2 = calculateScore(p2.boardState);
+  const score1 = calculateScore(p1.boardState, p1.stars);
+  const score2 = calculateScore(p2.boardState, p2.stars);
 
   // Determine winner
   const roundWinner = compareScores(score1.totalScore, score2.totalScore);
