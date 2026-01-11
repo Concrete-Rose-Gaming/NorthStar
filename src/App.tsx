@@ -54,7 +54,6 @@ function App() {
   const [playerName, setPlayerName] = useState('');
   const [playerDeck, setPlayerDeck] = useState<PlayerDeck | null>(null);
   const [mulliganCards, setMulliganCards] = useState<string[]>([]);
-  const [showMulligan, setShowMulligan] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   
   // #region agent log
@@ -140,7 +139,6 @@ function App() {
     };
 
     setGameState(updatedState);
-    setShowMulligan(true);
   };
 
   const handleDeckComplete = (completedDeck: PlayerDeck) => {
@@ -167,7 +165,6 @@ function App() {
       : { ...player2, ready: true };
 
     setMulliganCards([]);
-    setShowMulligan(false);
 
     // Move to coin flip
     const coinResult = flipCoin();
@@ -206,7 +203,6 @@ function App() {
     }, coinResult);
 
     setGameState(updatedState);
-    setShowMulligan(false);
   };
 
   const [mealReplacementState, setMealReplacementState] = useState<{

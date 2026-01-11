@@ -40,11 +40,6 @@ export const DualArchetypeBadge: React.FC<DualArchetypeBadgeProps> = ({
   secondary, 
   size = 'medium' 
 }) => {
-  const primaryColor = getArchetypeColor(primary);
-  const secondaryColor = getArchetypeColor(secondary);
-  const primaryDef = getArchetypeDefinition(primary);
-  const secondaryDef = getArchetypeDefinition(secondary);
-
   return (
     <div className={`dual-archetype-badge dual-archetype-badge-${size}`}>
       <ArchetypeBadge archetype={primary} size={size} />
