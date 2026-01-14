@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Chef Card Editor
+Comment=Create and edit game cards for Chef Card Game
+Exec=/path/to/Chef Card Editor-*.AppImage
+Icon=application-x-executable
+Type=Application
+Categories=Utility;Game;
+Terminal=false
+StartupNotify=true
+
+
