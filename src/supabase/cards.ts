@@ -1,4 +1,4 @@
-import { supabase } from './config';
+import { supabase, isSupabaseConfigured } from './config';
 
 export interface Card {
   code: string; // Format: EXPANSION-TYPE-NUMBER
@@ -90,6 +90,14 @@ export function parseCardCode(code: string): { expansion: string; cardType: stri
  * Gets all cards with feeder table data using LEFT JOINs
  */
 export async function getAllCards(): Promise<{ cards: Card[]; error: Error | null }> {
+  // If Supabase is not configured, immediately return error without making requests
+  if (!isSupabaseConfigured()) {
+    return { 
+      cards: [], 
+      error: new Error('Supabase not configured') 
+    };
+  }
+
   try {
     const { data, error } = await supabase
       .from('cards')
@@ -104,15 +112,6 @@ export async function getAllCards(): Promise<{ cards: Card[]; error: Error | nul
       .order('expansion', { ascending: true })
       .order('card_type', { ascending: true })
       .order('card_number', { ascending: true });
-
-    // #region agent log
-    if (data) {
-      const restaurantCards = data.filter((c: any) => c.card_type === 'RESTAURANT').slice(0, 3);
-      restaurantCards.forEach((card: any) => {
-          fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'cards.ts:96',message:'getAllCards restaurant data',data:{cardCode:card.code,restaurantData:card.restaurant_data,restaurantDataKeys:card.restaurant_data?Object.keys(card.restaurant_data):null,RestaurantFocus1:card.restaurant_data?.Restaurant_Focus_1},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'A'})}).catch(()=>{});
-      });
-    }
-    // #endregion
 
     if (error) {
       return { cards: [], error: error as Error };
