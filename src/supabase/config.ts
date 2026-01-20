@@ -31,7 +31,10 @@ function getSupabaseClient(): SupabaseClient {
       } else {
         // Create a no-op client that returns errors instead of making requests
         // This prevents CORS errors from placeholder URLs
-        console.warn('Supabase not configured. Please set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY in your .env file');
+        // Only show warning in development mode
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Supabase not configured. Please set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY in your .env file');
+        }
         // Create a client with empty strings - it will fail gracefully
         supabaseInstance = createClient(
           supabaseUrl || 'https://not-configured.supabase.co',

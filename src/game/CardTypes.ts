@@ -9,6 +9,18 @@ export enum CardType {
   EVENT = 'EVENT'
 }
 
+// Archetype system
+export type Archetype = 'Breakfast' | 'Food Truck' | 'Diner' | 'Fast Casual' | 'Sit Down' | 'Buffet' | 'Brunch' | 'Lunch' | 'Dinner';
+
+export interface ArchetypeDefinition {
+  name: string;
+  displayName: string;
+  color: string;
+  icon?: string;
+  description: string;
+  synergies: string[]; // Other archetypes that synergize
+}
+
 // Base card interface
 export interface BaseCard {
   id: string;
@@ -23,6 +35,10 @@ export interface ChefCard extends BaseCard {
   baseValue: number;
   ability: string;
   abilityDescription: string;
+  startingInfluence: number;        // Base influence chef provides
+  starBonusInfluence: number;       // Bonus influence per star earned
+  primaryArchetype: string;         // Main archetype (e.g., 'Breakfast', 'Food Truck')
+  secondaryArchetype?: string;      // Optional second archetype for dual-archetype chefs
 }
 
 // Restaurant card - cannot be removed, has base score and conditional ability
@@ -32,6 +48,8 @@ export interface RestaurantCard extends BaseCard {
   ability: string;
   abilityCondition: string;
   abilityDescription: string;
+  primaryArchetype?: string;        // Optional archetype for restaurants
+  requiredStars?: number;            // Minimum star ranking required for effect to activate
 }
 
 // Meal card - contributes to restaurant score
@@ -40,6 +58,8 @@ export interface MealCard extends BaseCard {
   value: number;
   effect?: string;
   effectDescription?: string;
+  influenceCost: number;            // Influence cost to play this card
+  mealArchetype?: string;           // Optional archetype for meal synergies
 }
 
 // Staff card - provides support abilities and modifiers
@@ -48,6 +68,8 @@ export interface StaffCard extends BaseCard {
   ability: string;
   abilityDescription: string;
   modifier?: number;
+  influenceCost: number;            // Influence cost to play this card
+  staffArchetype?: string;          // Optional archetype for staff synergies
 }
 
 // Support card - utility and enhancement effects
@@ -64,6 +86,7 @@ export interface EventCard extends BaseCard {
   effect: string;
   effectDescription: string;
   target?: 'self' | 'opponent' | 'both';
+  influenceCost: number;            // Influence cost to play this card
 }
 
 // Union type for all cards
@@ -72,7 +95,9 @@ export type Card = ChefCard | RestaurantCard | MealCard | StaffCard | SupportCar
 // Card registry - stores all card definitions by ID
 export type CardRegistry = Record<string, Card>;
 
-// Placeholder card data
+// Card data is now loaded from Supabase via CardLoader
+// This constant is kept for backward compatibility during migration
+// DO NOT USE - use getCardRegistry() from CardLoader instead
 export const CARD_DEFINITIONS: CardRegistry = {
   // Chef Cards
   'chef_001': {
@@ -82,7 +107,11 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.CHEF,
     baseValue: 5,
     ability: 'perfectionist',
-    abilityDescription: 'Add +2 to all Meal cards you play'
+    abilityDescription: 'Add +2 to all Meal cards you play',
+    startingInfluence: 3,
+    starBonusInfluence: 1,
+    primaryArchetype: 'Sit Down',
+    secondaryArchetype: undefined
   },
   'chef_002': {
     id: 'chef_002',
@@ -91,7 +120,11 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.CHEF,
     baseValue: 4,
     ability: 'innovation',
-    abilityDescription: 'Once per round, double the value of one Meal card'
+    abilityDescription: 'Once per round, double the value of one Meal card',
+    startingInfluence: 4,
+    starBonusInfluence: 1,
+    primaryArchetype: 'Fast Casual',
+    secondaryArchetype: undefined
   },
   'chef_003': {
     id: 'chef_003',
@@ -100,7 +133,11 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.CHEF,
     baseValue: 3,
     ability: 'speed',
-    abilityDescription: 'Draw an extra card at the start of each round'
+    abilityDescription: 'Draw an extra card at the start of each round',
+    startingInfluence: 5,
+    starBonusInfluence: 0,
+    primaryArchetype: 'Food Truck',
+    secondaryArchetype: undefined
   },
   'chef_004': {
     id: 'chef_004',
@@ -109,7 +146,11 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.CHEF,
     baseValue: 4,
     ability: 'presentation',
-    abilityDescription: 'Your Restaurant gains +1 base score'
+    abilityDescription: 'Your Restaurant gains +1 base score',
+    startingInfluence: 3,
+    starBonusInfluence: 1,
+    primaryArchetype: 'Sit Down',
+    secondaryArchetype: undefined
   },
   'chef_005': {
     id: 'chef_005',
@@ -118,7 +159,11 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.CHEF,
     baseValue: 5,
     ability: 'bold',
-    abilityDescription: 'When you win a round, gain an extra star'
+    abilityDescription: 'When you win a round, gain an extra star',
+    startingInfluence: 3,
+    starBonusInfluence: 2,
+    primaryArchetype: 'Dinner',
+    secondaryArchetype: undefined
   },
 
   // Restaurant Cards
@@ -219,105 +264,135 @@ export const CARD_DEFINITIONS: CardRegistry = {
     name: 'Signature Burger',
     description: 'A classic favorite',
     type: CardType.MEAL,
-    value: 3
+    value: 3,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_002': {
     id: 'meal_002',
     name: 'Truffle Pasta',
     description: 'Luxurious and rich',
     type: CardType.MEAL,
-    value: 5
+    value: 5,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_003': {
     id: 'meal_003',
     name: 'Grilled Salmon',
     description: 'Fresh and healthy',
     type: CardType.MEAL,
-    value: 4
+    value: 4,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_004': {
     id: 'meal_004',
     name: 'Ribeye Steak',
     description: 'Premium cut',
     type: CardType.MEAL,
-    value: 6
+    value: 6,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_005': {
     id: 'meal_005',
     name: 'Caesar Salad',
     description: 'Crisp and refreshing',
     type: CardType.MEAL,
-    value: 2
+    value: 2,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_006': {
     id: 'meal_006',
     name: 'Lobster Bisque',
     description: 'Elegant starter',
     type: CardType.MEAL,
-    value: 4
+    value: 4,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_007': {
     id: 'meal_007',
     name: 'Chocolate Soufflé',
     description: 'Decadent dessert',
     type: CardType.MEAL,
-    value: 3
+    value: 3,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_008': {
     id: 'meal_008',
     name: 'Sushi Platter',
     description: 'Artisanal selection',
     type: CardType.MEAL,
-    value: 5
+    value: 5,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_009': {
     id: 'meal_009',
     name: 'Margherita Pizza',
     description: 'Simple perfection',
     type: CardType.MEAL,
-    value: 3
+    value: 3,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_010': {
     id: 'meal_010',
     name: 'Wagyu Beef',
     description: 'Ultra-premium',
     type: CardType.MEAL,
-    value: 7
+    value: 7,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_011': {
     id: 'meal_011',
     name: 'Ramen Bowl',
     description: 'Comforting and warm',
     type: CardType.MEAL,
-    value: 3
+    value: 3,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_012': {
     id: 'meal_012',
     name: 'Duck Confit',
     description: 'French classic',
     type: CardType.MEAL,
-    value: 5
+    value: 5,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_013': {
     id: 'meal_013',
     name: 'Fish Tacos',
     description: 'Fresh and zesty',
     type: CardType.MEAL,
-    value: 3
+    value: 3,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_014': {
     id: 'meal_014',
     name: 'Beef Wellington',
     description: 'Elegant entrée',
     type: CardType.MEAL,
-    value: 6
+    value: 6,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
   'meal_015': {
     id: 'meal_015',
     name: 'Tiramisu',
     description: 'Italian classic',
     type: CardType.MEAL,
-    value: 3
+    value: 3,
+    influenceCost: 1,
+    mealArchetype: undefined
   },
 
   // Staff Cards
@@ -328,7 +403,9 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.STAFF,
     ability: 'service',
     abilityDescription: 'Add +1 to all Meal cards',
-    modifier: 1
+    modifier: 1,
+    influenceCost: 2,
+    staffArchetype: undefined
   },
   'staff_002': {
     id: 'staff_002',
@@ -337,7 +414,9 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.STAFF,
     ability: 'support',
     abilityDescription: 'Add +2 to one Meal card',
-    modifier: 2
+    modifier: 2,
+    influenceCost: 2,
+    staffArchetype: undefined
   },
   'staff_003': {
     id: 'staff_003',
@@ -346,7 +425,9 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.STAFF,
     ability: 'pairing',
     abilityDescription: 'Add +1 to Restaurant base score',
-    modifier: 1
+    modifier: 1,
+    influenceCost: 2,
+    staffArchetype: undefined
   },
   'staff_004': {
     id: 'staff_004',
@@ -355,7 +436,9 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.STAFF,
     ability: 'dessert',
     abilityDescription: 'Double the value of dessert Meal cards',
-    modifier: 2
+    modifier: 2,
+    influenceCost: 2,
+    staffArchetype: undefined
   },
   'staff_005': {
     id: 'staff_005',
@@ -364,7 +447,9 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.STAFF,
     ability: 'welcome',
     abilityDescription: 'Draw an extra card next round',
-    modifier: 0
+    modifier: 0,
+    influenceCost: 2,
+    staffArchetype: undefined
   },
   'staff_006': {
     id: 'staff_006',
@@ -373,7 +458,9 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.STAFF,
     ability: 'efficiency',
     abilityDescription: 'Reduce opponent\'s score by 1',
-    modifier: -1
+    modifier: -1,
+    influenceCost: 2,
+    staffArchetype: undefined
   },
   'staff_007': {
     id: 'staff_007',
@@ -382,7 +469,9 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.STAFF,
     ability: 'cocktails',
     abilityDescription: 'Add +1 to Restaurant base score',
-    modifier: 1
+    modifier: 1,
+    influenceCost: 2,
+    staffArchetype: undefined
   },
   'staff_008': {
     id: 'staff_008',
@@ -391,7 +480,9 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.STAFF,
     ability: 'cleanup',
     abilityDescription: 'Remove one Event card effect',
-    modifier: 0
+    modifier: 0,
+    influenceCost: 2,
+    staffArchetype: undefined
   },
 
   // Support Cards
@@ -458,7 +549,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.EVENT,
     effect: 'disrupt',
     effectDescription: 'Opponent loses 3 points from their score',
-    target: 'opponent'
+    target: 'opponent',
+    influenceCost: 2
   },
   'event_002': {
     id: 'event_002',
@@ -467,7 +559,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.EVENT,
     effect: 'inspect',
     effectDescription: 'Opponent cannot use Staff card abilities this round',
-    target: 'opponent'
+    target: 'opponent',
+    influenceCost: 2
   },
   'event_003': {
     id: 'event_003',
@@ -476,7 +569,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.EVENT,
     effect: 'rush',
     effectDescription: 'Both players draw 2 extra cards',
-    target: 'both'
+    target: 'both',
+    influenceCost: 2
   },
   'event_004': {
     id: 'event_004',
@@ -485,7 +579,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.EVENT,
     effect: 'shortage',
     effectDescription: 'Opponent discards one Meal card',
-    target: 'opponent'
+    target: 'opponent',
+    influenceCost: 2
   },
   'event_005': {
     id: 'event_005',
@@ -494,7 +589,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.EVENT,
     effect: 'celebrity',
     effectDescription: 'Add +5 to your Restaurant score',
-    target: 'self'
+    target: 'self',
+    influenceCost: 2
   },
   'event_006': {
     id: 'event_006',
@@ -503,7 +599,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.EVENT,
     effect: 'outage',
     effectDescription: 'Opponent\'s Restaurant loses 2 base score this round',
-    target: 'opponent'
+    target: 'opponent',
+    influenceCost: 2
   },
   'event_007': {
     id: 'event_007',
@@ -512,7 +609,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.EVENT,
     effect: 'festival',
     effectDescription: 'Both players gain +2 to Restaurant base score',
-    target: 'both'
+    target: 'both',
+    influenceCost: 2
   },
   'event_008': {
     id: 'event_008',
@@ -521,22 +619,68 @@ export const CARD_DEFINITIONS: CardRegistry = {
     type: CardType.EVENT,
     effect: 'review',
     effectDescription: 'Opponent loses 1 star (minimum 0)',
-    target: 'opponent'
+    target: 'opponent',
+    influenceCost: 2
   }
 };
 
 // Helper function to get card by ID
+// Now uses CardLoader registry instead of local CARD_DEFINITIONS
 export function getCardById(id: string): Card | undefined {
-  return CARD_DEFINITIONS[id];
+  try {
+    // Use dynamic import to avoid circular dependency issues
+    const cardLoader = require('./CardLoader');
+    const registry: CardRegistry = cardLoader.getCardRegistry();
+    const card = registry[id];
+    // Fallback to local definitions if card not found in registry
+    return card || CARD_DEFINITIONS[id];
+  } catch (error) {
+    // Fallback to local definitions if loader not available (for migration period)
+    console.warn('CardLoader not available, using local definitions');
+    return CARD_DEFINITIONS[id];
+  }
 }
 
 // Helper function to get all cards of a type
+// Now uses CardLoader registry instead of local CARD_DEFINITIONS
 export function getCardsByType(type: CardType): Card[] {
-  return Object.values(CARD_DEFINITIONS).filter(card => card.type === type);
+  try {
+    // Use dynamic import to avoid circular dependency issues
+    const cardLoader = require('./CardLoader');
+    const registry: CardRegistry = cardLoader.getCardRegistry();
+    const cards = Object.values(registry).filter((card: Card) => card.type === type);
+    // If registry is empty (cards not loaded), fallback to local definitions
+    if (cards.length === 0 && Object.keys(registry).length === 0) {
+      return Object.values(CARD_DEFINITIONS).filter(card => card.type === type);
+    }
+    return cards;
+  } catch (error) {
+    // Fallback to local definitions if loader not available (for migration period)
+    console.warn('CardLoader not available, using local definitions');
+    return Object.values(CARD_DEFINITIONS).filter(card => card.type === type);
+  }
 }
 
 // Helper function to validate card ID exists
+// Now uses CardLoader registry instead of local CARD_DEFINITIONS
 export function isValidCardId(id: string): boolean {
-  return id in CARD_DEFINITIONS;
+  try {
+    // Use dynamic import to avoid circular dependency issues
+    const cardLoader = require('./CardLoader');
+    const registry: CardRegistry = cardLoader.getCardRegistry();
+    // Check registry first, fallback to local definitions if registry is empty
+    if (id in registry) {
+      return true;
+    }
+    if (Object.keys(registry).length === 0) {
+      // Registry is empty (cards not loaded), check local definitions
+      return id in CARD_DEFINITIONS;
+    }
+    return false;
+  } catch (error) {
+    // Fallback to local definitions if loader not available (for migration period)
+    console.warn('CardLoader not available, using local definitions');
+    return id in CARD_DEFINITIONS;
+  }
 }
 

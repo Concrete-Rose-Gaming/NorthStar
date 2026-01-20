@@ -19,16 +19,32 @@ import {
 import { PlayerDeck } from './game/DeckManager';
 import { AIOpponent } from './game/AIOpponent';
 import { getCardById, CardType } from './game/CardTypes';
+import { loadCardsFromSupabase } from './game/CardLoader';
 import { Tutorial } from './components/Tutorial/Tutorial';
 import { Login } from './components/Login/Login';
 import { DeckManager } from './components/DeckManager/DeckManager';
+import { MuteButton } from './components/MuteButton/MuteButton';
 import { AuthUser, getCurrentUser, onAuthStateChange, signOut } from './supabase/auth';
+import { musicService } from './services/MusicService';
 import './App.css';
 
 function App() {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/App.tsx:App-function-entry',message:'App component function executing',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'white-page-debug',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
+  const [cardsLoaded, setCardsLoaded] = useState(false);
+  const [cardsError, setCardsError] = useState<Error | null>(null);
+
+  // Load cards from Supabase on mount
+  useEffect(() => {
+    loadCardsFromSupabase()
+      .then(() => {
+        setCardsLoaded(true);
+      })
+      .catch((error) => {
+        console.error('Failed to load cards:', error);
+        setCardsError(error);
+        // Still set loaded to true to allow app to continue (with fallback to local cards)
+        setCardsLoaded(true);
+      });
+  }, []);
   
   const [user, setUser] = useState<AuthUser | null>(null);
   const [showLogin, setShowLogin] = useState(false);
@@ -39,12 +55,9 @@ function App() {
   const [mulliganCards, setMulliganCards] = useState<string[]>([]);
   const [showMulligan, setShowMulligan] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
-  
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/App.tsx:App-state-initialized',message:'App component state initialized',data:{gameStateIsNull:gameState===null},timestamp:Date.now(),sessionId:'debug-session',runId:'white-page-debug',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   const [showDeckBuilder, setShowDeckBuilder] = useState(false);
   const [aiOpponent] = useState<AIOpponent>(new AIOpponent('AI Chef'));
+  const [isMuted, setIsMuted] = useState(musicService.getMuted());
   // Current player ID - in single-player mode, always 'player1' (you are always at bottom)
   const currentPlayerId: 'player1' | 'player2' = 'player1';
 
@@ -54,6 +67,25 @@ function App() {
     const unsubscribe = onAuthStateChange(setUser);
     return () => unsubscribe();
   }, []);
+
+  // Music management - play intro on lobby screen, gameplay music during game
+  useEffect(() => {
+    if (!gameState) {
+      // On lobby screen - play intro music
+      musicService.playIntro();
+    } else if (gameState.phase === GamePhase.TURN || 
+               gameState.phase === GamePhase.FACE_OFF || 
+               gameState.phase === GamePhase.ROUND_START ||
+               gameState.phase === GamePhase.ROUND_END) {
+      // During gameplay - play random gameplay music
+      musicService.playGameplayMusic();
+    }
+  }, [gameState]);
+
+  const handleToggleMute = () => {
+    const newMutedState = musicService.toggleMute();
+    setIsMuted(newMutedState);
+  };
 
   // Handle AI turn automatically
   useEffect(() => {
@@ -259,10 +291,27 @@ function App() {
     setShowDeckBuilder(false);
   };
 
+  // Show loading screen while cards are loading
+  if (!cardsLoaded) {
+    return (
+      <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
+        <div className="loading-screen">
+          <h1>Chef Card Game</h1>
+          <p>Loading cards...</p>
+          {cardsError && (
+            <p className="error-text">Warning: Failed to load cards from database. Using fallback.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // Show login screen if user wants to login (optional)
   if (showLogin) {
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         <Login
           onLogin={handleLogin}
           onSkip={() => setShowLogin(false)}
@@ -275,6 +324,7 @@ function App() {
   if (showDeckBuilder) {
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         {showDeckManager && user && (
           <DeckManager
             currentDeck={playerDeck || undefined}
@@ -307,14 +357,9 @@ function App() {
 
   // Initial screen - enter name and start
   if (!gameState) {
-    // #region agent log
-    const computedStyle = window.getComputedStyle(document.body);
-    const rootElement = document.getElementById('root');
-    const rootComputedStyle = rootElement ? window.getComputedStyle(rootElement) : null;
-    fetch('http://127.0.0.1:7242/ingest/cb56b80d-4377-4047-a30a-c397732dacfd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/App.tsx:App-lobby-render',message:'Rendering lobby screen (no gameState)',data:{showTutorial,bodyBg:computedStyle.background,rootExists:!!rootElement,rootDisplay:rootComputedStyle?.display,rootMinHeight:rootComputedStyle?.minHeight},timestamp:Date.now(),sessionId:'debug-session',runId:'white-page-debug',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
         {showDeckManager && user && (
           <DeckManager
@@ -402,6 +447,7 @@ function App() {
     const player1 = gameState.players.player1;
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         <div className="mulligan-screen">
           <h2>Mulligan Phase</h2>
           <p>Select cards to mulligan (or skip)</p>
@@ -440,6 +486,7 @@ function App() {
   if (gameState.phase === GamePhase.COIN_FLIP) {
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         <div className="coin-flip-screen">
           <h2>Flipping Coin...</h2>
           {gameState.coinFlipResult && (
@@ -473,6 +520,7 @@ function App() {
 
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
         <GameBoard
           gameState={gameState}
@@ -488,6 +536,7 @@ function App() {
 
   return (
     <div className="App">
+      <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
       <div className="waiting-screen">
         <h2>Waiting for game to start...</h2>
         <p>Phase: {gameState.phase}</p>

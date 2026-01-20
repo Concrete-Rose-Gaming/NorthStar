@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Card } from '../Card/Card';
-import { CardType, CARD_DEFINITIONS, getCardsByType } from '../../game/CardTypes';
+import { CardType, getCardsByType } from '../../game/CardTypes';
+import { getCardRegistry } from '../../game/CardLoader';
 import { PlayerDeck, validatePlayerDeck, getDeckStats } from '../../game/DeckManager';
 import './DeckBuilder.css';
 
@@ -39,7 +40,8 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
   };
 
   const handleAddToMainDeck = (cardId: string) => {
-    const card = CARD_DEFINITIONS[cardId];
+    const registry = getCardRegistry();
+    const card = registry[cardId];
     if (!card) return;
     
     // Don't allow Chef or Restaurant cards in main deck
@@ -98,7 +100,8 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
     } else {
       // Main deck - only Meals, Staff, Support, Event
       if (selectedType === 'MAIN_DECK') {
-        return Object.values(CARD_DEFINITIONS).filter(card => 
+        const registry = getCardRegistry();
+        return Object.values(registry).filter(card => 
           card.type !== CardType.CHEF && card.type !== CardType.RESTAURANT
         );
       }
@@ -202,12 +205,17 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
                 </div>
               ))}
             </div>
-            {chefCardId && (
-              <div className="selected-chef">
-                <h4>Selected Chef:</h4>
-                <Card card={CARD_DEFINITIONS[chefCardId]} size="medium" />
-              </div>
-            )}
+            {chefCardId && (() => {
+              const registry = getCardRegistry();
+              const chefCard = registry[chefCardId];
+              if (!chefCard) return null;
+              return (
+                <div className="selected-chef">
+                  <h4>Selected Chef:</h4>
+                  <Card card={chefCard} size="medium" />
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -235,9 +243,11 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
               <div className="selected-restaurants">
                 <h4>Selected Restaurants ({restaurantCardIds.length}/3):</h4>
                 <div className="cards-row">
-                  {restaurantCardIds.map(cardId => (
-                    <Card key={cardId} card={CARD_DEFINITIONS[cardId]} size="small" />
-                  ))}
+                  {restaurantCardIds.map(cardId => {
+                    const registry = getCardRegistry();
+                    const card = registry[cardId];
+                    return card ? <Card key={cardId} card={card} size="small" /> : null;
+                  })}
                 </div>
               </div>
             )}
@@ -291,10 +301,12 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
               <h3>Main Deck ({mainDeck.length} / 30 cards)</h3>
               <div className="deck-list">
                 {Object.entries(getDeckStats(mainDeck).cardCounts).map(([cardId, count]) => {
-                  const card = CARD_DEFINITIONS[cardId];
+                  const registry = getCardRegistry();
+                  const card = registry[cardId];
                   if (!card) return null;
+                  const cardTypeClass = `deck-item-${card.type.toLowerCase()}`;
                   return (
-                    <div key={cardId} className="deck-item">
+                    <div key={cardId} className={`deck-item ${cardTypeClass}`}>
                       <span>{card.name} x{count}</span>
                       <button onClick={() => handleRemoveFromMainDeck(cardId)}>Remove</button>
                     </div>

@@ -1,4 +1,5 @@
-import { CardType, CARD_DEFINITIONS, getCardById, isValidCardId } from './CardTypes';
+import { CardType, getCardById, isValidCardId, ChefCard, RestaurantCard, MealCard, StaffCard } from './CardTypes';
+import { getCardRegistry } from './CardLoader';
 
 // Deck is represented as an array of card IDs (strings)
 export type Deck = string[];
@@ -238,22 +239,24 @@ export function removeCards(deck: Deck, cardIds: string[]): Deck {
  * Includes: 1 Chef, 3 Restaurants (separate), and 30 main deck cards
  */
 export function createDefaultPlayerDeck(): PlayerDeck {
+  const registry = getCardRegistry();
+  
   // Get Chef card
-  const chefs = Object.keys(CARD_DEFINITIONS).filter(id => 
-    CARD_DEFINITIONS[id].type === CardType.CHEF
+  const chefs = Object.keys(registry).filter(id => 
+    registry[id].type === CardType.CHEF
   );
   const chefCardId = chefs.length > 0 ? chefs[0] : '';
 
   // Get 3 Restaurant cards
-  const restaurants = Object.keys(CARD_DEFINITIONS).filter(id => 
-    CARD_DEFINITIONS[id].type === CardType.RESTAURANT
+  const restaurants = Object.keys(registry).filter(id => 
+    registry[id].type === CardType.RESTAURANT
   );
   const restaurantCardIds = restaurants.slice(0, 3);
 
   // Build main deck (30 cards - Meals, Staff, Support, Event only)
   const mainDeck: Deck = [];
-  const otherCards = Object.keys(CARD_DEFINITIONS).filter(id => {
-    const card = CARD_DEFINITIONS[id];
+  const otherCards = Object.keys(registry).filter(id => {
+    const card = registry[id];
     return card.type !== CardType.CHEF && card.type !== CardType.RESTAURANT;
   });
 
@@ -282,6 +285,78 @@ export function createDefaultPlayerDeck(): PlayerDeck {
 }
 
 /**
+ * Creates "The Balanced Chef" starter deck
+ * A well-rounded deck with good mix of all card types
+ */
+export function createStarterDeck1(): PlayerDeck {
+  return {
+    chefCardId: 'chef_001', // Master Chef Pierre - +2 to all Meal cards
+    restaurantCardIds: ['restaurant_001', 'restaurant_003', 'restaurant_004'], // Le Grand Bistro, Ocean Breeze, Mountain View
+    mainDeck: [
+      // Meals - 12 cards (mix of values)
+      'meal_001', 'meal_001', // Signature Burger x2
+      'meal_003', 'meal_003', // Grilled Salmon x2
+      'meal_005', 'meal_005', // Caesar Salad x2
+      'meal_007', // Chocolate Soufflé
+      'meal_008', 'meal_008', // Sushi Platter x2
+      'meal_011', 'meal_011', // Ramen Bowl x2
+      'meal_013', // Fish Tacos
+      // Staff - 9 cards
+      'staff_001', 'staff_001', 'staff_001', // Head Waiter x3
+      'staff_002', 'staff_002', // Sous Chef x2
+      'staff_003', // Sommelier
+      'staff_005', // Host
+      'staff_006', 'staff_006', // Line Cook x2
+      // Support - 6 cards
+      'support_001', 'support_001', // Fresh Ingredients x2
+      'support_002', // Renovation
+      'support_003', // Marketing Campaign
+      'support_005', 'support_005', // VIP Service x2
+      // Events - 3 cards
+      'event_001', // Kitchen Fire
+      'event_003', // Rush Hour
+      'event_005', // Celebrity Visit
+    ]
+  };
+}
+
+/**
+ * Creates "The High Roller" starter deck
+ * Focus on high-value meals and aggressive playstyle
+ */
+export function createStarterDeck2(): PlayerDeck {
+  return {
+    chefCardId: 'chef_005', // Chef Marcus - Extra star on win
+    restaurantCardIds: ['restaurant_002', 'restaurant_006', 'restaurant_007'], // The Spice Market, Skyline Terrace, The Rustic Inn
+    mainDeck: [
+      // Meals - 12 cards (higher value focus)
+      'meal_002', 'meal_002', // Truffle Pasta x2
+      'meal_004', 'meal_004', // Ribeye Steak x2
+      'meal_006', 'meal_006', // Lobster Bisque x2
+      'meal_008', 'meal_008', // Sushi Platter x2
+      'meal_010', 'meal_010', // Wagyu Beef x2 (high value!)
+      'meal_012', // Duck Confit
+      'meal_014', // Beef Wellington
+      // Staff - 8 cards
+      'staff_001', 'staff_001', // Head Waiter x2
+      'staff_002', 'staff_002', // Sous Chef x2
+      'staff_003', 'staff_003', // Sommelier x2
+      'staff_007', 'staff_007', // Bartender x2
+      // Support - 7 cards
+      'support_001', // Fresh Ingredients
+      'support_002', 'support_002', // Renovation x2
+      'support_003', 'support_003', // Marketing Campaign x2
+      'support_004', // Special Menu
+      'support_006', // Food Critic Visit
+      // Events - 3 cards
+      'event_002', // Health Inspection
+      'event_004', // Food Shortage
+      'event_008', // Bad Review
+    ]
+  };
+}
+
+/**
  * @deprecated Use createDefaultPlayerDeck instead
  * Kept for backward compatibility
  */
@@ -302,3 +377,67 @@ export function selectRandomRestaurant(restaurantCardIds: string[]): string | nu
   return restaurantCardIds[randomIndex];
 }
 
+/**
+ * Checks if a restaurant matches any of the chef's archetypes
+ */
+export function restaurantMatchesChefArchetype(
+  restaurantCard: RestaurantCard,
+  chefCard: ChefCard
+): boolean {
+  // Archetype matching disabled - allow all restaurants for deck building
+  return true;
+}
+
+/**
+ * Checks if a meal card matches any of the chef's archetypes
+ */
+export function mealMatchesChefArchetype(
+  mealCard: MealCard,
+  chefCard: ChefCard
+): boolean {
+  if (!mealCard.mealArchetype) {
+    return false; // Meal must have an archetype to match
+  }
+  
+  const chefArchetypes = [chefCard.primaryArchetype];
+  if (chefCard.secondaryArchetype) {
+    chefArchetypes.push(chefCard.secondaryArchetype);
+  }
+  
+  return chefArchetypes.includes(mealCard.mealArchetype);
+}
+
+/**
+ * Checks if a staff card matches any of the chef's archetypes
+ */
+export function staffMatchesChefArchetype(
+  staffCard: StaffCard,
+  chefCard: ChefCard
+): boolean {
+  if (!staffCard.staffArchetype) {
+    return false; // Staff must have an archetype to match
+  }
+  
+  const chefArchetypes = [chefCard.primaryArchetype];
+  if (chefCard.secondaryArchetype) {
+    chefArchetypes.push(chefCard.secondaryArchetype);
+  }
+  
+  return chefArchetypes.includes(staffCard.staffArchetype);
+}
+
+/**
+ * Checks if a card (meal/staff) matches chef archetypes, or is universal (support/event)
+ */
+export function cardAllowedForChef(cardId: string, chefCard: ChefCard | null): boolean {
+  const card = getCardById(cardId);
+  if (!card) return false;
+  
+  // Don't allow Chef or Restaurant cards in main deck (handled separately)
+  if (card.type === CardType.CHEF || card.type === CardType.RESTAURANT) {
+    return false;
+  }
+  
+  // Archetype matching disabled - allow all other cards for deck building
+  return true;
+}

@@ -1,10 +1,12 @@
 import { getCardById, ChefCard, RestaurantCard, MealCard, StaffCard, SupportCard, EventCard } from './CardTypes';
+import { calculateArchetypeBonus } from './ArchetypeSystem';
 
 // Player's board state during a round
 export interface PlayerBoardState {
   chefCardId: string;
   restaurantCardId: string;
-  playedMeals: string[]; // Card IDs
+  attachedMeals: string[]; // Card IDs - permanently attached meals (max 3)
+  playedMeals: string[]; // Card IDs - kept for backward compatibility, but meals now attach permanently
   playedStaff: string[]; // Card IDs
   playedSupport: string[]; // Card IDs
   playedEvents: string[]; // Card IDs
@@ -19,6 +21,7 @@ export interface ScoreResult {
   restaurantBonus: number;
   chefBonus: number;
   eventModifiers: number;
+  archetypeBonus: number;  // NEW: Bonus from archetype synergies
   totalScore: number;
   breakdown: string[];
 }
@@ -26,7 +29,7 @@ export interface ScoreResult {
 /**
  * Calculates the total score for a player's restaurant
  */
-export function calculateScore(boardState: PlayerBoardState): ScoreResult {
+export function calculateScore(boardState: PlayerBoardState, playerStars: number = 0): ScoreResult {
   const breakdown: string[] = [];
   let baseScore = 0;
   let mealPoints = 0;
@@ -35,6 +38,7 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
   let restaurantBonus = 0;
   let chefBonus = 0;
   let eventModifiers = 0;
+  let archetypeBonus = 0;
 
   // Get Chef card
   const chefCard = getCardById(boardState.chefCardId) as ChefCard | undefined;
@@ -50,21 +54,24 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
     breakdown.push(`Restaurant base score: ${baseScore}`);
   }
 
-  // Calculate Meal points
-  boardState.playedMeals.forEach(mealId => {
+  // Calculate Meal points from attached meals (permanent equipment)
+  const attachedMeals = boardState.attachedMeals || [];
+  attachedMeals.forEach(mealId => {
     const mealCard = getCardById(mealId) as MealCard | undefined;
     if (mealCard) {
       mealPoints += mealCard.value;
+      // Apply meal effects/abilities here if needed
+      // Meal effects are active while attached
     }
   });
   if (mealPoints > 0) {
-    breakdown.push(`Meal cards: +${mealPoints}`);
+    breakdown.push(`Attached meals: +${mealPoints}`);
   }
 
   // Apply Chef ability (if applicable)
   if (chefCard) {
     if (chefCard.ability === 'perfectionist') {
-      const mealBonus = boardState.playedMeals.length * 2;
+      const mealBonus = attachedMeals.length * 2;
       chefBonus += mealBonus;
       if (mealBonus > 0) {
         breakdown.push(`Chef ability (Perfectionist): +${mealBonus}`);
@@ -77,7 +84,7 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
     const staffCard = getCardById(staffId) as StaffCard | undefined;
     if (staffCard) {
       if (staffCard.ability === 'service') {
-        const bonus = boardState.playedMeals.length * (staffCard.modifier || 1);
+        const bonus = attachedMeals.length * (staffCard.modifier || 1);
         staffModifiers += bonus;
         breakdown.push(`${staffCard.name}: +${bonus} to all Meals`);
       } else if (staffCard.ability === 'support') {
@@ -97,7 +104,7 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
     const supportCard = getCardById(supportId) as SupportCard | undefined;
     if (supportCard) {
       if (supportCard.ability === 'quality') {
-        const bonus = boardState.playedMeals.length * 2;
+        const bonus = attachedMeals.length * 2;
         supportModifiers += bonus;
         breakdown.push(`${supportCard.name}: +${bonus} to all Meals`);
       } else if (supportCard.ability === 'upgrade') {
@@ -129,18 +136,55 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
 
   // Check Restaurant ability conditions
   if (restaurantCard) {
-    const restaurantBonus = checkRestaurantAbility(
+    const restBonus = checkRestaurantAbility(
       restaurantCard,
       boardState,
-      { mealCount: boardState.playedMeals.length, staffCount: boardState.playedStaff.length }
+      { mealCount: attachedMeals.length, staffCount: boardState.playedStaff.length },
+      playerStars
     );
-    if (restaurantBonus > 0) {
-      breakdown.push(`Restaurant ability (${restaurantCard.ability}): +${restaurantBonus}`);
+    restaurantBonus = restBonus;
+    if (restBonus > 0) {
+      breakdown.push(`Restaurant ability (${restaurantCard.ability}): +${restBonus}`);
+    }
+  }
+
+  // Calculate Archetype synergy bonuses
+  if (chefCard) {
+    const chefArchetypes: string[] = [chefCard.primaryArchetype];
+    if (chefCard.secondaryArchetype) {
+      chefArchetypes.push(chefCard.secondaryArchetype);
+    }
+
+    const cardArchetypes: string[] = [];
+    
+    // Collect archetypes from attached meals (permanent equipment)
+    attachedMeals.forEach(mealId => {
+      const mealCard = getCardById(mealId) as MealCard | undefined;
+      if (mealCard?.mealArchetype) {
+        cardArchetypes.push(mealCard.mealArchetype);
+      }
+    });
+
+    boardState.playedStaff.forEach(staffId => {
+      const staffCard = getCardById(staffId) as StaffCard | undefined;
+      if (staffCard?.staffArchetype) {
+        cardArchetypes.push(staffCard.staffArchetype);
+      }
+    });
+
+    archetypeBonus = calculateArchetypeBonus(
+      chefArchetypes,
+      restaurantCard?.primaryArchetype,
+      cardArchetypes
+    );
+
+    if (archetypeBonus > 0) {
+      breakdown.push(`Archetype Synergy: +${archetypeBonus}`);
     }
   }
 
   const totalScore = baseScore + mealPoints + staffModifiers + supportModifiers + 
-                     restaurantBonus + chefBonus + eventModifiers;
+                     restaurantBonus + chefBonus + eventModifiers + archetypeBonus;
 
   return {
     baseScore,
@@ -150,6 +194,7 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
     restaurantBonus,
     chefBonus,
     eventModifiers,
+    archetypeBonus,
     totalScore,
     breakdown
   };
@@ -161,18 +206,25 @@ export function calculateScore(boardState: PlayerBoardState): ScoreResult {
 function checkRestaurantAbility(
   restaurant: RestaurantCard,
   boardState: PlayerBoardState,
-  stats: { mealCount: number; staffCount: number }
+  stats: { mealCount: number; staffCount: number },
+  playerStars: number
 ): number {
+  // Check star requirement first - if not met, effect doesn't activate
+  const requiredStars = restaurant.requiredStars ?? 0;
+  if (playerStars < requiredStars) {
+    return 0; // Effect doesn't activate if player doesn't have enough stars
+  }
+
   const condition = restaurant.abilityCondition.toLowerCase();
 
-  // Check various conditions
-  if (condition.includes('play 3 or more meal cards')) {
+  // Check various conditions (note: conditions now check attached meals, not played meals)
+  if (condition.includes('play 3 or more meal cards') || condition.includes('have 3 or more meal')) {
     if (stats.mealCount >= 3) {
       return 5; // Le Grand Bistro
     }
   }
 
-  if (condition.includes('play exactly 2 meal cards')) {
+  if (condition.includes('play exactly 2 meal cards') || condition.includes('have exactly 2 meal')) {
     if (stats.mealCount === 2) {
       return 3; // Mountain View
     }
@@ -185,7 +237,10 @@ function checkRestaurantAbility(
 
   if (condition.includes('play cards of 3 different types')) {
     const typesPlayed = new Set<string>();
-    boardState.playedMeals.forEach(() => typesPlayed.add('meal'));
+    // Count attached meals (permanent) as meal type
+    if (boardState.attachedMeals && boardState.attachedMeals.length > 0) {
+      typesPlayed.add('meal');
+    }
     boardState.playedStaff.forEach(() => typesPlayed.add('staff'));
     boardState.playedSupport.forEach(() => typesPlayed.add('support'));
     boardState.playedEvents.forEach(() => typesPlayed.add('event'));

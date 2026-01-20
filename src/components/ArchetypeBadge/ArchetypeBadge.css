@@ -1,0 +1,75 @@
+.archetype-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7em;
+  font-weight: 600;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.archetype-badge-small {
+  padding: 1px 6px;
+  font-size: 0.65em;
+  border-radius: 10px;
+}
+
+.archetype-badge-medium {
+  padding: 2px 8px;
+  font-size: 0.7em;
+  border-radius: 12px;
+}
+
+.archetype-badge-large {
+  padding: 4px 10px;
+  font-size: 0.8em;
+  border-radius: 14px;
+}
+
+.dual-archetype-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.dual-archetype-badge-small {
+  gap: 3px;
+}
+
+.dual-archetype-badge-medium {
+  gap: 4px;
+}
+
+.dual-archetype-badge-large {
+  gap: 6px;
+}
+
+.archetype-separator {
+  color: #666;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.card-archetypes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0;
+  align-items: center;
+}
+
+.archetype-missing {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7em;
+  font-weight: 600;
+  color: #999;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  font-style: italic;
+}

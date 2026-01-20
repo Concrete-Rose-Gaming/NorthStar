@@ -189,6 +189,7 @@
 
 .current-deck h3 {
   margin-top: 0;
+  color: white;
 }
 
 .deck-list {
@@ -205,6 +206,44 @@
   margin-bottom: 8px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 6px;
+  color: white;
+  border-left: 4px solid transparent;
+  transition: all 0.2s;
+}
+
+.deck-item span {
+  color: white;
+}
+
+/* Card type specific backgrounds - inline styles take precedence, these are fallback */
+.deck-item.deck-item-meal {
+  background: rgba(255, 99, 71, 0.5); /* Tomato red */
+  border-left-color: #FF6347;
+}
+
+.deck-item.deck-item-staff {
+  background: rgba(65, 105, 225, 0.5); /* Royal Blue */
+  border-left-color: #4169E1;
+}
+
+.deck-item.deck-item-support {
+  background: rgba(50, 205, 50, 0.5); /* Lime Green */
+  border-left-color: #32CD32;
+}
+
+.deck-item.deck-item-event {
+  background: rgba(147, 112, 219, 0.5); /* Medium Purple */
+  border-left-color: #9370DB;
+}
+
+.deck-item.deck-item-chef {
+  background: rgba(255, 215, 0, 0.5); /* Gold */
+  border-left-color: #FFD700;
+}
+
+.deck-item.deck-item-restaurant {
+  background: rgba(139, 69, 19, 0.5); /* Brown */
+  border-left-color: #8B4513;
 }
 
 .deck-item button {

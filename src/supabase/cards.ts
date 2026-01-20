@@ -1,4 +1,4 @@
-import { supabase } from './config';
+import { supabase, isSupabaseConfigured } from './config';
 
 export interface Card {
   code: string; // Format: EXPANSION-TYPE-NUMBER
@@ -14,6 +14,38 @@ export interface Card {
   worth: number;
   created_at: string;
   updated_at: string;
+  // Feeder table data (from LEFT JOINs - will be null if no matching feeder entry)
+  chef_data?: {
+    code: string;
+    starting_influence?: number;
+    star_bonus_influence?: number;
+    Restaurant_Focus_1?: string; // Primary archetype
+    Restaurant_Focus_2?: string; // Secondary archetype (if dual)
+  } | null;
+  restaurant_data?: {
+    code: string;
+    Restaurant_Focus_1?: string; // Primary archetype
+    Restaurant_Focus_2?: string; // Secondary archetype (if dual)
+    required_stars?: number; // Minimum star ranking required for effect to activate
+  } | null;
+  meal_data?: {
+    code: string;
+    food_type?: string;
+    influence_cost?: number;
+    second_enum?: string;
+  } | null;
+  staff_data?: {
+    code: string;
+    employee_type?: string;
+    influence_cost?: number;
+    second_enum?: string;
+  } | null;
+  event_data?: {
+    code: string;
+    influence_cost?: number;
+    first_enum?: string;
+    second_enum?: string;
+  } | null;
 }
 
 export interface CardStats {
@@ -55,13 +87,28 @@ export function parseCardCode(code: string): { expansion: string; cardType: stri
 }
 
 /**
- * Gets all cards
+ * Gets all cards with feeder table data using LEFT JOINs
  */
 export async function getAllCards(): Promise<{ cards: Card[]; error: Error | null }> {
+  // If Supabase is not configured, immediately return error without making requests
+  if (!isSupabaseConfigured()) {
+    return { 
+      cards: [], 
+      error: new Error('Supabase not configured') 
+    };
+  }
+
   try {
     const { data, error } = await supabase
       .from('cards')
-      .select('*')
+      .select(`
+        *,
+        chef_data:chef_cards(code, starting_influence, star_bonus_influence, Restaurant_Focus_1, Restaurant_Focus_2),
+        restaurant_data:restaurant_cards(code, Restaurant_Focus_1, Restaurant_Focus_2, required_stars),
+        meal_data:meal_cards(code, food_type, influence_cost, restaurant_type_1, restaurant_type_2),
+        staff_data:staff_cards(code, employee_type, influence_cost, restaurant_type),
+        event_data:event_cards(code, influence_cost)
+      `)
       .order('expansion', { ascending: true })
       .order('card_type', { ascending: true })
       .order('card_number', { ascending: true });

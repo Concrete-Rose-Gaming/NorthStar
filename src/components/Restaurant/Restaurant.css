@@ -1,73 +1,276 @@
 .restaurant-card {
   background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
   color: white;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-  min-width: 300px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.restaurant-small {
+  width: 120px;
+  height: 180px;
+  min-width: 120px;
+  min-height: 180px;
+  padding: 8px;
+  font-size: 0.75rem;
+}
+
+.restaurant-medium {
+  width: 160px;
+  height: 240px;
+  min-width: 160px;
+  min-height: 240px;
+  max-width: 160px;
+  max-height: 240px;
+  padding: clamp(10px, 1.2vw, 12px);
+  font-size: clamp(0.8rem, 1.1vw, 0.9rem);
+}
+
+/* Match exact size of Card component medium */
+.chef-card-wrapper-middle .card-medium,
+.restaurant-card-wrapper-middle .restaurant-medium {
+  box-sizing: border-box;
+}
+
+.restaurant-large {
+  width: 200px;
+  height: 300px;
+  min-width: 200px;
+  min-height: 300px;
+  padding: 16px;
+  font-size: 0.95rem;
 }
 
 .restaurant-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  flex-direction: column;
+  gap: clamp(4px, 0.6vw, 6px);
+  margin-bottom: clamp(6px, 0.8vw, 8px);
+  padding-bottom: clamp(6px, 0.8vw, 8px);
   border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-  padding-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.restaurant-small .restaurant-header {
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  gap: 4px;
 }
 
 .restaurant-header h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: clamp(0.85em, 1.1vw, 1em);
+  line-height: 1.2;
+  font-weight: bold;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  max-height: 2.4em;
 }
 
 .restaurant-stars {
-  font-size: 1.5rem;
-  letter-spacing: 4px;
+  font-size: clamp(0.85em, 1.1vw, 1em);
+  letter-spacing: 2px;
+  text-align: center;
+  line-height: 1;
+}
+
+.restaurant-small .restaurant-stars {
+  font-size: clamp(0.75em, 1vw, 0.9em);
+  letter-spacing: 1px;
 }
 
 .restaurant-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: clamp(4px, 0.6vw, 6px);
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0;
+}
+
+.restaurant-archetype {
+  display: flex;
+  justify-content: center;
+  margin-bottom: clamp(4px, 0.5vw, 6px);
+  flex-shrink: 0;
+}
+
+.restaurant-small .restaurant-archetype {
+  margin-bottom: 4px;
+}
+
+.restaurant-small .restaurant-body {
+  gap: 4px;
 }
 
 .restaurant-description {
   font-style: italic;
   opacity: 0.9;
   margin: 0;
+  font-size: clamp(0.75em, 0.95vw, 0.85em);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  flex-shrink: 1;
 }
 
 .restaurant-base-score,
 .restaurant-current-score {
-  font-size: 1.1rem;
-  padding: 8px;
+  font-size: clamp(0.75em, 0.9vw, 0.9em);
+  padding: clamp(4px, 0.5vw, 6px) clamp(6px, 0.7vw, 8px);
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  border-radius: 6px;
+  text-align: center;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+.restaurant-small .restaurant-base-score,
+.restaurant-small .restaurant-current-score {
+  font-size: clamp(0.65em, 0.8vw, 0.75em);
+  padding: 4px 6px;
 }
 
 .restaurant-current-score {
   background: rgba(255, 215, 0, 0.3);
-  font-size: 1.3rem;
   font-weight: bold;
 }
 
+.restaurant-medium .restaurant-current-score {
+  font-size: clamp(0.85em, 1vw, 1em);
+}
+
 .restaurant-ability {
-  margin-top: 12px;
-  padding: 12px;
+  margin-top: auto;
+  padding: clamp(6px, 0.7vw, 8px);
   background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  border-left: 4px solid #FFD700;
+  border-radius: 6px;
+  border-left: 3px solid #FFD700;
+  font-size: clamp(0.7em, 0.85vw, 0.8em);
+  flex-shrink: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.restaurant-small .restaurant-ability {
+  padding: 6px;
+  font-size: clamp(0.65em, 0.75vw, 0.7em);
+  border-left-width: 2px;
+}
+
+.ability-star-requirement {
+  font-size: 0.9em;
+  font-weight: 600;
+  margin-bottom: 0.5em;
+  padding: 0.4em;
+  border-radius: 4px;
+}
+
+.ability-star-requirement.requirement-met {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+
+.ability-star-requirement.requirement-unmet {
+  background-color: rgba(244, 67, 54, 0.2);
+  color: #f44336;
 }
 
 .ability-condition {
   font-weight: bold;
-  margin-bottom: 6px;
+  margin-bottom: clamp(2px, 0.3vw, 4px);
   color: #FFD700;
+  font-size: clamp(0.8em, 0.95vw, 0.9em);
+  line-height: 1.2;
+}
+
+.restaurant-small .ability-condition {
+  font-size: clamp(0.7em, 0.85vw, 0.8em);
+  margin-bottom: 2px;
 }
 
 .ability-description {
-  font-size: 0.9rem;
+  font-size: clamp(0.75em, 0.9vw, 0.85em);
   opacity: 0.95;
+  line-height: 1.3;
+}
+
+.restaurant-small .ability-description {
+  font-size: clamp(0.65em, 0.8vw, 0.75em);
+}
+
+.restaurant-attached-meals {
+  margin-top: clamp(4px, 0.5vw, 6px);
+  padding: clamp(4px, 0.5vw, 6px);
+  background: rgba(255, 215, 0, 0.15);
+  border-radius: 6px;
+  border-left: 2px solid #FFD700;
+  font-size: clamp(0.7em, 0.85vw, 0.8em);
+  flex-shrink: 0;
+}
+
+.restaurant-small .restaurant-attached-meals {
+  padding: 4px;
+  font-size: clamp(0.65em, 0.75vw, 0.7em);
+  border-left-width: 1px;
+}
+
+.attached-meals-label {
+  font-weight: bold;
+  margin-bottom: clamp(2px, 0.3vw, 4px);
+  color: #FFD700;
+  font-size: clamp(0.75em, 0.9vw, 0.85em);
+}
+
+.restaurant-small .attached-meals-label {
+  font-size: clamp(0.7em, 0.85vw, 0.8em);
+  margin-bottom: 2px;
+}
+
+.attached-meals-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.3vw, 3px);
+}
+
+.attached-meal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(2px, 0.3vw, 3px) clamp(4px, 0.5vw, 6px);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  font-size: clamp(0.7em, 0.85vw, 0.8em);
+  line-height: 1.2;
+}
+
+.restaurant-small .attached-meal-item {
+  padding: 2px 4px;
+  font-size: clamp(0.65em, 0.75vw, 0.75em);
+}
+
+.attached-meal-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: clamp(4px, 0.5vw, 6px);
+}
+
+.attached-meal-value {
+  font-weight: bold;
+  color: #FFD700;
+  flex-shrink: 0;
 }
 

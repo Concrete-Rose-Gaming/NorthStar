@@ -1,5 +1,6 @@
 import { Deck, PlayerDeck, shuffleDeck, drawCards, selectRandomRestaurant } from './DeckManager';
 import { calculateScore, compareScores, PlayerBoardState } from './Scoring';
+import { CardType, getCardById, ChefCard } from './CardTypes';
 
 // Game phase
 export enum GamePhase {
@@ -21,12 +22,16 @@ export interface Player {
   name: string;
   deck: Deck;
   hand: Deck; // Card IDs in hand
+  discardPile: Deck; // Card IDs in discard pile (for discarded meals)
   chefCardId: string | null;
   restaurantCardId: string | null;
   boardState: PlayerBoardState;
   stars: number;
+  influence: number;        // Current influence available
+  maxInfluence: number;     // Maximum influence this round (based on chef + stars)
   ready: boolean;
   turnComplete: boolean;
+  eventCardPlayedThisRound: boolean;
 }
 
 // Game state
@@ -62,6 +67,23 @@ export function createGameState(gameId: string): GameState {
 }
 
 /**
+ * Calculates the maximum influence for a player based on their chef and stars
+ */
+export function calculateMaxInfluence(player: Player): number {
+  if (!player.chefCardId) {
+    return 0; // No chef selected
+  }
+
+  const chefCard = getCardById(player.chefCardId) as ChefCard | undefined;
+  if (!chefCard) {
+    return 3; // Default fallback
+  }
+
+  // Starting influence + (stars * star bonus influence)
+  return chefCard.startingInfluence + (player.stars * chefCard.starBonusInfluence);
+}
+
+/**
  * Initializes a player with their deck
  */
 export function initializePlayer(playerId: string, name: string, playerDeck: PlayerDeck): Player {
@@ -74,25 +96,37 @@ export function initializePlayer(playerId: string, name: string, playerDeck: Pla
   // Draw initial 5 cards from main deck
   const { drawn: initialHand, remaining: remainingDeck } = drawCards(shuffledDeck, 5);
 
-  return {
+  // Create initial player state
+  const initialPlayer: Player = {
     id: playerId,
     name,
     deck: remainingDeck,
     hand: initialHand,
+    discardPile: [],
     chefCardId: playerDeck.chefCardId,
     restaurantCardId: restaurantCardId || null,
     boardState: {
       chefCardId: playerDeck.chefCardId,
       restaurantCardId: restaurantCardId || '',
+      attachedMeals: [],
       playedMeals: [],
       playedStaff: [],
       playedSupport: [],
       playedEvents: []
     },
     stars: 0,
+    influence: 0,
+    maxInfluence: 0,
     ready: false,
-    turnComplete: false
+    turnComplete: false,
+    eventCardPlayedThisRound: false
   };
+
+  // Calculate initial influence based on chef
+  initialPlayer.maxInfluence = calculateMaxInfluence(initialPlayer);
+  initialPlayer.influence = initialPlayer.maxInfluence; // Start with full influence
+
+  return initialPlayer;
 }
 
 /**
@@ -144,19 +178,21 @@ export function setFirstPlayer(gameState: GameState, coinResult: 'heads' | 'tail
 export function startRound(gameState: GameState): GameState {
   const newRound = gameState.currentRound + 1;
   
-  // Both players draw a card
+  // Both players reset board state, event card flag, and draw cards
+  // Note: attachedMeals persist between rounds (they are permanent equipment)
   const player1 = gameState.players.player1 ? {
     ...gameState.players.player1,
     deck: gameState.players.player1.deck,
     hand: [...gameState.players.player1.hand],
     boardState: {
       ...gameState.players.player1.boardState,
-      playedMeals: [],
+      // Keep attachedMeals - they persist between rounds
       playedStaff: [],
       playedSupport: [],
       playedEvents: []
     },
-    turnComplete: false
+    turnComplete: false,
+    eventCardPlayedThisRound: false
   } : null;
 
   const player2 = gameState.players.player2 ? {
@@ -165,25 +201,45 @@ export function startRound(gameState: GameState): GameState {
     hand: [...gameState.players.player2.hand],
     boardState: {
       ...gameState.players.player2.boardState,
-      playedMeals: [],
+      // Keep attachedMeals - they persist between rounds
       playedStaff: [],
       playedSupport: [],
       playedEvents: []
     },
-    turnComplete: false
+    turnComplete: false,
+    eventCardPlayedThisRound: false
   } : null;
 
-  // Draw cards
-  if (player1 && player1.deck.length > 0) {
-    const { drawn, remaining } = drawCards(player1.deck, 1);
-    player1.hand.push(...drawn);
-    player1.deck = remaining;
+  // Draw cards until each player has 5 cards (or deck runs out)
+  if (player1) {
+    const cardsNeeded = Math.max(0, 5 - player1.hand.length);
+    if (cardsNeeded > 0 && player1.deck.length > 0) {
+      const cardsToDraw = Math.min(cardsNeeded, player1.deck.length);
+      const { drawn, remaining } = drawCards(player1.deck, cardsToDraw);
+      player1.hand.push(...drawn);
+      player1.deck = remaining;
+    }
   }
 
-  if (player2 && player2.deck.length > 0) {
-    const { drawn, remaining } = drawCards(player2.deck, 1);
-    player2.hand.push(...drawn);
-    player2.deck = remaining;
+  if (player2) {
+    const cardsNeeded = Math.max(0, 5 - player2.hand.length);
+    if (cardsNeeded > 0 && player2.deck.length > 0) {
+      const cardsToDraw = Math.min(cardsNeeded, player2.deck.length);
+      const { drawn, remaining } = drawCards(player2.deck, cardsToDraw);
+      player2.hand.push(...drawn);
+      player2.deck = remaining;
+    }
+  }
+
+  // Recalculate and reset influence to max for new round
+  if (player1) {
+    player1.maxInfluence = calculateMaxInfluence(player1);
+    player1.influence = player1.maxInfluence; // Reset to max at round start
+  }
+
+  if (player2) {
+    player2.maxInfluence = calculateMaxInfluence(player2);
+    player2.influence = player2.maxInfluence; // Reset to max at round start
   }
 
   return {
@@ -198,13 +254,161 @@ export function startRound(gameState: GameState): GameState {
 }
 
 /**
+ * Checks if a player can afford to play a card (has enough influence)
+ */
+export function canAffordCard(player: Player, cardId: string): boolean {
+  const card = getCardById(cardId);
+  if (!card) return false;
+
+  // Chef and Restaurant cards don't cost influence (they're already played)
+  if (card.type === 'CHEF' || card.type === 'RESTAURANT') {
+    return true;
+  }
+
+  // Get influence cost based on card type
+  let cost = 0;
+  if (card.type === 'MEAL' && 'influenceCost' in card) {
+    cost = (card as any).influenceCost || 1;
+  } else if (card.type === 'STAFF' && 'influenceCost' in card) {
+    cost = (card as any).influenceCost || 2;
+  } else if ((card.type === 'EVENT' || card.type === 'SUPPORT') && 'influenceCost' in card) {
+    cost = (card as any).influenceCost || 2;
+  }
+
+  return player.influence >= cost;
+}
+
+/**
+ * Gets the influence cost of a card
+ */
+export function getCardInfluenceCost(cardId: string): number {
+  const card = getCardById(cardId);
+  if (!card) return 0;
+
+  // Chef and Restaurant cards don't cost influence
+  if (card.type === 'CHEF' || card.type === 'RESTAURANT') {
+    return 0;
+  }
+
+  if ('influenceCost' in card) {
+    return (card as any).influenceCost || 0;
+  }
+
+  return 0;
+}
+
+/**
  * Plays a card from hand to board
+ * Returns null if the card cannot be played (insufficient influence or event card limit)
+ * For meal cards: attaches to restaurant permanently (max 3). If at capacity, requires mealToDiscard parameter.
  */
 export function playCard(
   player: Player,
   cardId: string,
-  targetType?: 'meal' | 'staff' | 'support' | 'event'
-): Player {
+  targetType?: 'meal' | 'staff' | 'support' | 'event',
+  mealToDiscard?: string // Required when attaching a meal to a restaurant that already has 3 meals
+): Player | null {
+  const card = getCardById(cardId);
+  if (!card) {
+    return null; // Card not found
+  }
+
+  // Check if this is an event card
+  const isEventCard = targetType === 'event' || card.type === CardType.EVENT || cardId.startsWith('event_');
+  
+  // Prevent playing multiple event cards per round
+  if (isEventCard && player.eventCardPlayedThisRound) {
+    return null; // Cannot play - event already played this round
+  }
+
+  // Check if this is a meal card
+  const isMealCard = targetType === 'meal' || card.type === CardType.MEAL || cardId.startsWith('meal_');
+
+  // Special handling for meal cards - attach to restaurant
+  if (isMealCard) {
+    // Check if restaurant already has 3 meals attached
+    const currentAttachedMeals = player.boardState.attachedMeals || [];
+    
+    if (currentAttachedMeals.length >= 3) {
+      // Restaurant is at capacity - need to discard one meal
+      if (!mealToDiscard) {
+        // UI should handle showing selection - return null to indicate replacement needed
+        return null;
+      }
+      
+      // Validate that mealToDiscard is actually attached
+      if (!currentAttachedMeals.includes(mealToDiscard)) {
+        return null; // Invalid meal to discard
+      }
+      
+      // Remove the meal to discard from attached meals and add to discard pile
+      const newAttachedMeals = currentAttachedMeals.filter(id => id !== mealToDiscard);
+      const newDiscardPile = [...player.discardPile, mealToDiscard];
+      
+      // Add the new meal to attached meals
+      newAttachedMeals.push(cardId);
+      
+      // Remove card from hand
+      const newHand = player.hand.filter(id => id !== cardId);
+      
+      // Check if player can afford the card (influence cost)
+      if (!canAffordCard(player, cardId)) {
+        return null; // Cannot afford
+      }
+      
+      // Get and deduct influence cost
+      const cost = getCardInfluenceCost(cardId);
+      const newInfluence = player.influence - cost;
+      
+      return {
+        ...player,
+        hand: newHand,
+        discardPile: newDiscardPile,
+        influence: newInfluence,
+        boardState: {
+          ...player.boardState,
+          attachedMeals: newAttachedMeals
+        }
+      };
+    } else {
+      // Restaurant has space - attach meal directly
+      // Check if player can afford the card (influence cost)
+      if (!canAffordCard(player, cardId)) {
+        return null; // Cannot afford
+      }
+      
+      // Get and deduct influence cost
+      const cost = getCardInfluenceCost(cardId);
+      const newInfluence = player.influence - cost;
+      
+      // Remove card from hand
+      const newHand = player.hand.filter(id => id !== cardId);
+      
+      // Add to attached meals
+      const newAttachedMeals = [...currentAttachedMeals, cardId];
+      
+      return {
+        ...player,
+        hand: newHand,
+        influence: newInfluence,
+        boardState: {
+          ...player.boardState,
+          attachedMeals: newAttachedMeals
+        }
+      };
+    }
+  }
+
+  // For non-meal cards, use the original logic
+  // Check if player can afford the card (influence cost)
+  if (!canAffordCard(player, cardId)) {
+    return null; // Cannot afford
+  }
+
+  // Get and deduct influence cost
+  const cost = getCardInfluenceCost(cardId);
+  const newInfluence = player.influence - cost;
+
   // Remove card from hand
   const newHand = player.hand.filter(id => id !== cardId);
   
@@ -212,24 +416,17 @@ export function playCard(
   const newBoardState = { ...player.boardState };
   
   // Determine card type and add to appropriate area
-  // This is simplified - in a real implementation, you'd check the card type
-  // For now, we'll use the targetType parameter or infer from card ID
   if (!targetType) {
-    // Infer from card ID prefix
-    if (cardId.startsWith('meal_')) {
-      newBoardState.playedMeals.push(cardId);
-    } else if (cardId.startsWith('staff_')) {
+    // Infer from card type
+    if (card.type === 'STAFF') {
       newBoardState.playedStaff.push(cardId);
-    } else if (cardId.startsWith('support_')) {
+    } else if (card.type === 'SUPPORT') {
       newBoardState.playedSupport.push(cardId);
-    } else if (cardId.startsWith('event_')) {
+    } else if (card.type === 'EVENT') {
       newBoardState.playedEvents.push(cardId);
     }
   } else {
     switch (targetType) {
-      case 'meal':
-        newBoardState.playedMeals.push(cardId);
-        break;
       case 'staff':
         newBoardState.playedStaff.push(cardId);
         break;
@@ -245,7 +442,9 @@ export function playCard(
   return {
     ...player,
     hand: newHand,
-    boardState: newBoardState
+    influence: newInfluence,
+    boardState: newBoardState,
+    eventCardPlayedThisRound: isEventCard ? true : player.eventCardPlayedThisRound
   };
 }
 
@@ -281,8 +480,8 @@ export function performFaceOff(gameState: GameState): GameState {
   }
 
   // Calculate scores
-  const score1 = calculateScore(p1.boardState);
-  const score2 = calculateScore(p2.boardState);
+  const score1 = calculateScore(p1.boardState, p1.stars);
+  const score2 = calculateScore(p2.boardState, p2.stars);
 
   // Determine winner
   const roundWinner = compareScores(score1.totalScore, score2.totalScore);

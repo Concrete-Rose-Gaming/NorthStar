@@ -42,8 +42,8 @@ Then open `http://localhost:3000`
 ## 🛠️ Development
 
 ### Prerequisites
-- Node.js (v14 or higher)
-- npm or yarn
+- Node.js (v20 or higher)
+- npm (v10 or higher) or yarn
 
 ### Installation
 ```bash
@@ -119,3 +119,4 @@ This project is a prototype and is available for educational purposes.
 ## 🤝 Contributing
 
 This is a prototype project. Feel free to fork and modify for your own use!
+

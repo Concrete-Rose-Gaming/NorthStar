@@ -37,15 +37,17 @@ export function Tutorial({ onClose }: TutorialProps) {
               <li><strong>Meal:</strong> Contributes points to your score</li>
               <li><strong>Staff:</strong> Provides bonuses and modifiers</li>
               <li><strong>Support:</strong> Temporary or permanent enhancements</li>
-              <li><strong>Event:</strong> One-time effects that can help or hinder</li>
+              <li><strong>Event:</strong> One-time effects that can help or hinder (limited to one per round)</li>
             </ul>
           </section>
 
           <section>
             <h3>Gameplay</h3>
             <ul>
+              <li>At the start of each round, draw cards until you have 5 in hand (or until your deck is empty)</li>
               <li>Each round, both players take turns playing cards</li>
               <li>Play cards from your hand to build your restaurant</li>
+              <li>You can only play <strong>one event card per round</strong></li>
               <li>End your turn when you're done playing cards</li>
               <li>After both players end their turns, scores are compared</li>
               <li>The player with the higher score wins the round and gains 1 star</li>
@@ -58,7 +60,7 @@ export function Tutorial({ onClose }: TutorialProps) {
             <ul>
               <li>Balance your deck with different card types</li>
               <li>Use Staff and Support cards to boost your Meals</li>
-              <li>Save Event cards for critical moments</li>
+              <li>Save Event cards for critical moments - remember you can only play one per round!</li>
               <li>Pay attention to your Restaurant's special ability</li>
               <li>Manage your hand size and deck resources</li>
             </ul>

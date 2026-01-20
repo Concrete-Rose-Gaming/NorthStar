@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GameState, GamePhase } from '../../game/GameEngine';
 import { PlayerArea } from '../PlayerArea/PlayerArea';
 import { Restaurant } from '../Restaurant/Restaurant';
@@ -14,6 +14,10 @@ interface GameBoardProps {
   onEndTurn: () => void;
   onNextRound?: () => void;
   onShowTutorial?: () => void;
+  mulliganCards?: string[];
+  onMulliganCardToggle?: (cardId: string) => void;
+  onMulligan?: () => void;
+  onSkipMulligan?: () => void;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
@@ -22,16 +26,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   onCardPlay,
   onEndTurn,
   onNextRound,
-  onShowTutorial
+  onShowTutorial,
+  mulliganCards = [],
+  onMulliganCardToggle,
+  onMulligan,
+  onSkipMulligan
 }) => {
+  const [handPanelVisible, setHandPanelVisible] = useState(true);
+  
   // Determine which player is "you" (current player viewing) and "opponent"
   // You (current player) always goes at bottom, opponent always at top
   const you = gameState.players[currentPlayerId];
   const opponentId = currentPlayerId === 'player1' ? 'player2' : 'player1';
   const opponent = gameState.players[opponentId];
 
-  const youScore = you ? calculateScore(you.boardState).totalScore : 0;
-  const opponentScore = opponent ? calculateScore(opponent.boardState).totalScore : 0;
+  const youScore = you ? calculateScore(you.boardState, you.stars).totalScore : 0;
+  const opponentScore = opponent ? calculateScore(opponent.boardState, opponent.stars).totalScore : 0;
 
   const youRestaurant = you?.restaurantCardId ? getCardById(you.restaurantCardId) : null;
   const opponentRestaurant = opponent?.restaurantCardId ? getCardById(opponent.restaurantCardId) : null;
@@ -39,12 +49,71 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const opponentChef = opponent?.chefCardId ? getCardById(opponent.chefCardId) : null;
 
   const isFaceOffPhase = gameState.phase === GamePhase.FACE_OFF;
+  const isMulliganPhase = gameState.phase === GamePhase.MULLIGAN;
   const showScores = isFaceOffPhase || gameState.phase === GamePhase.ROUND_END;
   const showHands = isFaceOffPhase || gameState.phase === GamePhase.ROUND_END || gameState.phase === GamePhase.GAME_END;
   const isAI = opponent?.name === 'AI Chef' || opponent?.name.includes('AI');
 
+  // Count cards played this round by each player (excluding meals which are attached permanently)
+  const opponentCardsPlayed = opponent ? 
+    opponent.boardState.playedStaff.length + 
+    opponent.boardState.playedSupport.length + 
+    opponent.boardState.playedEvents.length : 0;
+  
+  const youCardsPlayed = you ? 
+    you.boardState.playedStaff.length + 
+    you.boardState.playedSupport.length + 
+    you.boardState.playedEvents.length : 0;
+
   return (
     <div className="game-board">
+      {/* Mulligan overlay modal */}
+      {isMulliganPhase && you && (
+        <div className="mulligan-overlay">
+          <div className="mulligan-overlay-content">
+            <h2>Mulligan Phase</h2>
+            <p>Select cards to mulligan (or skip)</p>
+            
+            {/* Display restaurant that was drawn */}
+            {youRestaurant && (
+              <div className="mulligan-restaurant-section">
+                <h3>Your Restaurant</h3>
+                <div className="mulligan-restaurant-card">
+                  <Restaurant 
+                    restaurant={youRestaurant as any} 
+                    size="medium"
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className="mulligan-hand">
+              <h3>Your Hand ({you.hand.length || 0} cards)</h3>
+              <div className="mulligan-hand-cards">
+                {you.hand.map(cardId => {
+                  const card = getCardById(cardId);
+                  return (
+                    <button
+                      key={cardId}
+                      className={`mulligan-card ${mulliganCards.includes(cardId) ? 'selected' : ''}`}
+                      onClick={() => onMulliganCardToggle?.(cardId)}
+                    >
+                      {card?.name || cardId}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="mulligan-actions">
+              <button onClick={onMulligan} disabled={!mulliganCards || mulliganCards.length === 0}>
+                Mulligan Selected ({mulliganCards?.length || 0})
+              </button>
+              <button onClick={onSkipMulligan}>Skip Mulligan</button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="game-header">
         <div className="header-top">
           <h1>Round {gameState.currentRound}</h1>
@@ -63,102 +132,161 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         )}
       </div>
 
+      {/* Main content area - split screen layout */}
+      <div className="main-content-area">
+        {/* Left side - Opponent (compact) */}
+        <div className="opponent-section">
+          {opponent && (
+            <PlayerArea
+              playerName={opponent.name}
+              hand={opponent.hand}
+              boardState={opponent.boardState}
+              stars={opponent.stars}
+              isCurrentPlayer={false}
+              onCardClick={undefined}
+              onEndTurn={undefined}
+              turnComplete={opponent.turnComplete}
+              isOpponent={true}
+              showHand={showHands} // Show cards only during face-off, but count always visible in header
+              cardsPlayed={opponentCardsPlayed}
+              influence={opponent.influence}
+              maxInfluence={opponent.maxInfluence}
+            />
+          )}
+        </div>
 
-      {/* Opponent (AI or other player) - Always at top */}
-      <div className="player-top">
-        {opponent && (
-          <PlayerArea
-            playerName={opponent.name}
-            hand={opponent.hand}
-            boardState={opponent.boardState}
-            stars={opponent.stars}
-            isCurrentPlayer={false}
-            onCardClick={undefined}
-            onEndTurn={undefined}
-            turnComplete={opponent.turnComplete}
-            isOpponent={true}
-            showHand={showHands} // Only show hand during face-off
-          />
-        )}
-      </div>
-
-      {/* Middle area - Chef and Restaurant cards side by side */}
-      <div className="middle-cards-section">
-        <div className="player-cards-group">
-          <div className="player-label">{opponent?.name || 'Opponent'}</div>
-          <div className="chef-restaurant-row">
-            {opponentChef && (
-              <div className="chef-card-wrapper">
-                <Card card={opponentChef} size="medium" />
-                <div className="card-label">Chef</div>
+        {/* Middle section - Chef and Restaurant cards in one row */}
+        <div className="middle-section">
+          {/* Scores during face-off */}
+          {showScores && (
+            <div className="score-comparison-middle">
+              <div className={`score-display ${youScore > opponentScore ? 'winner' : ''}`}>
+                <h3>{you?.name || 'You'}</h3>
+                <div className="score-value">{youScore}</div>
               </div>
-            )}
+              <div className="vs">VS</div>
+              <div className={`score-display ${opponentScore > youScore ? 'winner' : ''}`}>
+                <h3>{opponent?.name || 'Opponent'}</h3>
+                <div className="score-value">{opponentScore}</div>
+              </div>
+            </div>
+          )}
+          
+          {/* All four cards in one row: Restaurant (opponent) - Chef (opponent) - Chef (you) - Restaurant (you) */}
+          <div className="middle-cards-row-single">
+            {/* Opponent Restaurant */}
             {opponentRestaurant && (
-              <div className="restaurant-card-wrapper">
+              <div className="restaurant-card-wrapper-middle">
+                <div className="middle-card-label">{opponent?.name || 'Opponent'}</div>
                 <Restaurant
                   restaurant={opponentRestaurant as any}
                   score={showScores ? opponentScore : undefined}
                   stars={opponent?.stars || 0}
+                  size="medium"
+                  attachedMeals={opponent?.boardState.attachedMeals || []}
                 />
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Scores during face-off */}
-        {showScores && (
-          <div className="score-comparison-middle">
-            <div className={`score-display ${youScore > opponentScore ? 'winner' : ''}`}>
-              <h3>{you?.name || 'You'}</h3>
-              <div className="score-value">{youScore}</div>
-            </div>
-            <div className="vs">VS</div>
-            <div className={`score-display ${opponentScore > youScore ? 'winner' : ''}`}>
-              <h3>{opponent?.name || 'Opponent'}</h3>
-              <div className="score-value">{opponentScore}</div>
-            </div>
-          </div>
-        )}
-
-        <div className="player-cards-group">
-          <div className="player-label">{you?.name || 'You'}</div>
-          <div className="chef-restaurant-row">
+            
+            {/* Opponent Chef */}
+            {opponentChef && (
+              <div className="chef-card-wrapper-middle">
+                <div className="middle-card-label">{opponent?.name || 'Opponent'}</div>
+                <Card card={opponentChef} size="medium" />
+                <div className="card-label">Chef</div>
+              </div>
+            )}
+            
+            {/* Your Chef */}
             {youChef && (
-              <div className="chef-card-wrapper">
+              <div className="chef-card-wrapper-middle">
+                <div className="middle-card-label">{you?.name || 'You'}</div>
                 <Card card={youChef} size="medium" />
                 <div className="card-label">Chef</div>
               </div>
             )}
+            
+            {/* Your Restaurant */}
             {youRestaurant && (
-              <div className="restaurant-card-wrapper">
+              <div className="restaurant-card-wrapper-middle">
+                <div className="middle-card-label">{you?.name || 'You'}</div>
                 <Restaurant
                   restaurant={youRestaurant as any}
                   score={showScores ? youScore : undefined}
                   stars={you?.stars || 0}
+                  size="medium"
+                  attachedMeals={you?.boardState.attachedMeals || []}
                 />
               </div>
             )}
           </div>
         </div>
+
+        {/* Right side - Current player */}
+        <div className="player-section">
+          {you && (
+            <PlayerArea
+              playerName={you.name}
+              hand={[]} // Hand is shown separately at bottom
+              boardState={you.boardState}
+              stars={you.stars}
+              isCurrentPlayer={gameState.phase === GamePhase.TURN}
+              onCardClick={undefined}
+              onEndTurn={undefined}
+              turnComplete={you.turnComplete}
+              isOpponent={false}
+              showHand={false} // Hand shown separately
+              cardsPlayed={youCardsPlayed}
+              influence={you.influence}
+              maxInfluence={you.maxInfluence}
+            />
+          )}
+        </div>
       </div>
 
-      {/* You (current player) - Always at bottom */}
-      <div className="player-bottom">
-        {you && (
-          <PlayerArea
-            playerName={you.name}
-            hand={you.hand} // You always see your own hand
-            boardState={you.boardState}
-            stars={you.stars}
-            isCurrentPlayer={gameState.phase === GamePhase.TURN}
-            onCardClick={onCardPlay}
-            onEndTurn={onEndTurn}
-            turnComplete={you.turnComplete}
-            isOpponent={false}
-            showHand={true} // You always see your hand
-          />
-        )}
-      </div>
+      {/* Collapsible player hand area at bottom */}
+      {you && (
+        <div className={`player-hand-fixed ${!handPanelVisible ? 'collapsed' : ''}`}>
+          <div className="hand-header">
+            <div className="hand-header-left">
+              <button 
+                className="hand-toggle-button"
+                onClick={() => setHandPanelVisible(!handPanelVisible)}
+                title={handPanelVisible ? 'Hide Hand' : 'Show Hand'}
+              >
+                {handPanelVisible ? '▼' : '▲'}
+              </button>
+              <h4>Your Hand ({you.hand.length} cards)</h4>
+            </div>
+            <div className="hand-header-right">
+              {gameState.phase === GamePhase.TURN && !you.turnComplete && (
+                <button className="end-turn-button" onClick={onEndTurn}>
+                  End Turn
+                </button>
+              )}
+              {you.turnComplete && (
+                <div className="turn-status">Turn Complete</div>
+              )}
+            </div>
+          </div>
+          {handPanelVisible && (
+            <div className="cards-row">
+              {you.hand.map(cardId => {
+                const card = getCardById(cardId);
+                return card ? (
+                  <Card
+                    key={cardId}
+                    card={card}
+                    size="small"
+                    onClick={() => onCardPlay(cardId)}
+                    disabled={gameState.phase !== GamePhase.TURN || you.turnComplete}
+                  />
+                ) : null;
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {gameState.phase === GamePhase.ROUND_END && !gameState.winner && onNextRound && (
         <div className="round-end-actions">
