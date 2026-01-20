@@ -23,7 +23,9 @@ import { loadCardsFromSupabase } from './game/CardLoader';
 import { Tutorial } from './components/Tutorial/Tutorial';
 import { Login } from './components/Login/Login';
 import { DeckManager } from './components/DeckManager/DeckManager';
+import { MuteButton } from './components/MuteButton/MuteButton';
 import { AuthUser, getCurrentUser, onAuthStateChange, signOut } from './supabase/auth';
+import { musicService } from './services/MusicService';
 import './App.css';
 
 function App() {
@@ -55,6 +57,7 @@ function App() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showDeckBuilder, setShowDeckBuilder] = useState(false);
   const [aiOpponent] = useState<AIOpponent>(new AIOpponent('AI Chef'));
+  const [isMuted, setIsMuted] = useState(musicService.getMuted());
   // Current player ID - in single-player mode, always 'player1' (you are always at bottom)
   const currentPlayerId: 'player1' | 'player2' = 'player1';
 
@@ -64,6 +67,25 @@ function App() {
     const unsubscribe = onAuthStateChange(setUser);
     return () => unsubscribe();
   }, []);
+
+  // Music management - play intro on lobby screen, gameplay music during game
+  useEffect(() => {
+    if (!gameState) {
+      // On lobby screen - play intro music
+      musicService.playIntro();
+    } else if (gameState.phase === GamePhase.TURN || 
+               gameState.phase === GamePhase.FACE_OFF || 
+               gameState.phase === GamePhase.ROUND_START ||
+               gameState.phase === GamePhase.ROUND_END) {
+      // During gameplay - play random gameplay music
+      musicService.playGameplayMusic();
+    }
+  }, [gameState]);
+
+  const handleToggleMute = () => {
+    const newMutedState = musicService.toggleMute();
+    setIsMuted(newMutedState);
+  };
 
   // Handle AI turn automatically
   useEffect(() => {
@@ -273,6 +295,7 @@ function App() {
   if (!cardsLoaded) {
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         <div className="loading-screen">
           <h1>Chef Card Game</h1>
           <p>Loading cards...</p>
@@ -288,6 +311,7 @@ function App() {
   if (showLogin) {
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         <Login
           onLogin={handleLogin}
           onSkip={() => setShowLogin(false)}
@@ -300,6 +324,7 @@ function App() {
   if (showDeckBuilder) {
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         {showDeckManager && user && (
           <DeckManager
             currentDeck={playerDeck || undefined}
@@ -334,6 +359,7 @@ function App() {
   if (!gameState) {
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
         {showDeckManager && user && (
           <DeckManager
@@ -421,6 +447,7 @@ function App() {
     const player1 = gameState.players.player1;
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         <div className="mulligan-screen">
           <h2>Mulligan Phase</h2>
           <p>Select cards to mulligan (or skip)</p>
@@ -459,6 +486,7 @@ function App() {
   if (gameState.phase === GamePhase.COIN_FLIP) {
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         <div className="coin-flip-screen">
           <h2>Flipping Coin...</h2>
           {gameState.coinFlipResult && (
@@ -492,6 +520,7 @@ function App() {
 
     return (
       <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
         {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
         <GameBoard
           gameState={gameState}
@@ -507,6 +536,7 @@ function App() {
 
   return (
     <div className="App">
+      <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
       <div className="waiting-screen">
         <h2>Waiting for game to start...</h2>
         <p>Phase: {gameState.phase}</p>
