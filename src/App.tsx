@@ -424,8 +424,8 @@ function App() {
                 🎴 Build Deck
               </button>
               <button 
-                onClick={() => {
-                  const practiceDeck = createPracticeDeck();
+                onClick={async () => {
+                  const practiceDeck = await createPracticeDeck();
                   setPlayerDeck(practiceDeck);
                 }} 
                 className="lobby-button"

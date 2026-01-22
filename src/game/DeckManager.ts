@@ -357,6 +357,82 @@ export function createStarterDeck2(): PlayerDeck {
 }
 
 /**
+ * Creates a practice deck for new players (fallback hardcoded version)
+ * A well-balanced deck designed for learning the game mechanics
+ * Features a mix of all card types with clear, easy-to-understand effects
+ */
+export function createPracticeDeckFallback(): PlayerDeck {
+  return {
+    chefCardId: 'chef_001', // Master Chef Pierre - Simple +2 to all Meal cards ability
+    restaurantCardIds: ['restaurant_001', 'restaurant_003', 'restaurant_004'], // Le Grand Bistro, Ocean Breeze, Mountain View
+    mainDeck: [
+      // Meals - 15 cards (good variety of values for learning)
+      'meal_001', 'meal_001', 'meal_001', // Signature Burger x3
+      'meal_003', 'meal_003', // Grilled Salmon x2
+      'meal_005', 'meal_005', // Caesar Salad x2
+      'meal_007', 'meal_007', // Chocolate Soufflé x2
+      'meal_008', 'meal_008', // Sushi Platter x2
+      'meal_011', 'meal_011', // Ramen Bowl x2
+      'meal_013', 'meal_013', // Fish Tacos x2
+      // Staff - 9 cards (variety of staff abilities)
+      'staff_001', 'staff_001', 'staff_001', // Head Waiter x3 (simple +1 to all meals)
+      'staff_002', 'staff_002', // Sous Chef x2 (add +2 to one meal)
+      'staff_003', // Sommelier (add +1 to restaurant base)
+      'staff_005', 'staff_005', // Host x2 (draw extra card)
+      'staff_006', // Line Cook (reduce opponent score)
+      // Support - 4 cards (different durations)
+      'support_001', 'support_001', // Fresh Ingredients x2 (round duration)
+      'support_002', // Renovation (permanent)
+      'support_005', // VIP Service (round duration)
+      // Events - 2 cards (different targets)
+      'event_001', // Kitchen Fire (opponent)
+      'event_003', // Rush Hour (both players)
+    ]
+  };
+}
+
+/**
+ * Creates a practice deck for new players
+ * Tries to load from Supabase first, falls back to hardcoded version if unavailable
+ * A well-balanced deck designed for learning the game mechanics
+ */
+export async function createPracticeDeck(): Promise<PlayerDeck> {
+  try {
+    // Try to load from Supabase (dynamic import to avoid circular dependency)
+    const { getPrebuiltDeckByName } = await import('../supabase/decks');
+    const { deck, error } = await getPrebuiltDeckByName('Practice Deck');
+    
+    if (!error && deck && deck.deck) {
+      // Validate the deck before returning
+      const validation = validatePlayerDeck(deck.deck);
+      if (validation.isValid) {
+        return deck.deck;
+      }
+      // If invalid, fall through to fallback
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Practice deck from Supabase failed validation, using fallback');
+      }
+    }
+  } catch (error) {
+    // Supabase not available or error loading - use fallback
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Practice deck not available from Supabase, using fallback:', error);
+    }
+  }
+  
+  // Fallback to hardcoded version
+  return createPracticeDeckFallback();
+}
+
+/**
+ * Synchronous version for backwards compatibility
+ * Use createPracticeDeck() (async) when possible
+ */
+export function createPracticeDeckSync(): PlayerDeck {
+  return createPracticeDeckFallback();
+}
+
+/**
  * @deprecated Use createDefaultPlayerDeck instead
  * Kept for backward compatibility
  */
