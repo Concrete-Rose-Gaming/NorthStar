@@ -110,7 +110,7 @@ export const Card: React.FC<CardProps> = ({
         {restaurantCard && (
           <>
             {/* #region agent log */}
-            {(() => { fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Card.tsx:110',message:'Restaurant card render check',data:{cardId:restaurantCard.id,cardName:restaurantCard.name,primaryArchetype:restaurantCard.primaryArchetype,hasPrimaryArchetype:!!restaurantCard.primaryArchetype,primaryArchetypeType:typeof restaurantCard.primaryArchetype},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{}); return null; })()}
+            {process.env.NODE_ENV === 'development' && (() => { fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Card.tsx:110',message:'Restaurant card render check',data:{cardId:restaurantCard.id,cardName:restaurantCard.name,primaryArchetype:restaurantCard.primaryArchetype,hasPrimaryArchetype:!!restaurantCard.primaryArchetype,primaryArchetypeType:typeof restaurantCard.primaryArchetype},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{}); return null; })()}
             {/* #endregion */}
             <div className="card-archetypes">
               {restaurantCard.primaryArchetype ? (

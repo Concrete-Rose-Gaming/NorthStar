@@ -175,7 +175,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     baseScore: 10,
     ability: 'elegance',
     abilityCondition: 'If you play 3 or more Meal cards',
-    abilityDescription: 'Gain +5 bonus score'
+    abilityDescription: 'Gain +5 bonus score',
+    primaryArchetype: 'Sit Down'
   },
   'restaurant_002': {
     id: 'restaurant_002',
@@ -185,7 +186,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     baseScore: 8,
     ability: 'spice',
     abilityCondition: 'If opponent plays an Event card',
-    abilityDescription: 'Negate the Event card effect'
+    abilityDescription: 'Negate the Event card effect',
+    primaryArchetype: 'Diner'
   },
   'restaurant_003': {
     id: 'restaurant_003',
@@ -195,7 +197,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     baseScore: 9,
     ability: 'freshness',
     abilityCondition: 'If you have no Staff cards',
-    abilityDescription: 'Double your base score'
+    abilityDescription: 'Double your base score',
+    primaryArchetype: 'Sit Down'
   },
   'restaurant_004': {
     id: 'restaurant_004',
@@ -205,7 +208,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     baseScore: 7,
     ability: 'sustainability',
     abilityCondition: 'If you play exactly 2 Meal cards',
-    abilityDescription: 'Gain +3 bonus score'
+    abilityDescription: 'Gain +3 bonus score',
+    primaryArchetype: 'Sit Down'
   },
   'restaurant_005': {
     id: 'restaurant_005',
@@ -215,7 +219,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     baseScore: 6,
     ability: 'comfort',
     abilityCondition: 'If you have more Staff cards than opponent',
-    abilityDescription: 'Gain +4 bonus score'
+    abilityDescription: 'Gain +4 bonus score',
+    primaryArchetype: 'Diner'
   },
   'restaurant_006': {
     id: 'restaurant_006',
@@ -225,7 +230,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     baseScore: 8,
     ability: 'fusion',
     abilityCondition: 'If you play cards of 3 different types',
-    abilityDescription: 'Gain +6 bonus score'
+    abilityDescription: 'Gain +6 bonus score',
+    primaryArchetype: 'Sit Down'
   },
   'restaurant_007': {
     id: 'restaurant_007',
@@ -235,7 +241,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     baseScore: 7,
     ability: 'tradition',
     abilityCondition: 'If opponent\'s score is higher',
-    abilityDescription: 'Add +2 to all your Meal cards'
+    abilityDescription: 'Add +2 to all your Meal cards',
+    primaryArchetype: 'Fast Casual'
   },
   'restaurant_008': {
     id: 'restaurant_008',
@@ -245,7 +252,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     baseScore: 5,
     ability: 'nightowl',
     abilityCondition: 'If this is round 3 or later',
-    abilityDescription: 'Gain +7 bonus score'
+    abilityDescription: 'Gain +7 bonus score',
+    primaryArchetype: 'Diner'
   },
   'restaurant_009': {
     id: 'restaurant_009',
@@ -255,7 +263,8 @@ export const CARD_DEFINITIONS: CardRegistry = {
     baseScore: 6,
     ability: 'fresh',
     abilityCondition: 'If you play no Event cards',
-    abilityDescription: 'Gain +5 bonus score'
+    abilityDescription: 'Gain +5 bonus score',
+    primaryArchetype: 'Fast Casual'
   },
 
   // Meal Cards

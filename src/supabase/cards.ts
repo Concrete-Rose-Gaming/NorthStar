@@ -118,10 +118,12 @@ export async function getAllCards(): Promise<{ cards: Card[]; error: Error | nul
     }
 
     // #region agent log
-    const restaurantCards = (data || []).filter((c: any) => c.card_type === 'RESTAURANT');
-    if (restaurantCards.length > 0) {
-      const sampleCard = restaurantCards[0];
-      fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'cards.ts:119',message:'Supabase query result for restaurant card',data:{cardCode:sampleCard.code,cardName:sampleCard.name,hasRestaurantData:!!sampleCard.restaurant_data,restaurantData:sampleCard.restaurant_data,restaurantFocus1:sampleCard.restaurant_data?.Restaurant_Focus_1,totalRestaurantCards:restaurantCards.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    if (process.env.NODE_ENV === 'development') {
+      const restaurantCards = (data || []).filter((c: any) => c.card_type === 'RESTAURANT');
+      if (restaurantCards.length > 0) {
+        const sampleCard = restaurantCards[0];
+        fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'cards.ts:119',message:'Supabase query result for restaurant card',data:{cardCode:sampleCard.code,cardName:sampleCard.name,hasRestaurantData:!!sampleCard.restaurant_data,restaurantData:sampleCard.restaurant_data,restaurantFocus1:sampleCard.restaurant_data?.Restaurant_Focus_1,totalRestaurantCards:restaurantCards.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      }
     }
     // #endregion
 
