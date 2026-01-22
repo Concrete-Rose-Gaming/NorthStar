@@ -32,6 +32,13 @@ function convertSupabaseCardToGameCard(supabaseCard: SupabaseCard): Card {
 
     case 'RESTAURANT': {
       const restaurantData = supabaseCard.restaurant_data;
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:34',message:'Converting restaurant card',data:{cardCode:supabaseCard.code,cardName:supabaseCard.name,hasRestaurantData:!!restaurantData,restaurantData:restaurantData,restaurantFocus1:restaurantData?.Restaurant_Focus_1,primaryArchetypeResult:restaurantData?.Restaurant_Focus_1 || undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
+      const primaryArchetype = restaurantData?.Restaurant_Focus_1 || undefined;
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:44',message:'Restaurant card conversion result',data:{cardCode:supabaseCard.code,primaryArchetype:primaryArchetype,hasPrimaryArchetype:!!primaryArchetype},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       return {
         ...baseCard,
         type: CardType.RESTAURANT,
@@ -39,7 +46,7 @@ function convertSupabaseCardToGameCard(supabaseCard: SupabaseCard): Card {
         ability: supabaseCard.effect || '',
         abilityCondition: '', // TODO: Add abilityCondition field to Supabase schema
         abilityDescription: supabaseCard.description,
-        primaryArchetype: restaurantData?.Restaurant_Focus_1 || undefined, // Restaurant archetype from Restaurant_Focus_1
+        primaryArchetype: primaryArchetype, // Restaurant archetype from Restaurant_Focus_1
         requiredStars: restaurantData?.required_stars ?? 0 // Default to 0 if not specified
       } as RestaurantCard;
     }
@@ -136,10 +143,20 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
 
       // Convert Supabase cards to game cards
       const registry: CardRegistry = {};
+      const restaurantCardsFromSupabase = cards.filter(c => c.card_type === 'RESTAURANT');
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:139',message:'Starting card conversion',data:{totalCards:cards.length,restaurantCardCount:restaurantCardsFromSupabase.length,isUsingFallback:false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       for (const supabaseCard of cards) {
         try {
           const gameCard = convertSupabaseCardToGameCard(supabaseCard);
           registry[gameCard.id] = gameCard;
+          // #region agent log
+          if (gameCard.type === CardType.RESTAURANT) {
+            const restaurantCard = gameCard as RestaurantCard;
+            fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:145',message:'Restaurant card added to registry',data:{cardId:restaurantCard.id,cardName:restaurantCard.name,primaryArchetype:restaurantCard.primaryArchetype,hasPrimaryArchetype:!!restaurantCard.primaryArchetype},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+          }
+          // #endregion
         } catch (err) {
           console.error(`Failed to convert card ${supabaseCard.code}:`, err);
         }
@@ -150,6 +167,9 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
         if (process.env.NODE_ENV === 'development') {
           console.warn('No cards loaded from Supabase, falling back to local definitions');
         }
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:149',message:'Using fallback local definitions',data:{reason:'No cards loaded from Supabase'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
         const { CARD_DEFINITIONS } = require('./CardTypes');
         cardRegistry = CARD_DEFINITIONS;
         isLoaded = true;
@@ -191,10 +211,7 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
  */
 export function getCardRegistry(): CardRegistry {
   if (!isLoaded) {
-    // Don't warn in production to avoid console spam
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('Cards not loaded yet. Returning empty registry.');
-    }
+    console.warn('Cards not loaded yet. Returning empty registry.');
     return {};
   }
   return cardRegistry;
