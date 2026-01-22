@@ -360,33 +360,34 @@ export function createStarterDeck2(): PlayerDeck {
  * Creates a practice deck for new players (fallback hardcoded version)
  * A well-balanced deck designed for learning the game mechanics
  * Features a mix of all card types with clear, easy-to-understand effects
+ * Uses PROTOTYPE-SET-NUMBER format for card IDs
  */
 export function createPracticeDeckFallback(): PlayerDeck {
   return {
-    chefCardId: 'chef_001', // Master Chef Pierre - Simple +2 to all Meal cards ability
-    restaurantCardIds: ['restaurant_001', 'restaurant_003', 'restaurant_004'], // Le Grand Bistro, Ocean Breeze, Mountain View
+    chefCardId: 'PROTOTYPE-CHEF-001', // Master Chef Pierre - Simple +2 to all Meal cards ability
+    restaurantCardIds: ['PROTOTYPE-RESTAURANT-001', 'PROTOTYPE-RESTAURANT-003', 'PROTOTYPE-RESTAURANT-004'], // Le Grand Bistro, Ocean Breeze, Mountain View
     mainDeck: [
       // Meals - 15 cards (good variety of values for learning)
-      'meal_001', 'meal_001', 'meal_001', // Signature Burger x3
-      'meal_003', 'meal_003', // Grilled Salmon x2
-      'meal_005', 'meal_005', // Caesar Salad x2
-      'meal_007', 'meal_007', // Chocolate Soufflé x2
-      'meal_008', 'meal_008', // Sushi Platter x2
-      'meal_011', 'meal_011', // Ramen Bowl x2
-      'meal_013', 'meal_013', // Fish Tacos x2
+      'PROTOTYPE-MEAL-001', 'PROTOTYPE-MEAL-001', 'PROTOTYPE-MEAL-001', // Signature Burger x3
+      'PROTOTYPE-MEAL-003', 'PROTOTYPE-MEAL-003', // Grilled Salmon x2
+      'PROTOTYPE-MEAL-005', 'PROTOTYPE-MEAL-005', // Caesar Salad x2
+      'PROTOTYPE-MEAL-007', 'PROTOTYPE-MEAL-007', // Chocolate Soufflé x2
+      'PROTOTYPE-MEAL-008', 'PROTOTYPE-MEAL-008', // Sushi Platter x2
+      'PROTOTYPE-MEAL-011', 'PROTOTYPE-MEAL-011', // Ramen Bowl x2
+      'PROTOTYPE-MEAL-013', 'PROTOTYPE-MEAL-013', // Fish Tacos x2
       // Staff - 9 cards (variety of staff abilities)
-      'staff_001', 'staff_001', 'staff_001', // Head Waiter x3 (simple +1 to all meals)
-      'staff_002', 'staff_002', // Sous Chef x2 (add +2 to one meal)
-      'staff_003', // Sommelier (add +1 to restaurant base)
-      'staff_005', 'staff_005', // Host x2 (draw extra card)
-      'staff_006', // Line Cook (reduce opponent score)
+      'PROTOTYPE-STAFF-001', 'PROTOTYPE-STAFF-001', 'PROTOTYPE-STAFF-001', // Head Waiter x3 (simple +1 to all meals)
+      'PROTOTYPE-STAFF-002', 'PROTOTYPE-STAFF-002', // Sous Chef x2 (add +2 to one meal)
+      'PROTOTYPE-STAFF-003', // Sommelier (add +1 to restaurant base)
+      'PROTOTYPE-STAFF-005', 'PROTOTYPE-STAFF-005', // Host x2 (draw extra card)
+      'PROTOTYPE-STAFF-006', // Line Cook (reduce opponent score)
       // Support - 4 cards (different durations)
-      'support_001', 'support_001', // Fresh Ingredients x2 (round duration)
-      'support_002', // Renovation (permanent)
-      'support_005', // VIP Service (round duration)
+      'PROTOTYPE-SUPPORT-001', 'PROTOTYPE-SUPPORT-001', // Fresh Ingredients x2 (round duration)
+      'PROTOTYPE-SUPPORT-002', // Renovation (permanent)
+      'PROTOTYPE-SUPPORT-005', // VIP Service (round duration)
       // Events - 2 cards (different targets)
-      'event_001', // Kitchen Fire (opponent)
-      'event_003', // Rush Hour (both players)
+      'PROTOTYPE-EVENT-001', // Kitchen Fire (opponent)
+      'PROTOTYPE-EVENT-003', // Rush Hour (both players)
     ]
   };
 }
@@ -409,15 +410,11 @@ export async function createPracticeDeck(): Promise<PlayerDeck> {
         return deck.deck;
       }
       // If invalid, fall through to fallback
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Practice deck from Supabase failed validation, using fallback');
-      }
+      console.warn('Practice deck from Supabase failed validation, using fallback:', validation.errors);
     }
   } catch (error) {
     // Supabase not available or error loading - use fallback
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Practice deck not available from Supabase, using fallback:', error);
-    }
+    console.error('Practice deck not available from Supabase, using fallback:', error);
   }
   
   // Fallback to hardcoded version

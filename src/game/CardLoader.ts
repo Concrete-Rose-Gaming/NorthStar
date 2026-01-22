@@ -137,13 +137,13 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
         // Check if this is a "not configured" error (expected) vs actual connection error
         const isNotConfigured = error.message === 'Supabase not configured';
         
-        // Only log actual errors, not expected "not configured" messages
-        if (!isNotConfigured && process.env.NODE_ENV === 'development') {
+        // Log all errors, not just in development
+        if (!isNotConfigured) {
           console.error('Failed to load cards from Supabase:', error);
           console.warn('Falling back to local card definitions');
         }
         
-        // Silently fall back to local cards
+        // Fall back to local cards
         const { CARD_DEFINITIONS } = require('./CardTypes');
         // #region agent log
         if (process.env.NODE_ENV === 'development') {
@@ -183,9 +183,7 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
 
       // If no cards were loaded from Supabase, fallback to local
       if (Object.keys(registry).length === 0) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('No cards loaded from Supabase, falling back to local definitions');
-        }
+        console.warn('No cards loaded from Supabase, falling back to local definitions');
         // #region agent log
         if (process.env.NODE_ENV === 'development') {
           fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardLoader.ts:149',message:'Using fallback local definitions',data:{reason:'No cards loaded from Supabase'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
@@ -199,14 +197,10 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
 
       cardRegistry = registry;
       isLoaded = true;
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Loaded ${Object.keys(registry).length} cards from Supabase`);
-      }
+      console.log(`Loaded ${Object.keys(registry).length} cards from Supabase`);
       return registry;
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error loading cards:', error);
-      }
+      console.error('Error loading cards:', error);
       // Fallback to local cards on any error
       try {
         const { CARD_DEFINITIONS } = require('./CardTypes');

@@ -65,7 +65,7 @@ function getSupabaseClient(): SupabaseClient {
         );
       }
     } catch (error) {
-      console.warn('Supabase initialization error (non-blocking):', error);
+      console.error('Supabase initialization error (non-blocking):', error);
       // Create a minimal client that will fail gracefully
       supabaseInstance = createClient('https://not-configured.supabase.co', 'not-configured');
     }
