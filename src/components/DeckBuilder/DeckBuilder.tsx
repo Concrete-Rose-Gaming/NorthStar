@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { Card } from '../Card/Card';
-import { CardType, getCardsByType } from '../../game/CardTypes';
+import { CardType, getCardsByType, ChefCard, RestaurantCard } from '../../game/CardTypes';
 import { getCardRegistry } from '../../game/CardLoader';
-import { PlayerDeck, validatePlayerDeck, getDeckStats } from '../../game/DeckManager';
+import { PlayerDeck, validatePlayerDeck, getDeckStats, restaurantMatchesChefArchetype } from '../../game/DeckManager';
 import './DeckBuilder.css';
 
 interface DeckBuilderProps {
@@ -24,11 +24,45 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
   const mainDeckStats = getDeckStats(mainDeck);
 
   const handleSelectChef = (cardId: string) => {
+    const registry = getCardRegistry();
+    const newChef = registry[cardId] as ChefCard | undefined;
+    
+    if (!newChef || newChef.type !== CardType.CHEF) {
+      return;
+    }
+    
+    // If restaurants are already selected, check if they match the new chef
+    // Remove restaurants that don't match the new chef
+    const matchingRestaurantIds = restaurantCardIds.filter(restaurantId => {
+      const restaurant = registry[restaurantId] as RestaurantCard | undefined;
+      if (!restaurant) return false;
+      return restaurantMatchesChefArchetype(restaurant, newChef);
+    });
+    
     setChefCardId(cardId);
+    if (matchingRestaurantIds.length !== restaurantCardIds.length) {
+      setRestaurantCardIds(matchingRestaurantIds);
+    }
     validateDeck();
   };
 
   const handleSelectRestaurant = (cardId: string) => {
+    const registry = getCardRegistry();
+    const restaurant = registry[cardId] as RestaurantCard | undefined;
+    
+    if (!restaurant || restaurant.type !== CardType.RESTAURANT) {
+      return;
+    }
+    
+    // If a chef is selected, check if the restaurant matches
+    if (chefCardId) {
+      const chef = registry[chefCardId] as ChefCard | undefined;
+      if (chef && !restaurantMatchesChefArchetype(restaurant, chef)) {
+        // Restaurant doesn't match chef, don't allow selection
+        return;
+      }
+    }
+    
     if (restaurantCardIds.includes(cardId)) {
       // Remove if already selected
       setRestaurantCardIds(restaurantCardIds.filter(id => id !== cardId));
@@ -93,14 +127,53 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
   };
 
   const getAvailableCards = () => {
+    const registry = getCardRegistry();
+    
     if (activeSection === 'chef') {
-      return getCardsByType(CardType.CHEF);
+      let chefs = getCardsByType(CardType.CHEF) as ChefCard[];
+      
+      // If restaurants are selected, filter chefs to only show those that match restaurant archetypes
+      if (restaurantCardIds.length > 0) {
+        // Get all unique archetypes from selected restaurants
+        const selectedRestaurantArchetypes = new Set<string>();
+        restaurantCardIds.forEach(restaurantId => {
+          const restaurant = registry[restaurantId] as RestaurantCard | undefined;
+          if (restaurant?.primaryArchetype) {
+            selectedRestaurantArchetypes.add(restaurant.primaryArchetype);
+          }
+        });
+        
+        // Filter chefs: only show chefs whose primary or secondary archetype matches any selected restaurant archetype
+        if (selectedRestaurantArchetypes.size > 0) {
+          chefs = chefs.filter(chef => {
+            const chefArchetypes = [chef.primaryArchetype];
+            if (chef.secondaryArchetype) {
+              chefArchetypes.push(chef.secondaryArchetype);
+            }
+            // Chef matches if any of its archetypes match any selected restaurant archetype
+            return chefArchetypes.some(arch => selectedRestaurantArchetypes.has(arch));
+          });
+        }
+      }
+      
+      return chefs;
     } else if (activeSection === 'restaurants') {
-      return getCardsByType(CardType.RESTAURANT);
+      let restaurants = getCardsByType(CardType.RESTAURANT) as RestaurantCard[];
+      
+      // If a chef is selected, filter restaurants to only show those that match chef archetypes
+      if (chefCardId) {
+        const chef = registry[chefCardId] as ChefCard | undefined;
+        if (chef) {
+          restaurants = restaurants.filter(restaurant => 
+            restaurantMatchesChefArchetype(restaurant, chef)
+          );
+        }
+      }
+      
+      return restaurants;
     } else {
       // Main deck - only Meals, Staff, Support, Event
       if (selectedType === 'MAIN_DECK') {
-        const registry = getCardRegistry();
         return Object.values(registry).filter(card => 
           card.type !== CardType.CHEF && card.type !== CardType.RESTAURANT
         );
@@ -193,6 +266,11 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
         {activeSection === 'chef' && (
           <div className="chef-selection">
             <h3>Select Your Chef Card</h3>
+            {restaurantCardIds.length > 0 && (
+              <div className="archetype-filter-notice">
+                <p>Only chefs matching your selected restaurant archetypes are shown.</p>
+              </div>
+            )}
             <div className="cards-grid">
               {getAvailableCards().map(card => (
                 <div key={card.id} className="library-card-wrapper">
@@ -222,6 +300,16 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
         {activeSection === 'restaurants' && (
           <div className="restaurants-selection">
             <h3>Select Your 3 Restaurant Cards</h3>
+            {chefCardId && (
+              <div className="archetype-filter-notice">
+                <p>Only restaurants matching your chef's archetype are shown.</p>
+              </div>
+            )}
+            {!chefCardId && (
+              <div className="archetype-filter-notice warning">
+                <p>Select a chef first to see matching restaurants.</p>
+              </div>
+            )}
             <div className="cards-grid">
               {getAvailableCards().map(card => {
                 const isSelected = restaurantCardIds.includes(card.id);

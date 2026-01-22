@@ -384,8 +384,19 @@ export function restaurantMatchesChefArchetype(
   restaurantCard: RestaurantCard,
   chefCard: ChefCard
 ): boolean {
-  // Archetype matching disabled - allow all restaurants for deck building
-  return true;
+  // If restaurant has no archetype, it doesn't match
+  if (!restaurantCard.primaryArchetype) {
+    return false;
+  }
+  
+  // Get chef's archetypes (primary and optional secondary)
+  const chefArchetypes = [chefCard.primaryArchetype];
+  if (chefCard.secondaryArchetype) {
+    chefArchetypes.push(chefCard.secondaryArchetype);
+  }
+  
+  // Restaurant matches if its archetype matches any of the chef's archetypes
+  return chefArchetypes.includes(restaurantCard.primaryArchetype);
 }
 
 /**
