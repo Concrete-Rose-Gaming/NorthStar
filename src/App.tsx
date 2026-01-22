@@ -39,8 +39,15 @@ function App() {
         setCardsLoaded(true);
       })
       .catch((error) => {
-        console.error('Failed to load cards:', error);
-        setCardsError(error);
+        // Only log actual errors, not expected "not configured" scenarios
+        const isNotConfigured = error?.message === 'Supabase not configured';
+        if (!isNotConfigured) {
+          console.error('Failed to load cards:', error);
+        }
+        // Only set error state for actual errors, not configuration issues
+        if (!isNotConfigured) {
+          setCardsError(error);
+        }
         // Still set loaded to true to allow app to continue (with fallback to local cards)
         setCardsLoaded(true);
       });

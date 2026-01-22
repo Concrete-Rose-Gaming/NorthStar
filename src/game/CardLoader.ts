@@ -130,11 +130,16 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
       const { cards, error } = await getAllCards();
 
       if (error) {
-        // Only log errors in development mode
-        if (process.env.NODE_ENV === 'development') {
+        // Check if this is a "not configured" error (expected) vs actual connection error
+        const isNotConfigured = error.message === 'Supabase not configured';
+        
+        // Only log actual errors, not expected "not configured" messages
+        if (!isNotConfigured && process.env.NODE_ENV === 'development') {
           console.error('Failed to load cards from Supabase:', error);
           console.warn('Falling back to local card definitions');
         }
+        
+        // Silently fall back to local cards
         const { CARD_DEFINITIONS } = require('./CardTypes');
         cardRegistry = CARD_DEFINITIONS;
         isLoaded = true;
