@@ -16,7 +16,7 @@ import {
   advanceToNextRound,
   resetTurnStatus
 } from './game/GameEngine';
-import { PlayerDeck } from './game/DeckManager';
+import { PlayerDeck, createPracticeDeck } from './game/DeckManager';
 import { AIOpponent } from './game/AIOpponent';
 import { getCardById, CardType } from './game/CardTypes';
 import { loadCardsFromSupabase } from './game/CardLoader';
@@ -422,6 +422,16 @@ function App() {
                 className="lobby-button"
               >
                 🎴 Build Deck
+              </button>
+              <button 
+                onClick={() => {
+                  const practiceDeck = createPracticeDeck();
+                  setPlayerDeck(practiceDeck);
+                }} 
+                className="lobby-button"
+                title="Load a pre-built practice deck to learn the game"
+              >
+                📚 Load Practice Deck
               </button>
               <button 
                 onClick={handleStartGame} 

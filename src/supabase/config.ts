@@ -5,6 +5,26 @@ import { GameState } from '../game/GameEngine';
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || '';
 
+// Debug logging to diagnose environment variable issues
+// This will show in browser console whether variables are present in production bundle
+if (typeof window !== 'undefined') {
+  console.log('🔍 Supabase Config Debug:', {
+    url: supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : '❌ EMPTY',
+    urlLength: supabaseUrl.length,
+    key: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 10)}...` : '❌ EMPTY',
+    keyLength: supabaseAnonKey.length,
+    configured: !!(
+      supabaseUrl && 
+      supabaseUrl !== '' &&
+      supabaseUrl !== 'https://your-project.supabase.co' &&
+      supabaseAnonKey && 
+      supabaseAnonKey !== '' &&
+      supabaseAnonKey !== 'your-anon-key'
+    ),
+    nodeEnv: process.env.NODE_ENV
+  });
+}
+
 // Check if Supabase is properly configured
 export const isSupabaseConfigured = (): boolean => {
   return !!(
@@ -31,10 +51,13 @@ function getSupabaseClient(): SupabaseClient {
       } else {
         // Create a no-op client that returns errors instead of making requests
         // This prevents CORS errors from placeholder URLs
-        // Only show warning in development mode
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Supabase not configured. Please set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY in your .env file');
-        }
+        // Show warning in both development and production to help diagnose issues
+        console.error('⚠️ Supabase not configured!', {
+          url: supabaseUrl || 'MISSING',
+          key: supabaseAnonKey ? 'PRESENT' : 'MISSING',
+          environment: process.env.NODE_ENV,
+          message: 'Please set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY in your .env file (local) or GitHub Secrets (production)'
+        });
         // Create a client with empty strings - it will fail gracefully
         supabaseInstance = createClient(
           supabaseUrl || 'https://not-configured.supabase.co',
