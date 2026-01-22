@@ -178,13 +178,9 @@ export function importDeck(jsonString: string): { name: string; deck: PlayerDeck
  * Note: This requires a system account to be configured
  */
 export async function getPrebuiltDecks(category?: string): Promise<{ decks: SavedDeck[]; error: Error | null }> {
-  try {
-    // For now, just return empty - system account implementation was removed
-    // This will be implemented when system account is set up
-    return { decks: [], error: null };
-  } catch (error) {
-    return { decks: [], error: error as Error };
-  }
+  // For now, just return empty - system account implementation was removed
+  // This will be implemented when system account is set up
+  return { decks: [], error: null };
 }
 
 /**
@@ -192,13 +188,9 @@ export async function getPrebuiltDecks(category?: string): Promise<{ decks: Save
  * Note: This requires a system account to be configured
  */
 export async function getPrebuiltDeck(deckId: string): Promise<{ deck: SavedDeck | null; error: Error | null }> {
-  try {
-    // For now, just return null - system account implementation was removed
-    // This will be implemented when system account is set up
-    return { deck: null, error: null };
-  } catch (error) {
-    return { deck: null, error: error as Error };
-  }
+  // For now, just return null - system account implementation was removed
+  // This will be implemented when system account is set up
+  return { deck: null, error: null };
 }
 
 /**
@@ -207,11 +199,7 @@ export async function getPrebuiltDeck(deckId: string): Promise<{ deck: SavedDeck
  * Note: This requires a system account to be configured
  */
 export async function getPrebuiltDeckByName(name: string): Promise<{ deck: SavedDeck | null; error: Error | null }> {
-  try {
-    // For now, just return null - system account implementation was removed
-    // This will be implemented when system account is set up
-    return { deck: null, error: null };
-  } catch (error) {
-    return { deck: null, error: error as Error };
-  }
+  // For now, just return null - system account implementation was removed
+  // This will be implemented when system account is set up
+  return { deck: null, error: null };
 }
