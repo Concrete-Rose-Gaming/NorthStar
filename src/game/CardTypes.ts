@@ -648,25 +648,15 @@ export function getCardsByType(type: CardType): Card[] {
     // Use dynamic import to avoid circular dependency issues
     const cardLoader = require('./CardLoader');
     const registry: CardRegistry = cardLoader.getCardRegistry();
-    const areCardsLoaded = cardLoader.areCardsLoaded();
     const cards = Object.values(registry).filter((card: Card) => card.type === type);
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardTypes.ts:646',message:'getCardsByType called',data:{type:type,registrySize:Object.keys(registry).length,areCardsLoaded:areCardsLoaded,cardsFound:cards.length,firstCardId:cards[0]?.id,firstCardHasArchetype:cards[0] && 'primaryArchetype' in cards[0] ? !!cards[0].primaryArchetype : false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     // If registry is empty (cards not loaded), fallback to local definitions
     if (cards.length === 0 && Object.keys(registry).length === 0) {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardTypes.ts:653',message:'Using fallback CARD_DEFINITIONS',data:{type:type,reason:'Registry empty'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       return Object.values(CARD_DEFINITIONS).filter(card => card.type === type);
     }
     return cards;
   } catch (error) {
     // Fallback to local definitions if loader not available (for migration period)
     console.warn('CardLoader not available, using local definitions');
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/7a7fd3b5-e53c-4371-aace-6042bdec0cdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CardTypes.ts:658',message:'Using fallback CARD_DEFINITIONS due to error',data:{type:type,error:error?.toString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     return Object.values(CARD_DEFINITIONS).filter(card => card.type === type);
   }
 }
