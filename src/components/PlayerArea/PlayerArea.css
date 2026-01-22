@@ -1,9 +1,11 @@
 .player-area {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(232, 213, 196, 0.1);
+  border: 2px solid rgba(139, 111, 71, 0.3);
   border-radius: 12px;
   padding: 12px;
   margin: 6px;
   backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.2);
 }
 
 .opponent-area {
@@ -50,8 +52,8 @@
 }
 
 .current-player {
-  border: 3px solid #FFD700;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  border: 3px solid #D4AF37;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
 }
 
 .player-header {
@@ -60,13 +62,15 @@
   align-items: center;
   margin-bottom: 10px;
   padding-bottom: 8px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 2px solid rgba(212, 175, 55, 0.3);
 }
 
 .player-header h3 {
   margin: 0;
-  color: white;
+  color: #F7EFE2;
   font-size: 1.2rem;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.5);
 }
 
 .header-info {
@@ -78,29 +82,35 @@
 
 .player-stars {
   font-size: 1.3rem;
-  color: #FFD700;
+  color: #D4AF37;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(44, 36, 22, 0.5);
 }
 
 .hand-count-badge {
-  background: rgba(147, 112, 219, 0.3);
-  border: 2px solid rgba(147, 112, 219, 0.6);
+  background: rgba(123, 75, 148, 0.25);
+  border: 2px solid #7B4B94;
   border-radius: 6px;
   padding: 4px 12px;
   font-size: 0.9rem;
   font-weight: bold;
-  color: #E0BBE4;
+  color: #F7EFE2;
   white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.2);
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.3);
 }
 
 .influence-badge {
-  background: rgba(138, 43, 226, 0.3);
-  border: 2px solid rgba(138, 43, 226, 0.6);
+  background: rgba(212, 175, 55, 0.25);
+  border: 2px solid #D4AF37;
   border-radius: 6px;
   padding: 4px 12px;
   font-size: 0.9rem;
   font-weight: bold;
-  color: #E0BBE4;
+  color: #F7EFE2;
   white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.2);
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.3);
 }
 
 .player-board {
@@ -111,16 +121,21 @@
 }
 
 .board-section {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(232, 213, 196, 0.08);
+  border: 1px solid rgba(139, 111, 71, 0.2);
   border-radius: 6px;
   padding: 8px;
+  box-shadow: inset 0 1px 3px rgba(44, 36, 22, 0.1);
 }
 
 .board-section h4 {
   margin: 0 0 8px 0;
-  color: white;
+  color: #F7EFE2;
   font-size: 0.8rem;
   text-transform: uppercase;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.5);
+  letter-spacing: 0.5px;
 }
 
 .cards-row {
@@ -132,43 +147,53 @@
 }
 
 .player-hand {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(44, 36, 22, 0.4);
+  border: 2px solid rgba(139, 111, 71, 0.3);
   border-radius: 8px;
   padding: 12px;
   margin-top: 16px;
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.3);
 }
 
 .player-hand h4 {
   margin: 0 0 12px 0;
-  color: white;
+  color: #F7EFE2;
   font-size: 1rem;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.5);
 }
 
 .end-turn-button {
   margin-top: 16px;
   padding: 12px 24px;
-  background: #4CAF50;
-  color: white;
+  background: #C9734B;
+  color: #F7EFE2;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(201, 115, 75, 0.3);
 }
 
 .end-turn-button:hover {
-  background: #45a049;
+  background: #B8654A;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201, 115, 75, 0.4);
 }
 
 .turn-status {
   margin-top: 16px;
   padding: 12px;
-  background: rgba(76, 175, 80, 0.3);
-  color: white;
+  background: rgba(107, 142, 78, 0.25);
+  border: 2px solid #6B8E4E;
+  color: #F7EFE2;
   border-radius: 8px;
   text-align: center;
   font-weight: bold;
+  box-shadow: 0 2px 8px rgba(107, 142, 78, 0.2);
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.5);
 }
 
 .hidden-card {
@@ -187,30 +212,32 @@
 .card-back {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, #8B6F47 0%, #C9734B 100%);
+  border: 3px solid rgba(212, 175, 55, 0.5);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 3rem;
-  color: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: rgba(247, 239, 226, 0.7);
+  box-shadow: 0 4px 8px rgba(44, 36, 22, 0.3);
 }
 
 .opponent-area .card-back {
   font-size: 2rem;
   border-radius: 8px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(212, 175, 55, 0.4);
 }
 
 .cards-played-badge {
-  background: rgba(255, 193, 7, 0.3);
-  border: 2px solid rgba(255, 193, 7, 0.6);
+  background: rgba(230, 126, 34, 0.25);
+  border: 2px solid #E67E22;
   border-radius: 6px;
   padding: 4px 12px;
   font-size: 0.9rem;
   font-weight: bold;
-  color: #FFC107;
+  color: #F7EFE2;
   white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.2);
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.3);
 }

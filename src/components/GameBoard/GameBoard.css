@@ -1,6 +1,6 @@
 .game-board {
   padding: clamp(8px, 1vw, 12px);
-  color: white;
+  color: #F7EFE2;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -9,6 +9,33 @@
   overflow: hidden;
   font-size: clamp(14px, 1.2vw, 16px);
   position: relative;
+  background: linear-gradient(to bottom, #2C2416 0%, #4A3A28 100%);
+}
+
+/* Subtle warm texture overlay */
+.game-board::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      rgba(247, 239, 226, 0.02) 0px,
+      transparent 1px,
+      transparent 2px,
+      rgba(247, 239, 226, 0.02) 3px
+    );
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.3;
+}
+
+.game-board > * {
+  position: relative;
+  z-index: 1;
 }
 
 .game-header {
@@ -26,10 +53,10 @@
 }
 
 .tutorial-button-header {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(232, 213, 196, 0.2);
+  border: 2px solid #8B6F47;
   border-radius: 8px;
-  color: white;
+  color: #F7EFE2;
   font-size: 1.5rem;
   width: 45px;
   height: 45px;
@@ -39,12 +66,14 @@
   align-items: center;
   justify-content: center;
   padding: 0;
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.3);
 }
 
 .tutorial-button-header:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(232, 213, 196, 0.4);
+  border-color: #C9734B;
   transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(201, 115, 75, 0.3);
 }
 
 .game-header h1 {
@@ -60,7 +89,9 @@
 .first-player {
   margin-top: clamp(4px, 0.8vw, 8px);
   font-size: clamp(0.85rem, 1.1vw, 1rem);
-  color: #FFD700;
+  color: #D4AF37;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(44, 36, 22, 0.5);
 }
 
 .score-comparison {
@@ -70,34 +101,42 @@
   gap: 40px;
   margin: 30px 0;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(232, 213, 196, 0.1);
+  border: 2px solid rgba(139, 111, 71, 0.3);
   border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(44, 36, 22, 0.2);
 }
 
 .score-display {
   text-align: center;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(232, 213, 196, 0.15);
+  border: 2px solid rgba(139, 111, 71, 0.4);
   border-radius: 12px;
   min-width: 200px;
   transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.2);
 }
 
 .score-display.winner {
-  background: rgba(255, 215, 0, 0.3);
-  border: 3px solid #FFD700;
+  background: rgba(212, 175, 55, 0.2);
+  border: 3px solid #D4AF37;
   transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
 }
 
 .score-display h3 {
   margin: 0 0 12px 0;
   font-size: 1.3rem;
+  color: #F7EFE2;
+  font-weight: 600;
 }
 
 .score-value {
   font-size: 3rem;
   font-weight: bold;
-  color: #FFD700;
+  color: #D4AF37;
+  text-shadow: 0 2px 4px rgba(44, 36, 22, 0.5);
 }
 
 .vs {
@@ -109,8 +148,9 @@
 .ai-indicator {
   margin-top: 8px;
   font-size: 1rem;
-  color: #4CAF50;
+  color: #6B8E4E;
   font-weight: bold;
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.5);
 }
 
 /* Main content area - three column layout */
@@ -164,11 +204,13 @@
 .middle-card-label {
   font-size: clamp(0.7rem, 1vw, 0.85rem);
   font-weight: bold;
-  color: #FFD700;
+  color: #D4AF37;
   text-transform: uppercase;
   margin-bottom: 4px;
   text-align: center;
   white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.5);
+  letter-spacing: 0.5px;
 }
 
 .chef-card-wrapper-middle,
@@ -246,8 +288,10 @@
 .player-label {
   font-size: 1.2rem;
   font-weight: bold;
-  color: #FFD700;
+  color: #D4AF37;
   text-transform: uppercase;
+  text-shadow: 0 2px 4px rgba(44, 36, 22, 0.5);
+  letter-spacing: 0.5px;
 }
 
 .chef-restaurant-row {
@@ -268,9 +312,10 @@
 
 .card-label {
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(247, 239, 226, 0.9);
   text-transform: uppercase;
   font-weight: bold;
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.5);
 }
 
 .score-comparison-middle {
@@ -280,31 +325,41 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(232, 213, 196, 0.1);
+  border: 2px solid rgba(139, 111, 71, 0.3);
   border-radius: 8px;
   width: 100%;
   margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.2);
 }
 
 .score-comparison-middle .score-display {
   padding: 8px 12px;
   min-width: 90px;
   flex: 1;
+  background: rgba(232, 213, 196, 0.15);
+  border: 2px solid rgba(139, 111, 71, 0.4);
 }
 
 .score-comparison-middle .score-display h3 {
   font-size: 0.9rem;
   margin-bottom: 4px;
+  color: #F7EFE2;
+  font-weight: 600;
 }
 
 .score-comparison-middle .score-value {
   font-size: 1.8rem;
+  color: #D4AF37;
+  text-shadow: 0 1px 3px rgba(44, 36, 22, 0.5);
 }
 
 .score-comparison-middle .vs {
   font-size: 1.3rem;
   margin: 0;
   font-weight: bold;
+  color: #C9734B;
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.5);
 }
 
 .restaurants-row {
@@ -319,13 +374,13 @@
 .player-hand-fixed {
   position: sticky;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.95);
+  background: rgba(44, 36, 22, 0.95);
   backdrop-filter: blur(10px);
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  border-top: 2px solid rgba(201, 115, 75, 0.3);
   padding: 10px 20px;
   margin-top: auto;
   z-index: 100;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 -4px 20px rgba(44, 36, 22, 0.6);
   transition: padding 0.3s ease;
   flex-shrink: 0;
 }
@@ -348,10 +403,10 @@
 }
 
 .hand-toggle-button {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(232, 213, 196, 0.2);
+  border: 2px solid #8B6F47;
   border-radius: 6px;
-  color: white;
+  color: #F7EFE2;
   font-size: 1rem;
   width: 32px;
   height: 32px;
@@ -361,11 +416,14 @@
   cursor: pointer;
   transition: all 0.3s;
   padding: 0;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.3);
 }
 
 .hand-toggle-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(232, 213, 196, 0.4);
+  border-color: #C9734B;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(44, 36, 22, 0.4);
 }
 
 .hand-header-right {
@@ -376,8 +434,10 @@
 
 .hand-header h4 {
   margin: 0;
-  color: white;
+  color: #F7EFE2;
   font-size: 1.1rem;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(44, 36, 22, 0.5);
 }
 
 .player-hand-fixed .cards-row {
@@ -406,42 +466,53 @@
 
 .next-round-button {
   padding: 16px 32px;
-  background: #4CAF50;
-  color: white;
+  background: #C9734B;
+  color: #F7EFE2;
   border: none;
   border-radius: 8px;
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(201, 115, 75, 0.3);
 }
 
 .next-round-button:hover {
-  background: #45a049;
+  background: #B8654A;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(201, 115, 75, 0.4);
 }
 
 .game-end {
   text-align: center;
   padding: 40px;
-  background: rgba(255, 215, 0, 0.2);
+  background: rgba(212, 175, 55, 0.15);
   border-radius: 16px;
-  border: 3px solid #FFD700;
+  border: 3px solid #D4AF37;
   margin-top: 40px;
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
 }
 
 .game-end h2 {
   font-size: 3rem;
   margin-bottom: 20px;
+  color: #F7EFE2;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(44, 36, 22, 0.5);
 }
 
 .game-end h3 {
   font-size: 2rem;
   margin-bottom: 20px;
+  color: #F7EFE2;
+  font-weight: 600;
 }
 
 .final-stars {
   font-size: 2.5rem;
-  color: #FFD700;
+  color: #D4AF37;
+  font-weight: bold;
+  text-shadow: 0 2px 6px rgba(212, 175, 55, 0.6);
 }
 
 /* Responsive adjustments */
@@ -557,38 +628,40 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(44, 36, 22, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px;
   box-sizing: border-box;
+  backdrop-filter: blur(4px);
 }
 
 .mulligan-overlay-content {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border: 3px solid rgba(255, 215, 0, 0.5);
+  background: linear-gradient(135deg, #E8D5C4 0%, #D4B896 100%);
+  border: 3px solid #C9734B;
   border-radius: 16px;
   padding: clamp(20px, 3vw, 32px);
   max-width: 900px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  color: white;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  color: #2C2416;
+  box-shadow: 0 8px 32px rgba(44, 36, 22, 0.4);
 }
 
 .mulligan-overlay-content h2 {
   margin: 0 0 12px 0;
-  color: #FFD700;
+  color: #C9734B;
   font-size: clamp(1.5rem, 3vw, 2rem);
   text-align: center;
+  font-weight: 600;
 }
 
 .mulligan-overlay-content > p {
   margin: 0 0 24px 0;
-  color: rgba(255, 255, 255, 0.9);
+  color: #4A3A28;
   font-size: clamp(1rem, 1.5vw, 1.2rem);
   text-align: center;
 }
@@ -604,8 +677,9 @@
 .mulligan-overlay-content .mulligan-restaurant-section h3 {
   margin: 0;
   font-size: clamp(1.2rem, 2vw, 1.5rem);
-  color: #FFD700;
+  color: #C9734B;
   text-align: center;
+  font-weight: 600;
 }
 
 .mulligan-overlay-content .mulligan-restaurant-card {
@@ -626,9 +700,10 @@
 .mulligan-overlay-content .mulligan-hand h3 {
   margin: 0 0 16px 0;
   font-size: clamp(1.1rem, 2vw, 1.3rem);
-  color: white;
+  color: #2C2416;
   text-align: center;
   width: 100%;
+  font-weight: 600;
 }
 
 .mulligan-overlay-content .mulligan-hand-cards {
@@ -641,23 +716,28 @@
 
 .mulligan-overlay-content .mulligan-card {
   padding: clamp(10px, 1.5vw, 14px) clamp(16px, 2vw, 24px);
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(247, 239, 226, 0.6);
+  border: 2px solid #8B6F47;
   border-radius: 8px;
-  color: white;
+  color: #2C2416;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
   font-size: clamp(0.9rem, 1.2vw, 1rem);
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.1);
 }
 
 .mulligan-overlay-content .mulligan-card:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(247, 239, 226, 0.9);
+  border-color: #C9734B;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(44, 36, 22, 0.15);
 }
 
 .mulligan-overlay-content .mulligan-card.selected {
-  background: rgba(255, 215, 0, 0.3);
-  border-color: #FFD700;
+  background: rgba(212, 175, 55, 0.3);
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
 }
 
 .mulligan-overlay-content .mulligan-actions {
@@ -671,23 +751,26 @@
 .mulligan-overlay-content .mulligan-actions button {
   padding: clamp(12px, 1.5vw, 16px) clamp(24px, 3vw, 32px);
   font-size: clamp(0.95rem, 1.3vw, 1.1rem);
-  background: #4CAF50;
-  color: white;
+  background: #C9734B;
+  color: #F7EFE2;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
   font-weight: bold;
+  box-shadow: 0 2px 8px rgba(201, 115, 75, 0.2);
 }
 
 .mulligan-overlay-content .mulligan-actions button:hover:not(:disabled) {
-  background: #45a049;
+  background: #B8654A;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201, 115, 75, 0.3);
 }
 
 .mulligan-overlay-content .mulligan-actions button:disabled {
-  background: #666;
+  background: #7D6E5D;
   cursor: not-allowed;
   opacity: 0.6;
+  box-shadow: none;
 }
 

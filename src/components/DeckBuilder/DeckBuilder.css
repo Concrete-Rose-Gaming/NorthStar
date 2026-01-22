@@ -2,12 +2,14 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
-  color: white;
+  color: #2C2416;
 }
 
 .deck-builder h2 {
   text-align: center;
   margin-bottom: 20px;
+  color: #2C2416;
+  font-weight: 600;
 }
 
 .deck-stats {
@@ -17,30 +19,38 @@
   gap: 16px;
   margin-bottom: 20px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(232, 213, 196, 0.3);
+  border: 2px solid rgba(139, 111, 71, 0.3);
   border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.1);
 }
 
 .stat-item {
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(247, 239, 226, 0.5);
   border-radius: 6px;
+  color: #2C2416;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(44, 36, 22, 0.1);
 }
 
 .validation-result {
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.1);
 }
 
 .validation-result.valid {
-  background: rgba(76, 175, 80, 0.3);
-  border: 2px solid #4CAF50;
+  background: rgba(107, 142, 78, 0.2);
+  border: 2px solid #6B8E4E;
+  color: #2C2416;
 }
 
 .validation-result.invalid {
-  background: rgba(244, 67, 54, 0.3);
-  border: 2px solid #f44336;
+  background: rgba(196, 69, 54, 0.2);
+  border: 2px solid #C44536;
+  color: #2C2416;
 }
 
 .validation-result .errors,
@@ -62,23 +72,28 @@
 
 .section-tabs button {
   padding: 12px 24px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid transparent;
+  background: rgba(232, 213, 196, 0.3);
+  border: 2px solid #8B6F47;
   border-radius: 8px;
-  color: white;
+  color: #2C2416;
   cursor: pointer;
   font-size: 1rem;
   font-weight: bold;
   transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.1);
 }
 
 .section-tabs button:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(232, 213, 196, 0.5);
+  border-color: #C9734B;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(44, 36, 22, 0.15);
 }
 
 .section-tabs button.active {
-  background: rgba(255, 215, 0, 0.3);
-  border-color: #FFD700;
+  background: rgba(212, 175, 55, 0.25);
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
 }
 
 .deck-builder-content {
@@ -96,13 +111,17 @@
 .selected-restaurants {
   margin-top: 20px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(232, 213, 196, 0.3);
+  border: 2px solid rgba(139, 111, 71, 0.3);
   border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.1);
 }
 
 .selected-chef h4,
 .selected-restaurants h4 {
   margin-bottom: 12px;
+  color: #2C2416;
+  font-weight: 600;
 }
 
 .cards-row {
@@ -115,12 +134,14 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #4CAF50;
-  color: white;
+  background: #6B8E4E;
+  color: #F7EFE2;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: bold;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.3);
+  z-index: 10;
 }
 
 .library-card-wrapper {
@@ -128,9 +149,11 @@
 }
 
 .card-library {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(232, 213, 196, 0.3);
+  border: 2px solid rgba(139, 111, 71, 0.3);
   border-radius: 8px;
   padding: 16px;
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.1);
 }
 
 .type-filter {
@@ -142,21 +165,27 @@
 
 .type-filter button {
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid transparent;
+  background: rgba(247, 239, 226, 0.4);
+  border: 2px solid #8B6F47;
   border-radius: 6px;
-  color: white;
+  color: #2C2416;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  box-shadow: 0 1px 3px rgba(44, 36, 22, 0.1);
 }
 
 .type-filter button:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(247, 239, 226, 0.7);
+  border-color: #C9734B;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.15);
 }
 
 .type-filter button.active {
-  background: rgba(255, 215, 0, 0.5);
-  border-color: #FFD700;
+  background: rgba(212, 175, 55, 0.3);
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
 }
 
 .cards-grid {
@@ -177,19 +206,23 @@
 
 .card-count {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: #4A3A28;
   text-align: center;
+  font-weight: 600;
 }
 
 .current-deck {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(232, 213, 196, 0.3);
+  border: 2px solid rgba(139, 111, 71, 0.3);
   border-radius: 8px;
   padding: 16px;
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.1);
 }
 
 .current-deck h3 {
   margin-top: 0;
-  color: white;
+  color: #2C2416;
+  font-weight: 600;
 }
 
 .deck-list {
@@ -204,81 +237,98 @@
   align-items: center;
   padding: 8px;
   margin-bottom: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(247, 239, 226, 0.6);
   border-radius: 6px;
-  color: white;
+  color: #2C2416;
   border-left: 4px solid transparent;
   transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(44, 36, 22, 0.1);
+}
+
+.deck-item:hover {
+  background: rgba(247, 239, 226, 0.8);
+  transform: translateX(2px);
 }
 
 .deck-item span {
-  color: white;
+  color: #2C2416;
+  font-weight: 600;
 }
 
 /* Card type specific backgrounds - inline styles take precedence, these are fallback */
 .deck-item.deck-item-meal {
-  background: rgba(255, 99, 71, 0.5); /* Tomato red */
-  border-left-color: #FF6347;
+  background: rgba(233, 75, 60, 0.15);
+  border-left-color: #E94B3C;
 }
 
 .deck-item.deck-item-staff {
-  background: rgba(65, 105, 225, 0.5); /* Royal Blue */
-  border-left-color: #4169E1;
+  background: rgba(74, 124, 126, 0.15);
+  border-left-color: #4A7C7E;
 }
 
 .deck-item.deck-item-support {
-  background: rgba(50, 205, 50, 0.5); /* Lime Green */
-  border-left-color: #32CD32;
+  background: rgba(139, 111, 71, 0.15);
+  border-left-color: #8B6F47;
 }
 
 .deck-item.deck-item-event {
-  background: rgba(147, 112, 219, 0.5); /* Medium Purple */
-  border-left-color: #9370DB;
+  background: rgba(123, 75, 148, 0.15);
+  border-left-color: #7B4B94;
 }
 
 .deck-item.deck-item-chef {
-  background: rgba(255, 215, 0, 0.5); /* Gold */
-  border-left-color: #FFD700;
+  background: rgba(212, 175, 55, 0.15);
+  border-left-color: #D4AF37;
 }
 
 .deck-item.deck-item-restaurant {
-  background: rgba(139, 69, 19, 0.5); /* Brown */
+  background: rgba(139, 69, 19, 0.15);
   border-left-color: #8B4513;
 }
 
 .deck-item button {
   padding: 4px 12px;
-  background: #f44336;
-  color: white;
+  background: #C44536;
+  color: #F7EFE2;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(196, 69, 54, 0.2);
 }
 
 .deck-item button:hover {
-  background: #d32f2f;
+  background: #B13C2F;
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(196, 69, 54, 0.3);
 }
 
 .finish-button {
   width: 100%;
   padding: 12px;
-  background: #4CAF50;
-  color: white;
+  background: #C9734B;
+  color: #F7EFE2;
   border: none;
   border-radius: 8px;
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(201, 115, 75, 0.2);
 }
 
 .finish-button:hover:not(:disabled) {
-  background: #45a049;
+  background: #B8654A;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(201, 115, 75, 0.3);
 }
 
 .finish-button:disabled {
-  background: #666;
+  background: #7D6E5D;
   cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
 }
 
 .deck-builder-footer {

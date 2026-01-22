@@ -3,36 +3,39 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #F7EFE2 0%, #E8D5C4 50%, #D4B896 100%);
   padding: 20px;
 }
 
 .error-boundary-content {
-  background: white;
+  background: linear-gradient(135deg, #F7EFE2 0%, #E8D5C4 100%);
+  border: 3px solid #C44536;
   border-radius: 12px;
   padding: 40px;
   max-width: 600px;
   width: 100%;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 40px rgba(44, 36, 22, 0.3);
   text-align: center;
 }
 
 .error-boundary-content h1 {
   margin: 0 0 16px 0;
-  color: #333;
+  color: #2C2416;
   font-size: 28px;
+  font-weight: 600;
 }
 
 .error-boundary-content p {
   margin: 0 0 24px 0;
-  color: #666;
+  color: #4A3A28;
   font-size: 16px;
 }
 
 .error-details {
   margin: 20px 0;
   text-align: left;
-  background: #f5f5f5;
+  background: rgba(232, 213, 196, 0.4);
+  border: 2px solid rgba(139, 111, 71, 0.3);
   padding: 16px;
   border-radius: 6px;
 }
@@ -40,34 +43,39 @@
 .error-details summary {
   cursor: pointer;
   font-weight: 600;
-  color: #333;
+  color: #2C2416;
   margin-bottom: 8px;
 }
 
 .error-details pre {
   margin: 8px 0 0 0;
   padding: 12px;
-  background: #fff;
+  background: rgba(247, 239, 226, 0.8);
+  border: 1px solid rgba(139, 111, 71, 0.3);
   border-radius: 4px;
   overflow-x: auto;
   font-size: 12px;
-  color: #c33;
+  color: #C44536;
+  font-weight: 600;
 }
 
 .error-retry-button {
   padding: 12px 24px;
-  background: #667eea;
-  color: white;
+  background: #C9734B;
+  color: #F7EFE2;
   border: none;
   border-radius: 6px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s;
   margin-top: 16px;
+  box-shadow: 0 2px 8px rgba(201, 115, 75, 0.2);
 }
 
 .error-retry-button:hover {
-  background: #5568d3;
+  background: #B8654A;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201, 115, 75, 0.3);
 }
 

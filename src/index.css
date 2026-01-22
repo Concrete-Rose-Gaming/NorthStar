@@ -11,8 +11,39 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #F7EFE2 0%, #E8D5C4 50%, #D4B896 100%);
   min-height: 100vh;
+  color: #2C2416;
+  line-height: 1.6;
+  position: relative;
+}
+
+/* Subtle texture overlay for depth */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      rgba(44, 36, 22, 0.03) 0px,
+      transparent 1px,
+      transparent 2px,
+      rgba(44, 36, 22, 0.03) 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(44, 36, 22, 0.03) 0px,
+      transparent 1px,
+      transparent 2px,
+      rgba(44, 36, 22, 0.03) 3px
+    );
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.3;
 }
 
 code {
@@ -22,5 +53,7 @@ code {
 
 #root {
   min-height: 100vh;
+  position: relative;
+  z-index: 2;
 }
 

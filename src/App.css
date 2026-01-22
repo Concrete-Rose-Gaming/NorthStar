@@ -16,7 +16,7 @@
   justify-content: center;
   min-height: 100vh;
   padding: 40px;
-  color: white;
+  color: #2C2416;
 }
 
 .lobby-header {
@@ -31,6 +31,10 @@
 .lobby-header h1 {
   font-size: 3rem;
   margin: 0;
+  color: #2C2416;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: 2px 2px 4px rgba(212, 175, 55, 0.2);
 }
 
 .lobby-user-actions {
@@ -40,37 +44,45 @@
 }
 
 .user-info {
-  color: rgba(255, 255, 255, 0.9);
+  color: #4A3A28;
   font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .deck-manager-button,
 .login-button-header,
 .logout-button {
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(232, 213, 196, 0.4);
+  border: 2px solid #8B6F47;
   border-radius: 6px;
-  color: white;
+  color: #2C2416;
   font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.1);
 }
 
 .deck-manager-button:hover,
 .login-button-header:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(232, 213, 196, 0.7);
+  border-color: #C9734B;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(44, 36, 22, 0.15);
 }
 
 .logout-button {
-  background: rgba(244, 67, 54, 0.2);
-  border-color: rgba(244, 67, 54, 0.5);
+  background: rgba(196, 69, 54, 0.2);
+  border-color: #C44536;
+  color: #C44536;
 }
 
 .logout-button:hover {
-  background: rgba(244, 67, 54, 0.3);
-  border-color: rgba(244, 67, 54, 0.7);
+  background: rgba(196, 69, 54, 0.3);
+  border-color: #C44536;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(196, 69, 54, 0.2);
 }
 
 .deck-building-header {
@@ -94,32 +106,37 @@
 
 .back-button {
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(232, 213, 196, 0.4);
+  border: 2px solid #8B6F47;
   border-radius: 6px;
-  color: white;
+  color: #2C2416;
   font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.1);
 }
 
 .back-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(232, 213, 196, 0.7);
+  border-color: #C9734B;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(44, 36, 22, 0.15);
 }
 
 .deck-status {
   margin-top: 12px;
   padding: 12px;
-  background: rgba(76, 175, 80, 0.2);
-  border: 2px solid #4CAF50;
+  background: rgba(107, 142, 78, 0.15);
+  border: 2px solid #6B8E4E;
   border-radius: 8px;
   text-align: center;
+  box-shadow: 0 2px 8px rgba(107, 142, 78, 0.1);
 }
 
 .deck-status-text {
   margin: 0;
-  color: #4CAF50;
+  color: #6B8E4E;
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -127,18 +144,25 @@
 .lobby-screen h1 {
   font-size: 3rem;
   margin-bottom: 20px;
+  color: #2C2416;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: 2px 2px 4px rgba(212, 175, 55, 0.2);
 }
 
 .lobby-screen h2 {
   font-size: 2rem;
   margin-bottom: 10px;
-  color: #FFD700;
+  color: #C9734B;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .lobby-description {
   font-size: 1.1rem;
   margin-bottom: 30px;
-  opacity: 0.9;
+  color: #4A3A28;
+  opacity: 0.95;
 }
 
 .game-mode-badge {
@@ -147,10 +171,11 @@
   justify-content: center;
   gap: 10px;
   padding: 12px 24px;
-  background: rgba(76, 175, 80, 0.2);
-  border: 2px solid #4CAF50;
+  background: rgba(107, 142, 78, 0.15);
+  border: 2px solid #6B8E4E;
   border-radius: 8px;
   margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(107, 142, 78, 0.1);
 }
 
 .badge-icon {
@@ -160,13 +185,14 @@
 .badge-text {
   font-size: 1.1rem;
   font-weight: bold;
-  color: #4CAF50;
+  color: #6B8E4E;
 }
 
 .hint-text {
   margin-top: 10px;
   font-size: 0.9rem;
-  opacity: 0.7;
+  color: #4A3A28;
+  opacity: 0.8;
   text-align: center;
 }
 
@@ -178,20 +204,23 @@
 
 .tutorial-button-link {
   padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(232, 213, 196, 0.4);
+  border: 2px solid #8B6F47;
   border-radius: 8px;
-  color: white;
+  color: #2C2416;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
   text-decoration: none;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.1);
 }
 
 .tutorial-button-link:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(232, 213, 196, 0.7);
+  border-color: #C9734B;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(44, 36, 22, 0.15);
 }
 
 .lobby-form {
@@ -212,8 +241,9 @@
 .starter-decks-title {
   text-align: center;
   font-size: 1.5rem;
-  color: #FFD700;
+  color: #C9734B;
   margin: 0;
+  font-weight: 600;
 }
 
 .starter-decks-grid {
@@ -224,8 +254,8 @@
 }
 
 .starter-deck-card {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(232, 213, 196, 0.3);
+  border: 2px solid #8B6F47;
   border-radius: 12px;
   padding: 20px;
   cursor: pointer;
@@ -234,13 +264,14 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: 0 4px 12px rgba(44, 36, 22, 0.1);
 }
 
 .starter-deck-card:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(232, 213, 196, 0.5);
+  border-color: #C9734B;
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 20px rgba(44, 36, 22, 0.2);
 }
 
 .starter-deck-header {
@@ -253,28 +284,29 @@
 .starter-deck-header h4 {
   margin: 0;
   font-size: 1.3rem;
-  color: white;
+  color: #2C2416;
+  font-weight: 600;
 }
 
 .starter-deck-badge {
   padding: 4px 12px;
-  background: rgba(76, 175, 80, 0.3);
-  border: 1px solid #4CAF50;
+  background: rgba(107, 142, 78, 0.2);
+  border: 1px solid #6B8E4E;
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: bold;
-  color: #4CAF50;
+  color: #6B8E4E;
 }
 
 .starter-deck-badge.aggressive {
-  background: rgba(255, 99, 71, 0.3);
-  border-color: #FF6347;
-  color: #FF6347;
+  background: rgba(233, 75, 60, 0.2);
+  border-color: #E94B3C;
+  color: #E94B3C;
 }
 
 .starter-deck-description {
   margin: 0;
-  color: rgba(255, 255, 255, 0.9);
+  color: #4A3A28;
   font-size: 0.95rem;
   line-height: 1.5;
   flex: 1;
@@ -285,7 +317,7 @@
   flex-direction: column;
   gap: 8px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(74, 58, 40, 0.2);
 }
 
 .starter-deck-stat {
@@ -295,30 +327,33 @@
 }
 
 .starter-deck-stat .stat-label {
-  color: rgba(255, 255, 255, 0.7);
+  color: #4A3A28;
   font-weight: 600;
 }
 
 .starter-deck-stat .stat-value {
-  color: #FFD700;
+  color: #D4AF37;
   font-weight: bold;
 }
 
 .select-deck-button {
   padding: 12px 24px;
-  background: #4CAF50;
-  color: white;
+  background: #6B8E4E;
+  color: #F7EFE2;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
   margin-top: auto;
+  box-shadow: 0 2px 8px rgba(107, 142, 78, 0.2);
 }
 
 .select-deck-button:hover {
-  background: #45a049;
+  background: #5A7A3F;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 142, 78, 0.3);
 }
 
 .or-divider {
@@ -326,7 +361,7 @@
   align-items: center;
   gap: 16px;
   margin: 10px 0;
-  color: rgba(255, 255, 255, 0.6);
+  color: #7D6E5D;
   font-size: 0.9rem;
   font-weight: bold;
 }
@@ -336,35 +371,37 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(74, 58, 40, 0.3);
 }
 
 .build-deck-button {
   padding: 14px 28px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(232, 213, 196, 0.4);
+  border: 2px solid #8B6F47;
   border-radius: 8px;
-  color: white;
+  color: #2C2416;
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.1);
 }
 
 .build-deck-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(232, 213, 196, 0.7);
+  border-color: #C9734B;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(44, 36, 22, 0.15);
 }
 
 .lobby-button.secondary {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(232, 213, 196, 0.4);
+  border: 2px solid #7D6E5D;
 }
 
 .lobby-button.secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(232, 213, 196, 0.7);
+  border-color: #8B6F47;
 }
 
 .lobby-actions {
@@ -394,16 +431,25 @@
 .game-id-input {
   padding: 12px 16px;
   font-size: 1.1rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid #8B6F47;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: rgba(247, 239, 226, 0.8);
+  color: #2C2416;
   backdrop-filter: blur(10px);
+  transition: all 0.3s;
+  box-shadow: inset 0 2px 4px rgba(44, 36, 22, 0.05);
+}
+
+.name-input:focus,
+.game-id-input:focus {
+  outline: none;
+  border-color: #C9734B;
+  box-shadow: 0 0 0 3px rgba(201, 115, 75, 0.1), inset 0 2px 4px rgba(44, 36, 22, 0.05);
 }
 
 .name-input::placeholder,
 .game-id-input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(74, 58, 40, 0.6);
 }
 
 .lobby-actions {
@@ -424,50 +470,57 @@
 .lobby-button {
   padding: 12px 24px;
   font-size: 1.1rem;
-  background: #4CAF50;
-  color: white;
+  background: #C9734B;
+  color: #F7EFE2;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
   font-weight: bold;
+  box-shadow: 0 4px 12px rgba(201, 115, 75, 0.2);
 }
 
 .lobby-button:hover {
-  background: #45a049;
+  background: #B8654A;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(201, 115, 75, 0.3);
 }
 
 .ai-button {
   font-size: 1.3rem;
   padding: 16px 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #C9734B 0%, #8B6F47 100%);
+  box-shadow: 0 4px 15px rgba(201, 115, 75, 0.3);
 }
 
 .ai-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  background: linear-gradient(135deg, #8B6F47 0%, #C9734B 100%);
+  box-shadow: 0 6px 20px rgba(201, 115, 75, 0.4);
   transform: translateY(-2px);
 }
 
 .ai-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: 0 2px 8px rgba(201, 115, 75, 0.1);
 }
 
 .game-id-display {
   margin-top: 20px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(232, 213, 196, 0.3);
+  border: 2px solid #8B6F47;
   border-radius: 8px;
   text-align: center;
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.1);
 }
 
 .game-id-display strong {
   font-size: 1.3rem;
-  color: #FFD700;
+  color: #D4AF37;
   display: block;
   margin-top: 8px;
+  font-weight: 700;
 }
 
 .mulligan-screen {
@@ -486,8 +539,9 @@
 .mulligan-restaurant-section h3 {
   margin: 0;
   font-size: 1.5rem;
-  color: #FFD700;
+  color: #C9734B;
   text-align: center;
+  font-weight: 600;
 }
 
 .mulligan-restaurant-card {
@@ -499,9 +553,10 @@
 .mulligan-hand h3 {
   margin: 0 0 16px 0;
   font-size: 1.3rem;
-  color: white;
+  color: #2C2416;
   text-align: center;
   width: 100%;
+  font-weight: 600;
 }
 
 .mulligan-hand {
@@ -523,22 +578,27 @@
 
 .mulligan-card {
   padding: 12px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(232, 213, 196, 0.4);
+  border: 2px solid #8B6F47;
   border-radius: 8px;
-  color: white;
+  color: #2C2416;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.1);
 }
 
 .mulligan-card:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(232, 213, 196, 0.7);
+  border-color: #C9734B;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(44, 36, 22, 0.15);
 }
 
 .mulligan-card.selected {
-  background: rgba(255, 215, 0, 0.3);
-  border-color: #FFD700;
+  background: rgba(212, 175, 55, 0.25);
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
 }
 
 .mulligan-actions {
@@ -550,21 +610,26 @@
 .mulligan-actions button {
   padding: 12px 24px;
   font-size: 1rem;
-  background: #4CAF50;
-  color: white;
+  background: #C9734B;
+  color: #F7EFE2;
   border: none;
   border-radius: 8px;
+  font-weight: bold;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(201, 115, 75, 0.2);
 }
 
 .mulligan-actions button:hover:not(:disabled) {
-  background: #45a049;
+  background: #B8654A;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201, 115, 75, 0.3);
 }
 
 .mulligan-actions button:disabled {
-  background: #666;
+  background: #7D6E5D;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .coin-flip-screen h2 {
@@ -575,14 +640,18 @@
 .coin-result {
   margin-top: 30px;
   padding: 30px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(232, 213, 196, 0.4);
+  border: 2px solid #8B6F47;
   border-radius: 12px;
   text-align: center;
+  box-shadow: 0 4px 12px rgba(44, 36, 22, 0.1);
 }
 
 .coin-result p {
   font-size: 1.5rem;
   margin: 10px 0;
+  color: #2C2416;
+  font-weight: 600;
 }
 
 .waiting-screen h2 {
@@ -593,16 +662,21 @@
 .error-screen button {
   margin-top: 20px;
   padding: 12px 24px;
-  background: #f44336;
-  color: white;
+  background: #C44536;
+  color: #F7EFE2;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(196, 69, 54, 0.2);
 }
 
 .error-screen button:hover {
-  background: #d32f2f;
+  background: #B13C2F;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(196, 69, 54, 0.3);
 }
 
 .meal-replacement-modal {
@@ -611,33 +685,35 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(44, 36, 22, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .meal-replacement-content {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border: 2px solid rgba(255, 215, 0, 0.5);
+  background: linear-gradient(135deg, #E8D5C4 0%, #D4B896 100%);
+  border: 2px solid #C9734B;
   border-radius: 16px;
   padding: 24px;
   max-width: 500px;
   width: 90%;
-  color: white;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  color: #2C2416;
+  box-shadow: 0 8px 32px rgba(44, 36, 22, 0.3);
 }
 
 .meal-replacement-content h3 {
   margin: 0 0 12px 0;
-  color: #FFD700;
+  color: #C9734B;
   font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .meal-replacement-content p {
   margin: 0 0 20px 0;
-  color: rgba(255, 255, 255, 0.9);
+  color: #4A3A28;
   font-size: 1rem;
 }
 
@@ -649,47 +725,54 @@
 }
 
 .meal-replacement-button {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 215, 0, 0.3);
+  background: rgba(247, 239, 226, 0.6);
+  border: 2px solid #8B6F47;
   border-radius: 8px;
   padding: 12px 16px;
-  color: white;
+  color: #2C2416;
   cursor: pointer;
   transition: all 0.3s;
   text-align: left;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.1);
 }
 
 .meal-replacement-button:hover {
-  background: rgba(255, 215, 0, 0.2);
-  border-color: rgba(255, 215, 0, 0.6);
+  background: rgba(247, 239, 226, 0.9);
+  border-color: #C9734B;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(44, 36, 22, 0.15);
 }
 
 .meal-replacement-name {
   font-weight: bold;
   font-size: 1rem;
   margin-bottom: 4px;
+  color: #2C2416;
 }
 
 .meal-replacement-value {
   font-size: 0.9rem;
-  color: #FFD700;
-  opacity: 0.9;
+  color: #D4AF37;
+  font-weight: 600;
 }
 
 .cancel-button {
   width: 100%;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(247, 239, 226, 0.4);
+  border: 2px solid #7D6E5D;
   border-radius: 8px;
-  color: white;
+  color: #2C2416;
   cursor: pointer;
   font-size: 1rem;
+  font-weight: 600;
   transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(44, 36, 22, 0.1);
 }
 
 .cancel-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(247, 239, 226, 0.7);
+  border-color: #8B6F47;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(44, 36, 22, 0.15);
 }
