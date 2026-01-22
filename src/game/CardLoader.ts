@@ -32,24 +32,6 @@ function convertSupabaseCardToGameCard(supabaseCard: SupabaseCard): Card {
 
     case 'RESTAURANT': {
       const restaurantData = supabaseCard.restaurant_data;
-      // Handle empty string, null, or undefined - all should become undefined
-      const restaurantFocus1 = restaurantData?.Restaurant_Focus_1;
-      const primaryArchetype = (restaurantFocus1 && restaurantFocus1.trim() !== '') 
-        ? restaurantFocus1.trim() 
-        : undefined;
-      
-      // DEBUG: Log Restaurant card conversion
-      console.log(`[DEBUG] Converting Restaurant card:`, {
-        code: supabaseCard.code,
-        name: supabaseCard.name,
-        hasRestaurantData: !!restaurantData,
-        restaurantData: restaurantData,
-        restaurantFocus1: restaurantFocus1,
-        restaurantFocus1Type: typeof restaurantFocus1,
-        primaryArchetype: primaryArchetype,
-        primaryArchetypeType: typeof primaryArchetype
-      });
-      
       return {
         ...baseCard,
         type: CardType.RESTAURANT,
@@ -57,7 +39,7 @@ function convertSupabaseCardToGameCard(supabaseCard: SupabaseCard): Card {
         ability: supabaseCard.effect || '',
         abilityCondition: '', // TODO: Add abilityCondition field to Supabase schema
         abilityDescription: supabaseCard.description,
-        primaryArchetype: primaryArchetype, // Restaurant archetype from Restaurant_Focus_1
+        primaryArchetype: restaurantData?.Restaurant_Focus_1 || undefined, // Restaurant archetype from Restaurant_Focus_1
         requiredStars: restaurantData?.required_stars ?? 0 // Default to 0 if not specified
       } as RestaurantCard;
     }
@@ -141,9 +123,11 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
       const { cards, error } = await getAllCards();
 
       if (error) {
-        // Log errors in both development and production to help debug GitHub Pages issues
-        console.error('Failed to load cards from Supabase:', error);
-        console.warn('Falling back to local card definitions (these do not have archetypes)');
+        // Only log errors in development mode
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to load cards from Supabase:', error);
+          console.warn('Falling back to local card definitions');
+        }
         const { CARD_DEFINITIONS } = require('./CardTypes');
         cardRegistry = CARD_DEFINITIONS;
         isLoaded = true;
@@ -163,14 +147,15 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
 
       // If no cards were loaded from Supabase, fallback to local
       if (Object.keys(registry).length === 0) {
-        console.warn('No cards loaded from Supabase, falling back to local definitions (these do not have archetypes)');
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('No cards loaded from Supabase, falling back to local definitions');
+        }
         const { CARD_DEFINITIONS } = require('./CardTypes');
         cardRegistry = CARD_DEFINITIONS;
         isLoaded = true;
         return CARD_DEFINITIONS;
       }
 
-      // CRITICAL: Set registry and isLoaded atomically to prevent race conditions
       cardRegistry = registry;
       isLoaded = true;
       if (process.env.NODE_ENV === 'development') {
@@ -178,13 +163,17 @@ export async function loadCardsFromSupabase(): Promise<CardRegistry> {
       }
       return registry;
     } catch (error) {
-      console.error('Error loading cards:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error loading cards:', error);
+      }
       // Fallback to local cards on any error
       try {
         const { CARD_DEFINITIONS } = require('./CardTypes');
         cardRegistry = CARD_DEFINITIONS;
         isLoaded = true;
-        console.warn('Using local card definitions as fallback (these do not have archetypes)');
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Using local card definitions as fallback');
+        }
         return CARD_DEFINITIONS;
       } catch (fallbackError) {
         console.error('Failed to load fallback cards:', fallbackError);

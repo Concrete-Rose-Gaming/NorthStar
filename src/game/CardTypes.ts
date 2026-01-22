@@ -648,65 +648,27 @@ export function getCardsByType(type: CardType): Card[] {
     // Use dynamic import to avoid circular dependency issues
     const cardLoader = require('./CardLoader');
     const areCardsLoaded = cardLoader.areCardsLoaded();
-    let registry: CardRegistry = cardLoader.getCardRegistry();
+    const registry: CardRegistry = cardLoader.getCardRegistry();
     
-    // CRITICAL FIX: If cards aren't loaded yet, we need to check if there's a loading promise
-    // In production, there might be a race condition where getCardsByType is called
-    // before the promise resolves, even though App.tsx waits for cardsLoaded
+    // CRITICAL FIX: Don't fall back to local definitions if cards are still loading
+    // This prevents race condition where getCardsByType is called before Supabase cards finish loading
     if (!areCardsLoaded) {
-      // Cards are still loading - return empty array to prevent using fallback
+      // Cards are still loading, return empty array
       // The App component's cardsLoaded state should prevent rendering until cards are ready
       return [];
     }
     
-    // Cards are marked as loaded - get the registry
-    let cards = Object.values(registry).filter((card: Card) => card.type === type);
+    const cards = Object.values(registry).filter((card: Card) => card.type === type);
     
-    // CRITICAL FIX for Restaurant cards: If we have both Supabase cards (with archetypes) 
-    // and local fallback cards (without archetypes), prefer Supabase cards
-    // Supabase cards have IDs like "PROTOTYPE-RESTAURANT-001", local ones have "restaurant_001"
-    if (type === CardType.RESTAURANT && cards.length > 0) {
-      // Check if we have Supabase cards (IDs contain dashes) vs local cards (IDs use underscores)
-      const supabaseCards = cards.filter(card => card.id.includes('-'));
-      const localCards = cards.filter(card => !card.id.includes('-'));
-      
-      // DEBUG: Log Restaurant card details to diagnose the issue
-      console.log(`[DEBUG] getCardsByType RESTAURANT: Found ${cards.length} total cards`);
-      console.log(`[DEBUG] Supabase cards: ${supabaseCards.length}, Local cards: ${localCards.length}`);
-      if (supabaseCards.length > 0) {
-        const sampleCard = supabaseCards[0] as any;
-        console.log(`[DEBUG] Sample Supabase card:`, {
-          id: sampleCard.id,
-          name: sampleCard.name,
-          hasPrimaryArchetype: 'primaryArchetype' in sampleCard,
-          primaryArchetype: sampleCard.primaryArchetype,
-          primaryArchetypeType: typeof sampleCard.primaryArchetype
-        });
-      }
-      
-      // Prefer Supabase cards if available (they have archetypes)
-      if (supabaseCards.length > 0) {
-        cards = supabaseCards;
-        console.log(`[DEBUG] Using ${supabaseCards.length} Supabase Restaurant cards with archetypes`);
-      } else if (localCards.length > 0) {
-        cards = localCards;
-        console.warn(`[DEBUG] WARNING: Only local Restaurant cards found (no archetypes)!`);
-      }
-    }
-    
-    // If we found cards in the registry, use them
+    // If we found cards in the registry, use them (these are from Supabase with archetypes)
     if (cards.length > 0) {
       return cards;
     }
     
-    // Registry is empty or has no cards of this type
-    // This should only happen if Supabase failed and we're using fallback
-    // But CardLoader should have populated the registry with CARD_DEFINITIONS in that case
-    // If registry is truly empty, something went wrong - log and use fallback
+    // Registry is empty but cards are marked as loaded - this means Supabase failed
+    // and CardLoader should have set the registry to CARD_DEFINITIONS as fallback
+    // But if for some reason it didn't, fall back to CARD_DEFINITIONS here
     if (Object.keys(registry).length === 0) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn(`getCardsByType: Registry is empty for type ${type}, using fallback`);
-      }
       return Object.values(CARD_DEFINITIONS).filter(card => card.type === type);
     }
     
@@ -714,9 +676,7 @@ export function getCardsByType(type: CardType): Card[] {
     return [];
   } catch (error) {
     // Fallback to local definitions if loader not available (for migration period)
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('CardLoader not available, using local definitions', error);
-    }
+    console.warn('CardLoader not available, using local definitions');
     return Object.values(CARD_DEFINITIONS).filter(card => card.type === type);
   }
 }
