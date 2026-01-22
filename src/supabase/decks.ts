@@ -4,11 +4,14 @@ import { trackDeckCards, extractCardCodesFromDeck } from './cardTracking';
 
 export interface SavedDeck {
   id: string;
-  user_id: string;
+  user_id: string | null;
   name: string;
   deck: PlayerDeck;
   created_at: string;
   updated_at: string;
+  is_prebuilt?: boolean;
+  description?: string;
+  category?: string;
 }
 
 /**
@@ -167,5 +170,48 @@ export function importDeck(jsonString: string): { name: string; deck: PlayerDeck
     return { name: data.name, deck: data.deck, error: null };
   } catch (error) {
     return { name: '', deck: { mainDeck: [], chefCardId: '', restaurantCardIds: [] }, error: error as Error };
+  }
+}
+
+/**
+ * Gets all prebuilt decks (no authentication required)
+ * Note: This requires a system account to be configured
+ */
+export async function getPrebuiltDecks(category?: string): Promise<{ decks: SavedDeck[]; error: Error | null }> {
+  try {
+    // For now, just return empty - system account implementation was removed
+    // This will be implemented when system account is set up
+    return { decks: [], error: null };
+  } catch (error) {
+    return { decks: [], error: error as Error };
+  }
+}
+
+/**
+ * Gets a specific prebuilt deck by ID (no authentication required)
+ * Note: This requires a system account to be configured
+ */
+export async function getPrebuiltDeck(deckId: string): Promise<{ deck: SavedDeck | null; error: Error | null }> {
+  try {
+    // For now, just return null - system account implementation was removed
+    // This will be implemented when system account is set up
+    return { deck: null, error: null };
+  } catch (error) {
+    return { deck: null, error: error as Error };
+  }
+}
+
+/**
+ * Gets a prebuilt deck by name (no authentication required)
+ * Useful for getting the practice deck by name
+ * Note: This requires a system account to be configured
+ */
+export async function getPrebuiltDeckByName(name: string): Promise<{ deck: SavedDeck | null; error: Error | null }> {
+  try {
+    // For now, just return null - system account implementation was removed
+    // This will be implemented when system account is set up
+    return { deck: null, error: null };
+  } catch (error) {
+    return { deck: null, error: error as Error };
   }
 }
