@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '../Card/Card';
+import { CardPreview } from '../CardPreview/CardPreview';
 import { getCardById } from '../../game/CardTypes';
 import { PlayerBoardState } from '../../game/Scoring';
 import { GamePhase, FaceoffState } from '../../game/GameEngine';
@@ -45,6 +46,8 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
   // During Setup (TURN phase), cards are face-down
   // Owner can see their own cards, opponent sees face-down
   const isSetupPhase = gamePhase === GamePhase.TURN;
+  
+  const [previewedCard, setPreviewedCard] = useState<string | null>(null);
   
   // Get all played cards in play order
   const allPlayedCards = [
@@ -101,11 +104,19 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
                       size="small"
                       isFaceDown={true}
                       showToOwner={false}
+                      onPreview={() => setPreviewedCard(cardId)}
                     />
                   );
                 }
                 // Show revealed card
-                return <Card key={cardId} card={card} size="small" />;
+                return (
+                  <Card 
+                    key={cardId} 
+                    card={card} 
+                    size="small"
+                    onPreview={() => setPreviewedCard(cardId)}
+                  />
+                );
               }
               
               // During Setup: face-down unless owner
@@ -120,6 +131,7 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
                   size="small"
                   isFaceDown={isFaceDown && !showToOwner}
                   showToOwner={showToOwner}
+                  onPreview={() => setPreviewedCard(cardId)}
                 />
               );
             })}
@@ -140,6 +152,7 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
                   size="small"
                   onClick={() => onCardClick?.(cardId)}
                   disabled={!isCurrentPlayer || turnComplete}
+                  onPreview={() => setPreviewedCard(cardId)}
                 />
               ) : null;
             })}
@@ -168,6 +181,17 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
       {turnComplete && (
         <div className="turn-status">Turn Complete</div>
       )}
+
+      {/* Card Preview Modal */}
+      {previewedCard && (() => {
+        const card = getCardById(previewedCard);
+        return card ? (
+          <CardPreview 
+            card={card} 
+            onClose={() => setPreviewedCard(null)}
+          />
+        ) : null;
+      })()}
     </div>
   );
 };

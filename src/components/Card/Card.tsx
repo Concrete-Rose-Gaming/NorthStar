@@ -12,6 +12,7 @@ interface CardProps {
   canAfford?: boolean;  // Whether the player can afford to play this card (has enough influence)
   isFaceDown?: boolean; // Whether the card is face-down
   showToOwner?: boolean; // Whether to show card details to owner even when face-down
+  onPreview?: () => void; // Callback for preview (right-click)
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -22,14 +23,24 @@ export const Card: React.FC<CardProps> = ({
   size = 'medium',
   canAfford = true,
   isFaceDown = false,
-  showToOwner = false
+  showToOwner = false,
+  onPreview
 }) => {
+  const handleRightClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onPreview) {
+      onPreview();
+    }
+  };
+
   // If card is face-down and not shown to owner, render card back
   if (isFaceDown && !showToOwner) {
     return (
       <div
-        className={`card card-${size} card-face-down ${selected ? 'card-selected' : ''} ${disabled ? 'card-disabled' : ''}`}
+        className={`card card-${size} card-face-down ${selected ? 'card-selected' : ''} ${disabled ? 'card-disabled' : ''} ${onPreview ? 'card-previewable' : ''}`}
         onClick={disabled ? undefined : onClick}
+        onContextMenu={onPreview ? handleRightClick : undefined}
+        title={onPreview ? 'Right-click to preview' : undefined}
       >
         <div className="card-back">
           <div className="card-back-pattern"></div>
@@ -91,9 +102,11 @@ export const Card: React.FC<CardProps> = ({
 
   return (
     <div
-      className={`card card-${size} ${selected ? 'card-selected' : ''} ${isDisabled ? 'card-disabled' : ''} ${!canAfford ? 'card-unaffordable' : ''}`}
+      className={`card card-${size} ${selected ? 'card-selected' : ''} ${isDisabled ? 'card-disabled' : ''} ${!canAfford ? 'card-unaffordable' : ''} ${onPreview ? 'card-previewable' : ''}`}
       onClick={isDisabled ? undefined : onClick}
+      onContextMenu={onPreview ? handleRightClick : undefined}
       style={{ borderColor: getCardColor() }}
+      title={onPreview ? 'Right-click to preview' : undefined}
     >
       <div className="card-header" style={{ backgroundColor: getCardColor() }}>
         <span className="card-type">{card.type}</span>
@@ -161,16 +174,19 @@ export const Card: React.FC<CardProps> = ({
         )}
 
         <p className="card-description">{card.description}</p>
+        
         {restaurantCard && restaurantCard.requiredStars !== undefined && restaurantCard.requiredStars > 0 && (
           <div className="card-star-requirement">
             <strong>Requires {restaurantCard.requiredStars} {restaurantCard.requiredStars === 1 ? 'star' : 'stars'}</strong> {'⭐'.repeat(restaurantCard.requiredStars)}
           </div>
         )}
+        
         {'abilityDescription' in card && (
           <div className="card-ability">
             <strong>Ability:</strong> {card.abilityDescription}
           </div>
         )}
+        
         {'effectDescription' in card && (
           <div className="card-effect">
             <strong>Effect:</strong> {card.effectDescription}

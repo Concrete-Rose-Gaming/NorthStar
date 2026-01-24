@@ -3,6 +3,7 @@ import { GameState, GamePhase } from '../../game/GameEngine';
 import { PlayerArea } from '../PlayerArea/PlayerArea';
 import { Restaurant } from '../Restaurant/Restaurant';
 import { Card } from '../Card/Card';
+import { CardPreview } from '../CardPreview/CardPreview';
 import { getCardById, CardType } from '../../game/CardTypes';
 import { calculateScore } from '../../game/Scoring';
 import './GameBoard.css';
@@ -38,6 +39,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 }) => {
   const [handPanelVisible, setHandPanelVisible] = useState(true);
   const [supportCardToActivate, setSupportCardToActivate] = useState<string | null>(null);
+  const [previewedCard, setPreviewedCard] = useState<string | null>(null);
   
   // Determine which player is "you" (current player viewing) and "opponent"
   // You (current player) always goes at bottom, opponent always at top
@@ -285,7 +287,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             {opponentChef && (
               <div className="chef-card-wrapper-middle">
                 <div className="middle-card-label">{opponent?.name || 'Opponent'}</div>
-                <Card card={opponentChef} size="medium" />
+                <Card 
+                  card={opponentChef} 
+                  size="medium" 
+                  onPreview={() => setPreviewedCard(opponentChef.id)}
+                />
                 <div className="card-label">Chef</div>
               </div>
             )}
@@ -294,7 +300,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             {youChef && (
               <div className="chef-card-wrapper-middle">
                 <div className="middle-card-label">{you?.name || 'You'}</div>
-                <Card card={youChef} size="medium" />
+                <Card 
+                  card={youChef} 
+                  size="medium" 
+                  onPreview={() => setPreviewedCard(youChef.id)}
+                />
                 <div className="card-label">Chef</div>
               </div>
             )}
@@ -387,6 +397,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     size="small"
                     onClick={() => handleCardClick(cardId)}
                     disabled={gameState.phase !== GamePhase.TURN || you.turnComplete}
+                    onPreview={() => setPreviewedCard(cardId)}
                   />
                 ) : null;
               })}
@@ -412,6 +423,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Card Preview Modal */}
+      {previewedCard && (() => {
+        const card = getCardById(previewedCard);
+        return card ? (
+          <CardPreview 
+            card={card} 
+            onClose={() => setPreviewedCard(null)}
+          />
+        ) : null;
+      })()}
     </div>
   );
 };

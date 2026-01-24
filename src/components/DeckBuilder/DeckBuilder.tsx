@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Card } from '../Card/Card';
+import { CardPreview } from '../CardPreview/CardPreview';
 import { CardType, getCardsByType, ChefCard, RestaurantCard } from '../../game/CardTypes';
 import { getCardRegistry } from '../../game/CardLoader';
 import { PlayerDeck, validatePlayerDeck, getDeckStats, restaurantMatchesChefArchetype } from '../../game/DeckManager';
@@ -20,6 +21,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
   const [selectedType, setSelectedType] = useState<CardType | 'MAIN_DECK'>('MAIN_DECK');
   const [validationResult, setValidationResult] = useState<any>(null);
   const [activeSection, setActiveSection] = useState<'chef' | 'restaurants' | 'main'>('chef');
+  const [previewedCard, setPreviewedCard] = useState<string | null>(null);
 
   const mainDeckStats = getDeckStats(mainDeck);
 
@@ -279,6 +281,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
                     size="medium"
                     onClick={() => handleSelectChef(card.id)}
                     selected={chefCardId === card.id}
+                    onPreview={() => setPreviewedCard(card.id)}
                   />
                 </div>
               ))}
@@ -290,7 +293,11 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
               return (
                 <div className="selected-chef">
                   <h4>Selected Chef:</h4>
-                  <Card card={chefCard} size="medium" />
+                  <Card 
+                    card={chefCard} 
+                    size="medium"
+                    onPreview={() => setPreviewedCard(chefCardId)}
+                  />
                 </div>
               );
             })()}
@@ -321,6 +328,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
                       onClick={() => handleSelectRestaurant(card.id)}
                       selected={isSelected}
                       disabled={!isSelected && restaurantCardIds.length >= 3}
+                      onPreview={() => setPreviewedCard(card.id)}
                     />
                     {isSelected && <div className="selected-badge">Selected</div>}
                   </div>
@@ -334,7 +342,14 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
                   {restaurantCardIds.map(cardId => {
                     const registry = getCardRegistry();
                     const card = registry[cardId];
-                    return card ? <Card key={cardId} card={card} size="small" /> : null;
+                    return card ? (
+                      <Card 
+                        key={cardId} 
+                        card={card} 
+                        size="small"
+                        onPreview={() => setPreviewedCard(cardId)}
+                      />
+                    ) : null;
                   })}
                 </div>
               </div>
@@ -375,6 +390,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
                         size="small"
                         onClick={() => !maxReached && handleAddToMainDeck(card.id)}
                         disabled={maxReached}
+                        onPreview={() => setPreviewedCard(card.id)}
                       />
                       <div className="card-count">
                         In deck: {count} / 3
@@ -415,6 +431,18 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({
           Finish Deck
         </button>
       </div>
+
+      {/* Card Preview Modal */}
+      {previewedCard && (() => {
+        const registry = getCardRegistry();
+        const card = registry[previewedCard];
+        return card ? (
+          <CardPreview 
+            card={card} 
+            onClose={() => setPreviewedCard(null)}
+          />
+        ) : null;
+      })()}
     </div>
   );
 };
