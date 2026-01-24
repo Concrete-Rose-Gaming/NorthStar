@@ -14,7 +14,10 @@ import {
   completeTurn,
   performFaceOff,
   advanceToNextRound,
-  resetTurnStatus
+  resetTurnStatus,
+  selectRestaurantFromDeck,
+  revealRestaurants,
+  revealNextCardPair
 } from './game/GameEngine';
 import { PlayerDeck, createPracticeDeck } from './game/DeckManager';
 import { AIOpponent } from './game/AIOpponent';
@@ -94,6 +97,48 @@ function App() {
     setIsMuted(newMutedState);
   };
 
+  // Handle restaurant selection phase - AI automatically selects
+  useEffect(() => {
+    if (!gameState || gameState.phase !== GamePhase.RESTAURANT_SELECTION) return;
+    
+    const player1 = gameState.players.player1;
+    const player2 = gameState.players.player2;
+    
+    // If human player hasn't selected yet, wait
+    if (!player1?.restaurantCardId) return;
+    
+    // If AI hasn't selected yet, auto-select
+    if (player2 && !player2.restaurantCardId) {
+      const timer = setTimeout(() => {
+        const aiPosition = Math.random() < 0.5 ? 'top' : 'bottom';
+        const updatedPlayer2 = selectRestaurantFromDeck(player2, aiPosition);
+        
+        setGameState({
+          ...gameState,
+          players: {
+            ...gameState.players,
+            player2: updatedPlayer2
+          }
+        });
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+    
+    // Both players have selected - move to mulligan
+    if (player1.restaurantCardId && player2?.restaurantCardId) {
+      const timer = setTimeout(() => {
+        setGameState({
+          ...gameState,
+          phase: GamePhase.MULLIGAN
+        });
+        setShowMulligan(true);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [gameState]);
+
   // Handle AI turn automatically
   useEffect(() => {
     if (!gameState || gameState.phase !== GamePhase.TURN) return;
@@ -122,6 +167,7 @@ function App() {
     // If both players are done, trigger face-off
     if (player1?.turnComplete && player2?.turnComplete) {
       const timer = setTimeout(() => {
+        // Start faceoff with sequential reveal
         const faceOffState = performFaceOff(gameState);
         setGameState(faceOffState);
       }, 500);
@@ -129,6 +175,37 @@ function App() {
       return () => clearTimeout(timer);
     }
   }, [gameState, aiOpponent]);
+
+  // Handle sequential faceoff reveal
+  useEffect(() => {
+    if (!gameState || gameState.phase !== GamePhase.FACE_OFF) return;
+    
+    const faceoffState = gameState.faceoffState;
+    if (!faceoffState) return;
+    
+    const maxCards = Math.max(
+      faceoffState.revealOrder.player1.length,
+      faceoffState.revealOrder.player2.length
+    );
+    
+    // If not all cards revealed, auto-advance after a delay
+    if (faceoffState.currentRevealIndex < maxCards) {
+      const timer = setTimeout(() => {
+        const nextState = revealNextCardPair(gameState);
+        setGameState(nextState);
+      }, 1500); // 1.5 second delay between reveals
+      
+      return () => clearTimeout(timer);
+    } else {
+      // All cards revealed - calculate final scores and transition to ROUND_END
+      const timer = setTimeout(() => {
+        const finalState = performFaceOff(gameState);
+        setGameState(finalState);
+      }, 1000); // 1 second delay after last card reveal
+      
+      return () => clearTimeout(timer);
+    }
+  }, [gameState]);
 
   const handleStartGame = () => {
     if (!playerName.trim()) {
@@ -154,7 +231,7 @@ function App() {
     // Update game state
     const updatedState = {
       ...newGameState,
-      phase: GamePhase.MULLIGAN,
+      phase: GamePhase.RESTAURANT_SELECTION,
       players: {
         player1: humanPlayer,
         player2: aiPlayer
@@ -162,7 +239,26 @@ function App() {
     };
 
     setGameState(updatedState);
-    setShowMulligan(true);
+  };
+
+  const handleRestaurantSelection = (position: 'top' | 'bottom') => {
+    if (!gameState) return;
+
+    const player1 = gameState.players.player1;
+    if (!player1) return;
+
+    // Human player selects restaurant
+    const updatedPlayer1 = selectRestaurantFromDeck(player1, position);
+    
+    setGameState({
+      ...gameState,
+      players: {
+        ...gameState.players,
+        player1: updatedPlayer1
+      }
+    });
+    
+    // AI selection and transition to mulligan will be handled by useEffect
   };
 
   const handleDeckComplete = (completedDeck: PlayerDeck) => {
@@ -191,15 +287,18 @@ function App() {
     setMulliganCards([]);
     setShowMulligan(false);
 
-    // Move to coin flip
-    const coinResult = flipCoin();
-    const updatedState = setFirstPlayer({
+    // Reveal restaurants after mulligan
+    const stateWithRevealedRestaurants = revealRestaurants({
       ...gameState,
       players: {
         player1: { ...updatedPlayer1, ready: true },
         player2: updatedPlayer2
       }
-    }, coinResult);
+    });
+
+    // Move to coin flip
+    const coinResult = flipCoin();
+    const updatedState = setFirstPlayer(stateWithRevealedRestaurants, coinResult);
 
     setGameState(updatedState);
   };
@@ -217,21 +316,24 @@ function App() {
       ? performMulligan(player2, aiMulliganCards)
       : { ...player2, ready: true };
 
-    // Move to coin flip
-    const coinResult = flipCoin();
-    const updatedState = setFirstPlayer({
+    // Reveal restaurants after mulligan
+    const stateWithRevealedRestaurants = revealRestaurants({
       ...gameState,
       players: {
         player1: { ...player1, ready: true },
         player2: updatedPlayer2
       }
-    }, coinResult);
+    });
+
+    // Move to coin flip
+    const coinResult = flipCoin();
+    const updatedState = setFirstPlayer(stateWithRevealedRestaurants, coinResult);
 
     setGameState(updatedState);
     setShowMulligan(false);
   };
 
-  const handleCardPlay = (cardId: string) => {
+  const handleCardPlay = (cardId: string, activateSupport?: boolean) => {
     if (!gameState) return;
 
     const player1 = gameState.players.player1;
@@ -246,7 +348,7 @@ function App() {
     else if (card.type === CardType.SUPPORT) targetType = 'support';
     else if (card.type === CardType.EVENT) targetType = 'event';
 
-    const updatedPlayer1 = playCard(player1, cardId, targetType);
+    const updatedPlayer1 = playCard(player1, cardId, targetType, undefined, activateSupport);
     
     setGameState({
       ...gameState,
@@ -274,9 +376,14 @@ function App() {
     });
   };
 
+  const handleProceedToFaceoff = () => {
+    if (!gameState) return;
+    const faceOffState = performFaceOff(gameState);
+    setGameState(faceOffState);
+  };
+
   const handleNextRound = () => {
     if (!gameState) return;
-
     const resetState = resetTurnStatus(gameState);
     const newState = advanceToNextRound(resetState);
     setGameState(newState);
@@ -459,6 +566,25 @@ function App() {
   }
 
 
+  // Restaurant selection phase
+  if (gameState.phase === GamePhase.RESTAURANT_SELECTION) {
+    return (
+      <div className="App">
+        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
+        <GameBoard
+          gameState={gameState}
+          currentPlayerId={currentPlayerId}
+          onCardPlay={handleCardPlay}
+          onEndTurn={handleEndTurn}
+          onNextRound={handleNextRound}
+          onShowTutorial={() => setShowTutorial(true)}
+          onRestaurantSelect={handleRestaurantSelection}
+          onProceedToFaceoff={handleProceedToFaceoff}
+        />
+      </div>
+    );
+  }
+
   // Mulligan phase
   if (gameState.phase === GamePhase.MULLIGAN && showMulligan) {
     const player1 = gameState.players.player1;
@@ -546,6 +672,18 @@ function App() {
           onEndTurn={handleEndTurn}
           onNextRound={handleNextRound}
           onShowTutorial={() => setShowTutorial(true)}
+          mulliganCards={mulliganCards}
+          onMulliganCardToggle={(cardId) => {
+            setMulliganCards(prev => 
+              prev.includes(cardId) 
+                ? prev.filter(id => id !== cardId)
+                : [...prev, cardId]
+            );
+          }}
+          onMulligan={handleMulligan}
+          onSkipMulligan={handleSkipMulligan}
+          onRestaurantSelect={handleRestaurantSelection}
+          onProceedToFaceoff={handleProceedToFaceoff}
         />
       </div>
     );

@@ -2,6 +2,7 @@ import React from 'react';
 import { Card } from '../Card/Card';
 import { getCardById } from '../../game/CardTypes';
 import { PlayerBoardState } from '../../game/Scoring';
+import { GamePhase, FaceoffState } from '../../game/GameEngine';
 import './PlayerArea.css';
 
 interface PlayerAreaProps {
@@ -18,6 +19,9 @@ interface PlayerAreaProps {
   cardsPlayed?: number; // Number of cards played this round
   influence?: number; // Current influence available
   maxInfluence?: number; // Maximum influence this round
+  gamePhase?: GamePhase; // Current game phase
+  faceoffState?: FaceoffState; // Faceoff reveal state
+  playerId?: 'player1' | 'player2'; // Player ID for faceoff reveal lookup
 }
 
 export const PlayerArea: React.FC<PlayerAreaProps> = ({
@@ -33,8 +37,34 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
   showHand = false,
   cardsPlayed = 0,
   influence,
-  maxInfluence
+  maxInfluence,
+  gamePhase,
+  faceoffState,
+  playerId
 }) => {
+  // During Setup (TURN phase), cards are face-down
+  // Owner can see their own cards, opponent sees face-down
+  const isSetupPhase = gamePhase === GamePhase.TURN;
+  
+  // Get all played cards in play order
+  const allPlayedCards = [
+    ...boardState.playedStaff,
+    ...boardState.playedSupport,
+    ...boardState.playedEvents
+  ];
+
+  // Create a map of face-down cards for quick lookup
+  const faceDownMap = new Map<string, boolean>();
+  boardState.faceDownCards.forEach(cardState => {
+    faceDownMap.set(cardState.cardId, cardState.isFaceDown);
+  });
+  
+  // During faceoff, determine which cards are revealed
+  const isFaceOffPhase = gamePhase === GamePhase.FACE_OFF;
+  const revealedCards = faceoffState && playerId 
+    ? faceoffState.revealedCards[playerId] 
+    : [];
+
   return (
     <div className={`player-area ${isCurrentPlayer ? 'current-player' : ''} ${isOpponent ? 'opponent-area' : ''}`}>
       <div className="player-header">
@@ -55,14 +85,43 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
         <div className="board-section">
           <h4>Played Cards</h4>
           <div className="cards-row">
-            {[
-              // Meals are now attached to restaurant and shown there, not here
-              ...boardState.playedStaff,
-              ...boardState.playedSupport,
-              ...boardState.playedEvents
-            ].map(cardId => {
+            {allPlayedCards.map(cardId => {
               const card = getCardById(cardId);
-              return card ? <Card key={cardId} card={card} size="small" /> : null;
+              if (!card) return null;
+              
+              // During faceoff: only show revealed cards
+              if (isFaceOffPhase) {
+                const isRevealed = revealedCards.includes(cardId);
+                if (!isRevealed) {
+                  // Show face-down card
+                  return (
+                    <Card 
+                      key={cardId} 
+                      card={card} 
+                      size="small"
+                      isFaceDown={true}
+                      showToOwner={false}
+                    />
+                  );
+                }
+                // Show revealed card
+                return <Card key={cardId} card={card} size="small" />;
+              }
+              
+              // During Setup: face-down unless owner
+              const isFaceDown = isSetupPhase && faceDownMap.get(cardId) === true;
+              // Owner can see their own cards even when face-down
+              const showToOwner = !isOpponent && isCurrentPlayer;
+              
+              return (
+                <Card 
+                  key={cardId} 
+                  card={card} 
+                  size="small"
+                  isFaceDown={isFaceDown && !showToOwner}
+                  showToOwner={showToOwner}
+                />
+              );
             })}
           </div>
         </div>

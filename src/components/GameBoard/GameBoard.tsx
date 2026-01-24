@@ -3,14 +3,14 @@ import { GameState, GamePhase } from '../../game/GameEngine';
 import { PlayerArea } from '../PlayerArea/PlayerArea';
 import { Restaurant } from '../Restaurant/Restaurant';
 import { Card } from '../Card/Card';
-import { getCardById } from '../../game/CardTypes';
+import { getCardById, CardType } from '../../game/CardTypes';
 import { calculateScore } from '../../game/Scoring';
 import './GameBoard.css';
 
 interface GameBoardProps {
   gameState: GameState;
   currentPlayerId: 'player1' | 'player2';
-  onCardPlay: (cardId: string) => void;
+  onCardPlay: (cardId: string, activateSupport?: boolean) => void;
   onEndTurn: () => void;
   onNextRound?: () => void;
   onShowTutorial?: () => void;
@@ -18,6 +18,8 @@ interface GameBoardProps {
   onMulliganCardToggle?: (cardId: string) => void;
   onMulligan?: () => void;
   onSkipMulligan?: () => void;
+  onRestaurantSelect?: (position: 'top' | 'bottom') => void;
+  onProceedToFaceoff?: () => void;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
@@ -30,9 +32,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   mulliganCards = [],
   onMulliganCardToggle,
   onMulligan,
-  onSkipMulligan
+  onSkipMulligan,
+  onRestaurantSelect,
+  onProceedToFaceoff
 }) => {
   const [handPanelVisible, setHandPanelVisible] = useState(true);
+  const [supportCardToActivate, setSupportCardToActivate] = useState<string | null>(null);
   
   // Determine which player is "you" (current player viewing) and "opponent"
   // You (current player) always goes at bottom, opponent always at top
@@ -50,9 +55,33 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const isFaceOffPhase = gameState.phase === GamePhase.FACE_OFF;
   const isMulliganPhase = gameState.phase === GamePhase.MULLIGAN;
+  const isRestaurantSelectionPhase = gameState.phase === GamePhase.RESTAURANT_SELECTION;
+  const isSetupPhase = gameState.phase === GamePhase.TURN;
   const showScores = isFaceOffPhase || gameState.phase === GamePhase.ROUND_END;
   const showHands = isFaceOffPhase || gameState.phase === GamePhase.ROUND_END || gameState.phase === GamePhase.GAME_END;
   const isAI = opponent?.name === 'AI Chef' || opponent?.name.includes('AI');
+
+  // Handle card play - check if it's a support card during setup
+  const handleCardClick = (cardId: string) => {
+    if (!isSetupPhase || !you) return;
+    
+    const card = getCardById(cardId);
+    if (!card) return;
+    
+    // If it's a support card, show activation choice
+    if (card.type === CardType.SUPPORT || cardId.startsWith('support_')) {
+      setSupportCardToActivate(cardId);
+    } else {
+      // Other cards play normally (face-down)
+      onCardPlay(cardId);
+    }
+  };
+
+  const handleSupportActivationChoice = (activate: boolean) => {
+    if (!supportCardToActivate) return;
+    onCardPlay(supportCardToActivate, activate);
+    setSupportCardToActivate(null);
+  };
 
   // Count cards played this round by each player (excluding meals which are attached permanently)
   const opponentCardsPlayed = opponent ? 
@@ -67,6 +96,66 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   return (
     <div className="game-board">
+      {/* Support Card Activation Dialog */}
+      {supportCardToActivate && (
+        <div className="mulligan-overlay">
+          <div className="mulligan-overlay-content">
+            <h2>Support Card Activation</h2>
+            {(() => {
+              const card = getCardById(supportCardToActivate);
+              return card ? (
+                <>
+                  <p>How would you like to play <strong>{card.name}</strong>?</p>
+                  <div className="support-activation-options">
+                    <button 
+                      className="support-activation-button"
+                      onClick={() => handleSupportActivationChoice(true)}
+                    >
+                      <div className="activation-label">Activate Now</div>
+                      <div className="activation-description">Use the effect immediately during Setup</div>
+                    </button>
+                    <button 
+                      className="support-activation-button"
+                      onClick={() => handleSupportActivationChoice(false)}
+                    >
+                      <div className="activation-label">Play Face-Down</div>
+                      <div className="activation-description">Play face-down for Faceoff</div>
+                    </button>
+                  </div>
+                </>
+              ) : null;
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Restaurant Selection overlay modal */}
+      {isRestaurantSelectionPhase && you && (
+        <div className="mulligan-overlay">
+          <div className="mulligan-overlay-content">
+            <h2>Select Your Restaurant</h2>
+            <p>Your restaurant deck has been shuffled. Choose to draw from the top or bottom.</p>
+            
+            <div className="restaurant-selection-options">
+              <button 
+                className="restaurant-selection-button"
+                onClick={() => onRestaurantSelect?.('top')}
+              >
+                <div className="selection-label">Top Card</div>
+                <div className="selection-description">Draw from the top of your restaurant deck</div>
+              </button>
+              <button 
+                className="restaurant-selection-button"
+                onClick={() => onRestaurantSelect?.('bottom')}
+              >
+                <div className="selection-label">Bottom Card</div>
+                <div className="selection-description">Draw from the bottom of your restaurant deck</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mulligan overlay modal */}
       {isMulliganPhase && you && (
         <div className="mulligan-overlay">
@@ -151,6 +240,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               cardsPlayed={opponentCardsPlayed}
               influence={opponent.influence}
               maxInfluence={opponent.maxInfluence}
+              gamePhase={gameState.phase}
+              faceoffState={gameState.faceoffState}
+              playerId={opponentId}
             />
           )}
         </div>
@@ -184,6 +276,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   stars={opponent?.stars || 0}
                   size="medium"
                   attachedMeals={opponent?.boardState.attachedMeals || []}
+                  isFaceDown={!opponent?.restaurantRevealed}
                 />
               </div>
             )}
@@ -216,6 +309,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   stars={you?.stars || 0}
                   size="medium"
                   attachedMeals={you?.boardState.attachedMeals || []}
+                  isFaceDown={!you?.restaurantRevealed}
                 />
               </div>
             )}
@@ -239,6 +333,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               cardsPlayed={youCardsPlayed}
               influence={you.influence}
               maxInfluence={you.maxInfluence}
+              gamePhase={gameState.phase}
+              faceoffState={gameState.faceoffState}
+              playerId={currentPlayerId}
             />
           )}
         </div>
@@ -264,8 +361,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   End Turn
                 </button>
               )}
-              {you.turnComplete && (
+              {you.turnComplete && gameState.phase === GamePhase.TURN && (
                 <div className="turn-status">Turn Complete</div>
+              )}
+              {/* Show proceed button if both players are done but still in TURN phase */}
+              {gameState.phase === GamePhase.TURN && you.turnComplete && opponent?.turnComplete && onProceedToFaceoff && (
+                <button 
+                  className="proceed-button" 
+                  onClick={onProceedToFaceoff}
+                  style={{ marginLeft: '10px' }}
+                >
+                  Proceed to Faceoff
+                </button>
               )}
             </div>
           </div>
@@ -278,7 +385,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     key={cardId}
                     card={card}
                     size="small"
-                    onClick={() => onCardPlay(cardId)}
+                    onClick={() => handleCardClick(cardId)}
                     disabled={gameState.phase !== GamePhase.TURN || you.turnComplete}
                   />
                 ) : null;

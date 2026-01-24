@@ -1,6 +1,13 @@
 import { getCardById, ChefCard, RestaurantCard, MealCard, StaffCard, SupportCard, EventCard } from './CardTypes';
 import { calculateArchetypeBonus } from './ArchetypeSystem';
 
+// Card play state - tracks face-down status and play order
+export interface CardPlayState {
+  cardId: string;
+  isFaceDown: boolean;
+  playOrder: number;
+}
+
 // Player's board state during a round
 export interface PlayerBoardState {
   chefCardId: string;
@@ -10,6 +17,9 @@ export interface PlayerBoardState {
   playedStaff: string[]; // Card IDs
   playedSupport: string[]; // Card IDs
   playedEvents: string[]; // Card IDs
+  // Face-down card tracking
+  faceDownCards: CardPlayState[]; // Cards played face-down (Staff, Support, Event)
+  activatedSupport: string[]; // Support cards activated immediately during Setup
 }
 
 // Scoring result for a player
@@ -100,24 +110,39 @@ export function calculateScore(boardState: PlayerBoardState, playerStars: number
   });
 
   // Calculate Support card effects
-  boardState.playedSupport.forEach(supportId => {
+  // Include both face-down support cards (for faceoff) and activated support cards
+  const allSupportCards = [
+    ...boardState.playedSupport,
+    ...boardState.activatedSupport
+  ];
+  
+  allSupportCards.forEach(supportId => {
     const supportCard = getCardById(supportId) as SupportCard | undefined;
     if (supportCard) {
+      // Check if this support card was activated immediately (not face-down)
+      const wasActivated = boardState.activatedSupport.includes(supportId);
+      
       if (supportCard.ability === 'quality') {
         const bonus = attachedMeals.length * 2;
         supportModifiers += bonus;
-        breakdown.push(`${supportCard.name}: +${bonus} to all Meals`);
+        breakdown.push(`${supportCard.name}: +${bonus} to all Meals${wasActivated ? ' (activated)' : ''}`);
       } else if (supportCard.ability === 'upgrade') {
         const bonus = 3;
         supportModifiers += bonus;
-        breakdown.push(`${supportCard.name}: +${bonus} to Restaurant base`);
+        breakdown.push(`${supportCard.name}: +${bonus} to Restaurant base${wasActivated ? ' (permanent)' : ''}`);
       } else if (supportCard.ability === 'vip') {
         const bonus = 1;
         supportModifiers += bonus;
-        breakdown.push(`${supportCard.name}: +${bonus} to Restaurant base`);
+        breakdown.push(`${supportCard.name}: +${bonus} to Restaurant base${wasActivated ? ' (this round)' : ''}`);
       } else if (supportCard.ability === 'special') {
         // This would double one meal - simplified for now
-        breakdown.push(`${supportCard.name}: Double one Meal (applied)`);
+        breakdown.push(`${supportCard.name}: Double one Meal (applied)${wasActivated ? ' (activated)' : ''}`);
+      } else if (supportCard.ability === 'marketing') {
+        // Gain +1 star if you win this round - handled elsewhere
+        breakdown.push(`${supportCard.name}: +1 star on win${wasActivated ? ' (activated)' : ''}`);
+      } else if (supportCard.ability === 'critic') {
+        // Gain 2 stars instead of 1 if you win - handled elsewhere
+        breakdown.push(`${supportCard.name}: 2 stars on win${wasActivated ? ' (activated)' : ''}`);
       }
     }
   });

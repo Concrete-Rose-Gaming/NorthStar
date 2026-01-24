@@ -483,6 +483,26 @@
   box-shadow: 0 6px 16px rgba(201, 115, 75, 0.4);
 }
 
+.proceed-button {
+  padding: 8px 16px;
+  background: rgba(139, 111, 71, 0.3);
+  color: #F7EFE2;
+  border: 2px solid #8B6F47;
+  border-radius: 8px;
+  font-size: clamp(0.9rem, 1.2vw, 1rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 6px rgba(139, 111, 71, 0.3);
+}
+
+.proceed-button:hover {
+  background: rgba(139, 111, 71, 0.5);
+  border-color: #C9734B;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(139, 111, 71, 0.5);
+}
+
 .game-end {
   text-align: center;
   padding: 40px;
@@ -772,5 +792,85 @@
   cursor: not-allowed;
   opacity: 0.6;
   box-shadow: none;
+}
+
+/* Restaurant Selection UI */
+.restaurant-selection-options {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.restaurant-selection-button {
+  padding: 20px 30px;
+  background: rgba(212, 175, 55, 0.2);
+  border: 3px solid #D4AF37;
+  border-radius: 12px;
+  color: #F7EFE2;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.restaurant-selection-button:hover {
+  background: rgba(212, 175, 55, 0.4);
+  border-color: #FFD700;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.5);
+}
+
+.selection-label {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #D4AF37;
+}
+
+.selection-description {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Support Card Activation UI */
+.support-activation-options {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.support-activation-button {
+  padding: 20px 30px;
+  background: rgba(139, 111, 71, 0.2);
+  border: 3px solid #8B6F47;
+  border-radius: 12px;
+  color: #F7EFE2;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(139, 111, 71, 0.3);
+}
+
+.support-activation-button:hover {
+  background: rgba(139, 111, 71, 0.4);
+  border-color: #C9734B;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(139, 111, 71, 0.5);
+}
+
+.activation-label {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #8B6F47;
+}
+
+.activation-description {
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 

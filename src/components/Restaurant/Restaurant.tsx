@@ -9,6 +9,7 @@ interface RestaurantProps {
   stars?: number;
   size?: 'small' | 'medium' | 'large';
   attachedMeals?: string[]; // Card IDs of attached meals
+  isFaceDown?: boolean; // Whether the restaurant card is face-down
 }
 
 export const Restaurant: React.FC<RestaurantProps> = ({
@@ -16,8 +17,20 @@ export const Restaurant: React.FC<RestaurantProps> = ({
   score,
   stars = 0,
   size = 'medium',
-  attachedMeals = []
+  attachedMeals = [],
+  isFaceDown = false
 }) => {
+  if (isFaceDown) {
+    return (
+      <div className={`restaurant-card restaurant-${size} restaurant-face-down`}>
+        <div className="restaurant-card-back">
+          <div className="card-back-pattern"></div>
+          <div className="card-back-text">Restaurant</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`restaurant-card restaurant-${size}`}>
       <div className="restaurant-header">

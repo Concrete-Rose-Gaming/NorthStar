@@ -7,6 +7,7 @@ export enum GamePhase {
   LOBBY = 'LOBBY',
   DECK_BUILDING = 'DECK_BUILDING',
   INITIAL_DRAW = 'INITIAL_DRAW',
+  RESTAURANT_SELECTION = 'RESTAURANT_SELECTION',
   MULLIGAN = 'MULLIGAN',
   COIN_FLIP = 'COIN_FLIP',
   ROUND_START = 'ROUND_START',
@@ -25,6 +26,8 @@ export interface Player {
   discardPile: Deck; // Card IDs in discard pile (for discarded meals)
   chefCardId: string | null;
   restaurantCardId: string | null;
+  restaurantDeck: Deck; // Shuffled restaurant deck (3 cards)
+  restaurantRevealed: boolean; // Whether restaurant has been revealed
   boardState: PlayerBoardState;
   stars: number;
   influence: number;        // Current influence available
@@ -32,6 +35,13 @@ export interface Player {
   ready: boolean;
   turnComplete: boolean;
   eventCardPlayedThisRound: boolean;
+}
+
+// Faceoff state for sequential card reveal
+export interface FaceoffState {
+  revealedCards: { player1: string[], player2: string[] };
+  currentRevealIndex: number;
+  revealOrder: { player1: string[], player2: string[] };
 }
 
 // Game state
@@ -46,6 +56,7 @@ export interface GameState {
   firstPlayer: 'player1' | 'player2' | null;
   winner: 'player1' | 'player2' | null;
   coinFlipResult: 'heads' | 'tails' | null;
+  faceoffState?: FaceoffState; // State for sequential card reveal during faceoff
 }
 
 /**
@@ -90,13 +101,13 @@ export function initializePlayer(playerId: string, name: string, playerDeck: Pla
   // Shuffle the main deck
   const shuffledDeck = shuffleDeck([...playerDeck.mainDeck]);
   
-  // Select a random Restaurant from the 3 available
-  const restaurantCardId = selectRandomRestaurant(playerDeck.restaurantCardIds);
+  // Shuffle the restaurant deck (3 cards) - player will choose top or bottom
+  const shuffledRestaurantDeck = shuffleDeck([...playerDeck.restaurantCardIds]);
   
   // Draw initial 5 cards from main deck
   const { drawn: initialHand, remaining: remainingDeck } = drawCards(shuffledDeck, 5);
 
-  // Create initial player state
+  // Create initial player state - restaurant not selected yet
   const initialPlayer: Player = {
     id: playerId,
     name,
@@ -104,15 +115,19 @@ export function initializePlayer(playerId: string, name: string, playerDeck: Pla
     hand: initialHand,
     discardPile: [],
     chefCardId: playerDeck.chefCardId,
-    restaurantCardId: restaurantCardId || null,
+    restaurantCardId: null, // Will be set when player selects
+    restaurantDeck: shuffledRestaurantDeck,
+    restaurantRevealed: false, // Start face-down
     boardState: {
       chefCardId: playerDeck.chefCardId,
-      restaurantCardId: restaurantCardId || '',
+      restaurantCardId: '', // Empty until selected
       attachedMeals: [],
       playedMeals: [],
       playedStaff: [],
       playedSupport: [],
-      playedEvents: []
+      playedEvents: [],
+      faceDownCards: [],
+      activatedSupport: []
     },
     stars: 0,
     influence: 0,
@@ -127,6 +142,56 @@ export function initializePlayer(playerId: string, name: string, playerDeck: Pla
   initialPlayer.influence = initialPlayer.maxInfluence; // Start with full influence
 
   return initialPlayer;
+}
+
+/**
+ * Selects a restaurant from the shuffled deck (top or bottom)
+ */
+export function selectRestaurantFromDeck(player: Player, position: 'top' | 'bottom'): Player {
+  if (player.restaurantDeck.length === 0) {
+    return player; // No restaurants available
+  }
+
+  let selectedRestaurantId: string;
+  if (position === 'top') {
+    // Take from top (first card)
+    selectedRestaurantId = player.restaurantDeck[0];
+  } else {
+    // Take from bottom (last card)
+    selectedRestaurantId = player.restaurantDeck[player.restaurantDeck.length - 1];
+  }
+
+  return {
+    ...player,
+    restaurantCardId: selectedRestaurantId,
+    boardState: {
+      ...player.boardState,
+      restaurantCardId: selectedRestaurantId
+    }
+  };
+}
+
+/**
+ * Reveals the restaurant cards for both players (after mulligan)
+ */
+export function revealRestaurants(gameState: GameState): GameState {
+  const p1 = gameState.players.player1 ? {
+    ...gameState.players.player1,
+    restaurantRevealed: true
+  } : null;
+
+  const p2 = gameState.players.player2 ? {
+    ...gameState.players.player2,
+    restaurantRevealed: true
+  } : null;
+
+  return {
+    ...gameState,
+    players: {
+      player1: p1,
+      player2: p2
+    }
+  };
 }
 
 /**
@@ -189,7 +254,9 @@ export function startRound(gameState: GameState): GameState {
       // Keep attachedMeals - they persist between rounds
       playedStaff: [],
       playedSupport: [],
-      playedEvents: []
+      playedEvents: [],
+      faceDownCards: [],
+      activatedSupport: []
     },
     turnComplete: false,
     eventCardPlayedThisRound: false
@@ -204,7 +271,9 @@ export function startRound(gameState: GameState): GameState {
       // Keep attachedMeals - they persist between rounds
       playedStaff: [],
       playedSupport: [],
-      playedEvents: []
+      playedEvents: [],
+      faceDownCards: [],
+      activatedSupport: []
     },
     turnComplete: false,
     eventCardPlayedThisRound: false
@@ -301,12 +370,15 @@ export function getCardInfluenceCost(cardId: string): number {
  * Plays a card from hand to board
  * Returns null if the card cannot be played (insufficient influence or event card limit)
  * For meal cards: attaches to restaurant permanently (max 3). If at capacity, requires mealToDiscard parameter.
+ * For Staff/Support/Event cards: plays face-down by default during Setup phase.
+ * Support cards can be activated immediately if activateSupport is true.
  */
 export function playCard(
   player: Player,
   cardId: string,
   targetType?: 'meal' | 'staff' | 'support' | 'event',
-  mealToDiscard?: string // Required when attaching a meal to a restaurant that already has 3 meals
+  mealToDiscard?: string, // Required when attaching a meal to a restaurant that already has 3 meals
+  activateSupport?: boolean // If true, activate Support card immediately instead of playing face-down
 ): Player | null {
   const card = getCardById(cardId);
   if (!card) {
@@ -439,6 +511,23 @@ export function playCard(
     }
   }
 
+  // Track face-down cards (Staff, Support, Event) - all played face-down during Setup
+  // Support cards can be activated immediately if activateSupport is true
+  const isSupportCard = targetType === 'support' || card.type === CardType.SUPPORT;
+  
+  if (isSupportCard && activateSupport) {
+    // Support card activated immediately - add to activatedSupport, don't add to faceDownCards
+    newBoardState.activatedSupport.push(cardId);
+  } else {
+    // Card played face-down - track play order
+    const currentPlayOrder = newBoardState.faceDownCards.length;
+    newBoardState.faceDownCards.push({
+      cardId,
+      isFaceDown: true,
+      playOrder: currentPlayOrder
+    });
+  }
+
   return {
     ...player,
     hand: newHand,
@@ -469,7 +558,96 @@ export function bothPlayersReady(gameState: GameState): boolean {
 }
 
 /**
+ * Determines the reveal order for faceoff (left to right based on board position)
+ * Cards are ordered by play order (when they were played)
+ */
+function getRevealOrder(player: Player): string[] {
+  // Get all played cards in play order (from faceDownCards)
+  const playOrderMap = new Map<string, number>();
+  player.boardState.faceDownCards.forEach(cardState => {
+    playOrderMap.set(cardState.cardId, cardState.playOrder);
+  });
+  
+  // Combine all played cards
+  const allCards = [
+    ...player.boardState.playedStaff,
+    ...player.boardState.playedSupport,
+    ...player.boardState.playedEvents
+  ];
+  
+  // Sort by play order (left to right = first played to last played)
+  return allCards.sort((a, b) => {
+    const orderA = playOrderMap.get(a) ?? 999;
+    const orderB = playOrderMap.get(b) ?? 999;
+    return orderA - orderB;
+  });
+}
+
+/**
+ * Reveals the next pair of cards in the faceoff sequence
+ */
+export function revealNextCardPair(gameState: GameState): GameState {
+  if (!gameState.faceoffState) {
+    // Initialize faceoff state
+    const p1 = gameState.players.player1;
+    const p2 = gameState.players.player2;
+    
+    if (!p1 || !p2) return gameState;
+    
+    const revealOrder1 = getRevealOrder(p1);
+    const revealOrder2 = getRevealOrder(p2);
+    
+    gameState.faceoffState = {
+      revealedCards: { player1: [], player2: [] },
+      currentRevealIndex: 0,
+      revealOrder: { player1: revealOrder1, player2: revealOrder2 }
+    };
+  }
+  
+  const faceoffState = gameState.faceoffState;
+  const p1 = gameState.players.player1;
+  const p2 = gameState.players.player2;
+  
+  if (!p1 || !p2) return gameState;
+  
+  // Check if all cards are revealed
+  const maxCards = Math.max(
+    faceoffState.revealOrder.player1.length,
+    faceoffState.revealOrder.player2.length
+  );
+  
+  if (faceoffState.currentRevealIndex >= maxCards) {
+    // All cards revealed - calculate final scores
+    return performFaceOff(gameState);
+  }
+  
+  // Reveal next card pair
+  const newRevealed1 = [...faceoffState.revealedCards.player1];
+  const newRevealed2 = [...faceoffState.revealedCards.player2];
+  
+  if (faceoffState.currentRevealIndex < faceoffState.revealOrder.player1.length) {
+    newRevealed1.push(faceoffState.revealOrder.player1[faceoffState.currentRevealIndex]);
+  }
+  
+  if (faceoffState.currentRevealIndex < faceoffState.revealOrder.player2.length) {
+    newRevealed2.push(faceoffState.revealOrder.player2[faceoffState.currentRevealIndex]);
+  }
+  
+  const newFaceoffState: FaceoffState = {
+    ...faceoffState,
+    revealedCards: { player1: newRevealed1, player2: newRevealed2 },
+    currentRevealIndex: faceoffState.currentRevealIndex + 1
+  };
+  
+  return {
+    ...gameState,
+    faceoffState: newFaceoffState
+  };
+}
+
+/**
  * Performs the face-off - calculates scores and determines round winner
+ * Now uses sequential reveal system
  */
 export function performFaceOff(gameState: GameState): GameState {
   const p1 = gameState.players.player1;
@@ -479,7 +657,39 @@ export function performFaceOff(gameState: GameState): GameState {
     return gameState;
   }
 
-  // Calculate scores
+  // If faceoff state exists and not all cards revealed, start/continue sequential reveal
+  if (gameState.faceoffState) {
+    const faceoffState = gameState.faceoffState;
+    const maxCards = Math.max(
+      faceoffState.revealOrder.player1.length,
+      faceoffState.revealOrder.player2.length
+    );
+    
+    // If not all cards revealed yet, continue revealing
+    if (faceoffState.currentRevealIndex < maxCards) {
+      return {
+        ...gameState,
+        phase: GamePhase.FACE_OFF
+      };
+    }
+    // If all cards are revealed, fall through to calculate scores
+  } else {
+    // Start sequential reveal
+    return {
+      ...gameState,
+      phase: GamePhase.FACE_OFF,
+      faceoffState: {
+        revealedCards: { player1: [], player2: [] },
+        currentRevealIndex: 0,
+        revealOrder: {
+          player1: getRevealOrder(p1),
+          player2: getRevealOrder(p2)
+        }
+      }
+    };
+  }
+
+  // All cards revealed - calculate final scores
   const score1 = calculateScore(p1.boardState, p1.stars);
   const score2 = calculateScore(p2.boardState, p2.stars);
 
@@ -509,7 +719,8 @@ export function performFaceOff(gameState: GameState): GameState {
       player1: newP1,
       player2: newP2
     },
-    winner
+    winner,
+    faceoffState: undefined // Clear faceoff state
   };
 }
 

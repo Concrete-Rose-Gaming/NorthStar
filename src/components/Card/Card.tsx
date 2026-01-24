@@ -10,6 +10,8 @@ interface CardProps {
   disabled?: boolean;
   size?: 'small' | 'medium' | 'large';
   canAfford?: boolean;  // Whether the player can afford to play this card (has enough influence)
+  isFaceDown?: boolean; // Whether the card is face-down
+  showToOwner?: boolean; // Whether to show card details to owner even when face-down
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -18,8 +20,25 @@ export const Card: React.FC<CardProps> = ({
   selected = false,
   disabled = false,
   size = 'medium',
-  canAfford = true
+  canAfford = true,
+  isFaceDown = false,
+  showToOwner = false
 }) => {
+  // If card is face-down and not shown to owner, render card back
+  if (isFaceDown && !showToOwner) {
+    return (
+      <div
+        className={`card card-${size} card-face-down ${selected ? 'card-selected' : ''} ${disabled ? 'card-disabled' : ''}`}
+        onClick={disabled ? undefined : onClick}
+      >
+        <div className="card-back">
+          <div className="card-back-pattern"></div>
+          <div className="card-back-text">?</div>
+        </div>
+      </div>
+    );
+  }
+
   const getCardColor = () => {
     switch (card.type) {
       case CardTypeEnum.CHEF:
@@ -142,6 +161,11 @@ export const Card: React.FC<CardProps> = ({
         )}
 
         <p className="card-description">{card.description}</p>
+        {restaurantCard && restaurantCard.requiredStars !== undefined && restaurantCard.requiredStars > 0 && (
+          <div className="card-star-requirement">
+            <strong>Requires {restaurantCard.requiredStars} {restaurantCard.requiredStars === 1 ? 'star' : 'stars'}</strong> {'⭐'.repeat(restaurantCard.requiredStars)}
+          </div>
+        )}
         {'abilityDescription' in card && (
           <div className="card-ability">
             <strong>Ability:</strong> {card.abilityDescription}
