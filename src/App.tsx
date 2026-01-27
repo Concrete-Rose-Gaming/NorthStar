@@ -66,7 +66,6 @@ function App() {
   const [playerName, setPlayerName] = useState('');
   const [playerDeck, setPlayerDeck] = useState<PlayerDeck | null>(null);
   const [mulliganCards, setMulliganCards] = useState<string[]>([]);
-  const [showMulligan, setShowMulligan] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showDeckBuilder, setShowDeckBuilder] = useState(false);
   const [aiOpponent] = useState<AIOpponent>(new AIOpponent('AI Chef'));
@@ -158,7 +157,6 @@ function App() {
           ...gameState,
           phase: GamePhase.MULLIGAN
         });
-        setShowMulligan(true);
       }, 500);
       
       return () => clearTimeout(timer);
@@ -311,7 +309,6 @@ function App() {
       : { ...player2, ready: true };
 
     setMulliganCards([]);
-    setShowMulligan(false);
 
     // Reveal restaurants after mulligan
     const stateWithRevealedRestaurants = revealRestaurants({
@@ -356,7 +353,6 @@ function App() {
     const updatedState = setFirstPlayer(stateWithRevealedRestaurants, coinResult);
 
     setGameState(updatedState);
-    setShowMulligan(false);
   };
 
   const handleCardPlay = (cardId: string, activateSupport?: boolean, mealToDiscard?: string, handIndex?: number) => {

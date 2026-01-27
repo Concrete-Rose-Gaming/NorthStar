@@ -1,4 +1,4 @@
-import { Deck, PlayerDeck, shuffleDeck, drawCards, selectRandomRestaurant } from './DeckManager';
+import { Deck, PlayerDeck, shuffleDeck, drawCards } from './DeckManager';
 import { calculateScore, compareScores, PlayerBoardState } from './Scoring';
 import { CardType, getCardById, ChefCard } from './CardTypes';
 
