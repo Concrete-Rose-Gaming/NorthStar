@@ -378,8 +378,15 @@ export function playCard(
   cardId: string,
   targetType?: 'meal' | 'staff' | 'support' | 'event',
   mealToDiscard?: string, // Required when attaching a meal to a restaurant that already has 3 meals
-  activateSupport?: boolean // If true, activate Support card immediately instead of playing face-down
+  activateSupport?: boolean, // If true, activate Support card immediately instead of playing face-down
+  handIndex?: number // When provided, remove the card at this index only (allows duplicate card IDs in hand)
 ): Player | null {
+  const removeFromHand = (): string[] => {
+    if (handIndex !== undefined && handIndex >= 0 && handIndex < player.hand.length) {
+      return [...player.hand.slice(0, handIndex), ...player.hand.slice(handIndex + 1)];
+    }
+    return player.hand.filter(id => id !== cardId);
+  };
   const card = getCardById(cardId);
   if (!card) {
     return null; // Card not found
@@ -396,79 +403,45 @@ export function playCard(
   // Check if this is a meal card
   const isMealCard = targetType === 'meal' || card.type === CardType.MEAL || cardId.startsWith('meal_');
 
-  // Special handling for meal cards - attach to restaurant
+  // Special handling for meal cards - attach to restaurant (or replace an existing meal)
   if (isMealCard) {
-    // Check if restaurant already has 3 meals attached
     const currentAttachedMeals = player.boardState.attachedMeals || [];
-    
-    if (currentAttachedMeals.length >= 3) {
-      // Restaurant is at capacity - need to discard one meal
-      if (!mealToDiscard) {
-        // UI should handle showing selection - return null to indicate replacement needed
-        return null;
-      }
-      
-      // Validate that mealToDiscard is actually attached
-      if (!currentAttachedMeals.includes(mealToDiscard)) {
-        return null; // Invalid meal to discard
-      }
-      
-      // Remove the meal to discard from attached meals and add to discard pile
-      const newAttachedMeals = currentAttachedMeals.filter(id => id !== mealToDiscard);
-      const newDiscardPile = [...player.discardPile, mealToDiscard];
-      
-      // Add the new meal to attached meals
-      newAttachedMeals.push(cardId);
-      
-      // Remove card from hand
-      const newHand = player.hand.filter(id => id !== cardId);
-      
-      // Check if player can afford the card (influence cost)
-      if (!canAffordCard(player, cardId)) {
-        return null; // Cannot afford
-      }
-      
-      // Get and deduct influence cost
+
+    // Replace flow: player chose which attached meal to replace (works for any count 1–3)
+    if (mealToDiscard && currentAttachedMeals.includes(mealToDiscard)) {
+      if (!canAffordCard(player, cardId)) return null;
       const cost = getCardInfluenceCost(cardId);
       const newInfluence = player.influence - cost;
-      
+      const newHand = removeFromHand();
+      const newAttachedMeals = currentAttachedMeals.filter(id => id !== mealToDiscard);
+      newAttachedMeals.push(cardId);
+      const newDiscardPile = [...player.discardPile, mealToDiscard];
       return {
         ...player,
         hand: newHand,
         discardPile: newDiscardPile,
         influence: newInfluence,
-        boardState: {
-          ...player.boardState,
-          attachedMeals: newAttachedMeals
-        }
-      };
-    } else {
-      // Restaurant has space - attach meal directly
-      // Check if player can afford the card (influence cost)
-      if (!canAffordCard(player, cardId)) {
-        return null; // Cannot afford
-      }
-      
-      // Get and deduct influence cost
-      const cost = getCardInfluenceCost(cardId);
-      const newInfluence = player.influence - cost;
-      
-      // Remove card from hand
-      const newHand = player.hand.filter(id => id !== cardId);
-      
-      // Add to attached meals
-      const newAttachedMeals = [...currentAttachedMeals, cardId];
-      
-      return {
-        ...player,
-        hand: newHand,
-        influence: newInfluence,
-        boardState: {
-          ...player.boardState,
-          attachedMeals: newAttachedMeals
-        }
+        boardState: { ...player.boardState, attachedMeals: newAttachedMeals }
       };
     }
+
+    if (currentAttachedMeals.length >= 3) {
+      // At capacity and no replacement chosen – UI must ask which meal to replace
+      return null;
+    }
+
+    // Restaurant has space – attach meal directly
+    if (!canAffordCard(player, cardId)) return null;
+    const cost = getCardInfluenceCost(cardId);
+    const newInfluence = player.influence - cost;
+    const newHand = removeFromHand();
+    const newAttachedMeals = [...currentAttachedMeals, cardId];
+    return {
+      ...player,
+      hand: newHand,
+      influence: newInfluence,
+      boardState: { ...player.boardState, attachedMeals: newAttachedMeals }
+    };
   }
 
   // For non-meal cards, use the original logic
@@ -482,18 +455,20 @@ export function playCard(
   const newInfluence = player.influence - cost;
 
   // Remove card from hand
-  const newHand = player.hand.filter(id => id !== cardId);
+  const newHand = removeFromHand();
   
   // Add to appropriate board area
   const newBoardState = { ...player.boardState };
-  
-  // Determine card type and add to appropriate area
+  const isSupportCard = targetType === 'support' || card.type === CardType.SUPPORT;
+  const isActivateSupport = isSupportCard && activateSupport;
+
+  // Determine card type and add to appropriate area (activated support skips "in play" and goes to discard)
   if (!targetType) {
     // Infer from card type
     if (card.type === 'STAFF') {
       newBoardState.playedStaff.push(cardId);
     } else if (card.type === 'SUPPORT') {
-      newBoardState.playedSupport.push(cardId);
+      if (!isActivateSupport) newBoardState.playedSupport.push(cardId);
     } else if (card.type === 'EVENT') {
       newBoardState.playedEvents.push(cardId);
     }
@@ -503,7 +478,7 @@ export function playCard(
         newBoardState.playedStaff.push(cardId);
         break;
       case 'support':
-        newBoardState.playedSupport.push(cardId);
+        if (!isActivateSupport) newBoardState.playedSupport.push(cardId);
         break;
       case 'event':
         newBoardState.playedEvents.push(cardId);
@@ -512,12 +487,9 @@ export function playCard(
   }
 
   // Track face-down cards (Staff, Support, Event) - all played face-down during Setup
-  // Support cards can be activated immediately if activateSupport is true
-  const isSupportCard = targetType === 'support' || card.type === CardType.SUPPORT;
-  
-  if (isSupportCard && activateSupport) {
-    // Support card activated immediately - add to activatedSupport, don't add to faceDownCards
-    newBoardState.activatedSupport.push(cardId);
+  // Support cards can be activated immediately: effect runs, card goes to discard, not into play
+  if (isActivateSupport) {
+    newBoardState.activatedSupport.push(cardId); // for scoring/effect; card is not in playedSupport
   } else {
     // Card played face-down - track play order
     const currentPlayOrder = newBoardState.faceDownCards.length;
@@ -533,6 +505,7 @@ export function playCard(
     hand: newHand,
     influence: newInfluence,
     boardState: newBoardState,
+    discardPile: isActivateSupport ? [...player.discardPile, cardId] : player.discardPile,
     eventCardPlayedThisRound: isEventCard ? true : player.eventCardPlayedThisRound
   };
 }
@@ -544,6 +517,91 @@ export function completeTurn(player: Player): Player {
   return {
     ...player,
     turnComplete: true
+  };
+}
+
+/**
+ * Removes a played Staff/Support/Event card from the board and returns it to the player's hand.
+ * Refunds the influence that was spent to play that card (capped at maxInfluence).
+ */
+export function removeCardFromPlay(player: Player, cardId: string): Player | null {
+  const bs = player.boardState;
+  const inStaff = bs.playedStaff.includes(cardId);
+  const inSupport = bs.playedSupport.includes(cardId);
+  const inEvents = bs.playedEvents.includes(cardId);
+  if (!inStaff && !inSupport && !inEvents) return null;
+
+  const playedStaff = bs.playedStaff.filter(id => id !== cardId);
+  const playedSupport = bs.playedSupport.filter(id => id !== cardId);
+  const playedEvents = bs.playedEvents.filter(id => id !== cardId);
+  const faceDownCards = bs.faceDownCards.filter(c => c.cardId !== cardId);
+  const activatedSupport = (bs.activatedSupport || []).filter(id => id !== cardId);
+  const newHand = [...player.hand, cardId];
+
+  const refund = getCardInfluenceCost(cardId);
+  const newInfluence = Math.min(player.maxInfluence, player.influence + refund);
+
+  return {
+    ...player,
+    hand: newHand,
+    influence: newInfluence,
+    boardState: {
+      ...bs,
+      playedStaff,
+      playedSupport,
+      playedEvents,
+      faceDownCards,
+      activatedSupport
+    },
+    eventCardPlayedThisRound: bs.playedEvents.includes(cardId) ? false : player.eventCardPlayedThisRound
+  };
+}
+
+/**
+ * Reorders played cards by moving the item at fromIndex to toIndex in the combined list
+ * (staff, then support, then events). Updates faceDownCards playOrder to match.
+ */
+export function reorderPlayedCard(player: Player, fromIndex: number, toIndex: number): Player {
+  const all = [
+    ...player.boardState.playedStaff,
+    ...player.boardState.playedSupport,
+    ...player.boardState.playedEvents
+  ];
+  if (fromIndex < 0 || fromIndex >= all.length || toIndex < 0 || toIndex >= all.length) return player;
+  if (fromIndex === toIndex) return player;
+
+  const [moved] = all.splice(fromIndex, 1);
+  all.splice(toIndex, 0, moved);
+
+  const playedStaff: string[] = [];
+  const playedSupport: string[] = [];
+  const playedEvents: string[] = [];
+  all.forEach(id => {
+    const card = getCardById(id);
+    if (card?.type === CardType.STAFF) playedStaff.push(id);
+    else if (card?.type === CardType.SUPPORT) playedSupport.push(id);
+    else if (card?.type === CardType.EVENT) playedEvents.push(id);
+  });
+
+  const faceDownCards = player.boardState.faceDownCards
+    .slice()
+    .filter(c => all.includes(c.cardId))
+    .sort((a, b) => {
+      const ia = all.indexOf(a.cardId);
+      const ib = all.indexOf(b.cardId);
+      return ia - ib;
+    })
+    .map((c, i) => ({ ...c, playOrder: i }));
+
+  return {
+    ...player,
+    boardState: {
+      ...player.boardState,
+      playedStaff,
+      playedSupport,
+      playedEvents,
+      faceDownCards
+    }
   };
 }
 

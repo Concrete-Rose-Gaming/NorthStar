@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GameBoard } from './components/GameBoard/GameBoard';
 import { DeckBuilder } from './components/DeckBuilder/DeckBuilder';
 import {
@@ -11,7 +11,10 @@ import {
   setFirstPlayer,
   startRound,
   playCard,
+  canAffordCard,
   completeTurn,
+  removeCardFromPlay,
+  reorderPlayedCard,
   performFaceOff,
   advanceToNextRound,
   resetTurnStatus,
@@ -68,6 +71,8 @@ function App() {
   const [showDeckBuilder, setShowDeckBuilder] = useState(false);
   const [aiOpponent] = useState<AIOpponent>(new AIOpponent('AI Chef'));
   const [isMuted, setIsMuted] = useState(musicService.getMuted());
+  type MusicContext = 'lobby' | 'mulligan' | 'gameplay' | 'other';
+  const lastMusicContextRef = useRef<MusicContext | null>(null);
   // Current player ID - in single-player mode, always 'player1' (you are always at bottom)
   const currentPlayerId: 'player1' | 'player2' = 'player1';
 
@@ -78,19 +83,40 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Music management - play intro on lobby screen, gameplay music during game
+  // Unlock audio on first user interaction (browsers block autoplay until then)
   useEffect(() => {
-    if (!gameState) {
-      // On lobby screen - play intro music
+    const unlock = () => {
       musicService.playIntro();
-    } else if (gameState.phase === GamePhase.TURN || 
-               gameState.phase === GamePhase.FACE_OFF || 
-               gameState.phase === GamePhase.ROUND_START ||
-               gameState.phase === GamePhase.ROUND_END) {
-      // During gameplay - play random gameplay music
-      musicService.playGameplayMusic();
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('keydown', unlock);
+    };
+    document.addEventListener('click', unlock, { once: true });
+    document.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('keydown', unlock);
+    };
+  }, []);
+
+  // Music: intro (main/deck/login), mulligan (the show intro), gameplay (cooking-159122)
+  useEffect(() => {
+    const gameplayPhases = [GamePhase.TURN, GamePhase.FACE_OFF, GamePhase.ROUND_START, GamePhase.ROUND_END];
+    const context: MusicContext =
+      !gameState || showDeckBuilder || showLogin || showDeckManager
+        ? 'lobby'
+        : gameState.phase === GamePhase.MULLIGAN
+          ? 'mulligan'
+          : gameplayPhases.includes(gameState.phase)
+            ? 'gameplay'
+            : 'other';
+    const prev = lastMusicContextRef.current;
+    if (!musicService.getMuted()) {
+      if (context === 'lobby' && prev !== 'lobby') musicService.playIntro();
+      else if (context === 'mulligan' && prev !== 'mulligan') musicService.playMulliganMusic();
+      else if (context === 'gameplay' && prev !== 'gameplay') musicService.playGameplayMusic();
     }
-  }, [gameState]);
+    lastMusicContextRef.current = context;
+  }, [gameState, showDeckBuilder, showLogin, showDeckManager]);
 
   const handleToggleMute = () => {
     const newMutedState = musicService.toggleMute();
@@ -333,7 +359,7 @@ function App() {
     setShowMulligan(false);
   };
 
-  const handleCardPlay = (cardId: string, activateSupport?: boolean) => {
+  const handleCardPlay = (cardId: string, activateSupport?: boolean, mealToDiscard?: string, handIndex?: number) => {
     if (!gameState) return;
 
     const player1 = gameState.players.player1;
@@ -348,14 +374,42 @@ function App() {
     else if (card.type === CardType.SUPPORT) targetType = 'support';
     else if (card.type === CardType.EVENT) targetType = 'event';
 
-    const updatedPlayer1 = playCard(player1, cardId, targetType, undefined, activateSupport);
-    
+    const updatedPlayer1 = playCard(player1, cardId, targetType, mealToDiscard, activateSupport, handIndex);
+
+    if (updatedPlayer1 === null) {
+      if (!canAffordCard(player1, cardId)) {
+        alert("You've hit your influence limit. You don't have enough influence to play this card.");
+      } else {
+        alert("You can't play this card right now.");
+      }
+      return;
+    }
+
     setGameState({
       ...gameState,
       players: {
         ...gameState.players,
         player1: updatedPlayer1
       }
+    });
+  };
+
+  const handleRemoveCardFromPlay = (cardId: string) => {
+    if (!gameState?.players?.player1) return;
+    const next = removeCardFromPlay(gameState.players.player1, cardId);
+    if (!next) return;
+    setGameState({
+      ...gameState,
+      players: { ...gameState.players, player1: next }
+    });
+  };
+
+  const handleReorderPlayedCards = (fromIndex: number, toIndex: number) => {
+    if (!gameState?.players?.player1) return;
+    const next = reorderPlayedCard(gameState.players.player1, fromIndex, toIndex);
+    setGameState({
+      ...gameState,
+      players: { ...gameState.players, player1: next }
     });
   };
 
@@ -580,47 +634,9 @@ function App() {
           onShowTutorial={() => setShowTutorial(true)}
           onRestaurantSelect={handleRestaurantSelection}
           onProceedToFaceoff={handleProceedToFaceoff}
+          onRemoveCardFromPlay={handleRemoveCardFromPlay}
+          onReorderPlayedCards={handleReorderPlayedCards}
         />
-      </div>
-    );
-  }
-
-  // Mulligan phase
-  if (gameState.phase === GamePhase.MULLIGAN && showMulligan) {
-    const player1 = gameState.players.player1;
-    return (
-      <div className="App">
-        <MuteButton isMuted={isMuted} onToggle={handleToggleMute} />
-        <div className="mulligan-screen">
-          <h2>Mulligan Phase</h2>
-          <p>Select cards to mulligan (or skip)</p>
-          <div className="mulligan-hand">
-            {player1?.hand.map(cardId => {
-              const card = getCardById(cardId);
-              return (
-                <button
-                  key={cardId}
-                  className={`mulligan-card ${mulliganCards.includes(cardId) ? 'selected' : ''}`}
-                  onClick={() => {
-                    if (mulliganCards.includes(cardId)) {
-                      setMulliganCards(mulliganCards.filter(id => id !== cardId));
-                    } else {
-                      setMulliganCards([...mulliganCards, cardId]);
-                    }
-                  }}
-                >
-                  {card?.name || cardId}
-                </button>
-              );
-            })}
-          </div>
-          <div className="mulligan-actions">
-            <button onClick={handleMulligan} disabled={mulliganCards.length === 0}>
-              Mulligan Selected ({mulliganCards.length})
-            </button>
-            <button onClick={handleSkipMulligan}>Skip Mulligan</button>
-          </div>
-        </div>
       </div>
     );
   }
@@ -647,8 +663,9 @@ function App() {
     );
   }
 
-  // Main game phases
+  // Main game phases (includes MULLIGAN so mulligan runs on board as overlay)
   if (
+    gameState.phase === GamePhase.MULLIGAN ||
     gameState.phase === GamePhase.ROUND_START ||
     gameState.phase === GamePhase.TURN ||
     gameState.phase === GamePhase.FACE_OFF ||
@@ -684,6 +701,8 @@ function App() {
           onSkipMulligan={handleSkipMulligan}
           onRestaurantSelect={handleRestaurantSelection}
           onProceedToFaceoff={handleProceedToFaceoff}
+          onRemoveCardFromPlay={handleRemoveCardFromPlay}
+          onReorderPlayedCards={handleReorderPlayedCards}
         />
       </div>
     );

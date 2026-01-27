@@ -11,7 +11,7 @@ import './GameBoard.css';
 interface GameBoardProps {
   gameState: GameState;
   currentPlayerId: 'player1' | 'player2';
-  onCardPlay: (cardId: string, activateSupport?: boolean) => void;
+  onCardPlay: (cardId: string, activateSupport?: boolean, mealToDiscard?: string, handIndex?: number) => void;
   onEndTurn: () => void;
   onNextRound?: () => void;
   onShowTutorial?: () => void;
@@ -21,6 +21,8 @@ interface GameBoardProps {
   onSkipMulligan?: () => void;
   onRestaurantSelect?: (position: 'top' | 'bottom') => void;
   onProceedToFaceoff?: () => void;
+  onRemoveCardFromPlay?: (cardId: string) => void;
+  onReorderPlayedCards?: (fromIndex: number, toIndex: number) => void;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
@@ -35,10 +37,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   onMulligan,
   onSkipMulligan,
   onRestaurantSelect,
-  onProceedToFaceoff
+  onProceedToFaceoff,
+  onRemoveCardFromPlay,
+  onReorderPlayedCards
 }) => {
   const [handPanelVisible, setHandPanelVisible] = useState(true);
   const [supportCardToActivate, setSupportCardToActivate] = useState<string | null>(null);
+  const [supportCardHandIndex, setSupportCardHandIndex] = useState<number | null>(null);
+  const [mealToReplaceWithCard, setMealToReplaceWithCard] = useState<string | null>(null);
+  const [mealToReplaceHandIndex, setMealToReplaceHandIndex] = useState<number | null>(null);
   const [previewedCard, setPreviewedCard] = useState<string | null>(null);
   
   // Determine which player is "you" (current player viewing) and "opponent"
@@ -63,26 +70,34 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const showHands = isFaceOffPhase || gameState.phase === GamePhase.ROUND_END || gameState.phase === GamePhase.GAME_END;
   const isAI = opponent?.name === 'AI Chef' || opponent?.name.includes('AI');
 
-  // Handle card play - check if it's a support card during setup
-  const handleCardClick = (cardId: string) => {
+  // Handle card play - support card activation, meal replace, or normal play
+  const handleCardClick = (cardId: string, handIndex?: number) => {
     if (!isSetupPhase || !you) return;
-    
+
     const card = getCardById(cardId);
     if (!card) return;
-    
-    // If it's a support card, show activation choice
+
     if (card.type === CardType.SUPPORT || cardId.startsWith('support_')) {
       setSupportCardToActivate(cardId);
-    } else {
-      // Other cards play normally (face-down)
-      onCardPlay(cardId);
+      setSupportCardHandIndex(handIndex ?? null);
+      return;
     }
+    if (card.type === CardType.MEAL || cardId.startsWith('meal_')) {
+      const attached = you.boardState.attachedMeals || [];
+      if (attached.length >= 3) {
+        setMealToReplaceWithCard(cardId);
+        setMealToReplaceHandIndex(handIndex ?? null);
+        return;
+      }
+    }
+    onCardPlay(cardId, undefined, undefined, handIndex);
   };
 
   const handleSupportActivationChoice = (activate: boolean) => {
     if (!supportCardToActivate) return;
-    onCardPlay(supportCardToActivate, activate);
+    onCardPlay(supportCardToActivate, activate, undefined, supportCardHandIndex ?? undefined);
     setSupportCardToActivate(null);
+    setSupportCardHandIndex(null);
   };
 
   // Count cards played this round by each player (excluding meals which are attached permanently)
@@ -181,16 +196,37 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             <div className="mulligan-hand">
               <h3>Your Hand ({you.hand.length || 0} cards)</h3>
               <div className="mulligan-hand-cards">
-                {you.hand.map(cardId => {
+                {you.hand.map((cardId, index) => {
                   const card = getCardById(cardId);
+                  const isSelected = mulliganCards.includes(cardId);
+                  const uniqueKey = `mulligan-${index}-${cardId}`;
+                  if (!card) {
+                    return (
+                      <div key={uniqueKey} className="mulligan-card mulligan-card-fallback">
+                        Unknown card
+                      </div>
+                    );
+                  }
                   return (
-                    <button
-                      key={cardId}
-                      className={`mulligan-card ${mulliganCards.includes(cardId) ? 'selected' : ''}`}
+                    <div
+                      key={uniqueKey}
+                      role="button"
+                      tabIndex={0}
+                      className={`mulligan-card ${isSelected ? 'selected' : ''}`}
                       onClick={() => onMulliganCardToggle?.(cardId)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onMulliganCardToggle?.(cardId);
+                        }
+                      }}
                     >
-                      {card?.name || cardId}
-                    </button>
+                      <Card
+                        card={card}
+                        size="small"
+                        selected={isSelected}
+                      />
+                    </div>
                   );
                 })}
               </div>
@@ -320,6 +356,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   size="medium"
                   attachedMeals={you?.boardState.attachedMeals || []}
                   isFaceDown={!you?.restaurantRevealed}
+                  replaceMealMode={mealToReplaceWithCard !== null}
+                  onReplaceMeal={mealToReplaceWithCard ? (mealId) => {
+                    onCardPlay(mealToReplaceWithCard, false, mealId, mealToReplaceHandIndex ?? undefined);
+                    setMealToReplaceWithCard(null);
+                    setMealToReplaceHandIndex(null);
+                  } : undefined}
                 />
               </div>
             )}
@@ -346,6 +388,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               gamePhase={gameState.phase}
               faceoffState={gameState.faceoffState}
               playerId={currentPlayerId}
+              onRemoveCard={onRemoveCardFromPlay}
+              onReorderCards={onReorderPlayedCards}
             />
           )}
         </div>
@@ -366,7 +410,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               <h4>Your Hand ({you.hand.length} cards)</h4>
             </div>
             <div className="hand-header-right">
-              {gameState.phase === GamePhase.TURN && !you.turnComplete && (
+              {mealToReplaceWithCard && (
+                <>
+                  <span className="replace-meal-prompt">
+                    Replacing with {getCardById(mealToReplaceWithCard)?.name ?? 'meal'}. Click an attached meal on your restaurant.
+                  </span>
+                  <button type="button" className="cancel-replace-button" onClick={() => { setMealToReplaceWithCard(null); setMealToReplaceHandIndex(null); }}>
+                    Cancel
+                  </button>
+                </>
+              )}
+              {gameState.phase === GamePhase.TURN && !you.turnComplete && !mealToReplaceWithCard && (
                 <button className="end-turn-button" onClick={onEndTurn}>
                   End Turn
                 </button>
@@ -388,15 +442,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           </div>
           {handPanelVisible && (
             <div className="cards-row">
-              {you.hand.map(cardId => {
+              {you.hand.map((cardId, index) => {
                 const card = getCardById(cardId);
                 return card ? (
                   <Card
-                    key={cardId}
+                    key={`hand-${index}-${cardId}`}
                     card={card}
                     size="small"
-                    onClick={() => handleCardClick(cardId)}
-                    disabled={gameState.phase !== GamePhase.TURN || you.turnComplete}
+                    onClick={() => handleCardClick(cardId, index)}
+                    disabled={gameState.phase !== GamePhase.TURN || you.turnComplete || mealToReplaceWithCard !== null}
                     onPreview={() => setPreviewedCard(cardId)}
                   />
                 ) : null;

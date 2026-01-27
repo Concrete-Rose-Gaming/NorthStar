@@ -7,13 +7,8 @@ class MusicService {
   private currentVolume: number = 0.3; // 30% volume by default
   
   private readonly INTRO_MUSIC = `${process.env.PUBLIC_URL}/music/intro.mp3`;
-  private readonly GAMEPLAY_MUSIC = [
-    `${process.env.PUBLIC_URL}/music/cooking-159122.mp3`,
-    `${process.env.PUBLIC_URL}/music/cooking-food-music-312872.mp3`,
-    `${process.env.PUBLIC_URL}/music/on-fight-18441.mp3`,
-    `${process.env.PUBLIC_URL}/music/that-jazz-260655.mp3`,
-    `${process.env.PUBLIC_URL}/music/the-show-intro-162872.mp3`
-  ];
+  private readonly MULLIGAN_MUSIC = `${process.env.PUBLIC_URL}/music/the-show-intro-162872.mp3`;
+  private readonly GAMEPLAY_MUSIC = `${process.env.PUBLIC_URL}/music/cooking-159122.mp3`;
 
   constructor() {
     // Load mute state from localStorage
@@ -40,22 +35,39 @@ class MusicService {
     }
   }
 
-  // Play random gameplay music (loops)
-  playGameplayMusic() {
+  // Play mulligan-phase music "the show intro" (loops)
+  playMulliganMusic() {
     this.stopAll();
-    
-    const randomIndex = Math.floor(Math.random() * this.GAMEPLAY_MUSIC.length);
-    const randomTrack = this.GAMEPLAY_MUSIC[randomIndex];
-    
+
     if (!this.gameplayAudio) {
-      this.gameplayAudio = new Audio(randomTrack);
+      this.gameplayAudio = new Audio(this.MULLIGAN_MUSIC);
     } else {
-      this.gameplayAudio.src = randomTrack;
+      this.gameplayAudio.src = this.MULLIGAN_MUSIC;
     }
-    
+
     this.gameplayAudio.loop = true;
     this.gameplayAudio.volume = this.isMuted ? 0 : this.currentVolume;
-    
+
+    if (!this.isMuted) {
+      this.gameplayAudio.play().catch(err => {
+        console.error('Failed to play mulligan music:', err);
+      });
+    }
+  }
+
+  // Play standard gameplay music cooking-159122 (loops)
+  playGameplayMusic() {
+    this.stopAll();
+
+    if (!this.gameplayAudio) {
+      this.gameplayAudio = new Audio(this.GAMEPLAY_MUSIC);
+    } else {
+      this.gameplayAudio.src = this.GAMEPLAY_MUSIC;
+    }
+
+    this.gameplayAudio.loop = true;
+    this.gameplayAudio.volume = this.isMuted ? 0 : this.currentVolume;
+
     if (!this.isMuted) {
       this.gameplayAudio.play().catch(err => {
         console.error('Failed to play gameplay music:', err);

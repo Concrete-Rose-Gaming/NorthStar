@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card } from '../Card/Card';
 import { CardPreview } from '../CardPreview/CardPreview';
 import { getCardById } from '../../game/CardTypes';
@@ -23,6 +23,10 @@ interface PlayerAreaProps {
   gamePhase?: GamePhase; // Current game phase
   faceoffState?: FaceoffState; // Faceoff reveal state
   playerId?: 'player1' | 'player2'; // Player ID for faceoff reveal lookup
+  /** Remove a played card (return to hand). Only used when current player in TURN phase. */
+  onRemoveCard?: (cardId: string) => void;
+  /** Reorder played cards (fromIndex, toIndex in combined staff/support/events list). */
+  onReorderCards?: (fromIndex: number, toIndex: number) => void;
 }
 
 export const PlayerArea: React.FC<PlayerAreaProps> = ({
@@ -41,13 +45,18 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
   maxInfluence,
   gamePhase,
   faceoffState,
-  playerId
+  playerId,
+  onRemoveCard,
+  onReorderCards
 }) => {
   // During Setup (TURN phase), cards are face-down
   // Owner can see their own cards, opponent sees face-down
   const isSetupPhase = gamePhase === GamePhase.TURN;
-  
   const [previewedCard, setPreviewedCard] = useState<string | null>(null);
+  const dragJustEndedRef = useRef(false);
+  const canEditPlayed = Boolean(
+    isSetupPhase && isCurrentPlayer && !turnComplete && !isOpponent && onRemoveCard && onReorderCards
+  );
   
   // Get all played cards in play order
   const allPlayedCards = [
@@ -86,20 +95,20 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
 
       <div className="player-board">
         <div className="board-section">
-          <h4>Played Cards</h4>
-          <div className="cards-row">
-            {allPlayedCards.map(cardId => {
+          <h4>Played Cards{canEditPlayed && <span className="played-cards-hint"> — Click to return to hand, drag to reorder</span>}</h4>
+          <div className="cards-row cards-row-played">
+            {allPlayedCards.map((cardId, index) => {
               const card = getCardById(cardId);
               if (!card) return null;
+              const uniqueKey = `played-${index}-${cardId}`;
               
               // During faceoff: only show revealed cards
               if (isFaceOffPhase) {
                 const isRevealed = revealedCards.includes(cardId);
                 if (!isRevealed) {
-                  // Show face-down card
                   return (
                     <Card 
-                      key={cardId} 
+                      key={uniqueKey} 
                       card={card} 
                       size="small"
                       isFaceDown={true}
@@ -108,10 +117,9 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
                     />
                   );
                 }
-                // Show revealed card
                 return (
                   <Card 
-                    key={cardId} 
+                    key={uniqueKey} 
                     card={card} 
                     size="small"
                     onPreview={() => setPreviewedCard(cardId)}
@@ -119,20 +127,55 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
                 );
               }
               
-              // During Setup: face-down unless owner
+              // During Setup: face-down unless owner; optionally draggable/removable
               const isFaceDown = isSetupPhase && faceDownMap.get(cardId) === true;
-              // Owner can see their own cards even when face-down
               const showToOwner = !isOpponent && isCurrentPlayer;
-              
-              return (
+              const cardEl = (
                 <Card 
-                  key={cardId} 
+                  key={uniqueKey} 
                   card={card} 
                   size="small"
                   isFaceDown={isFaceDown && !showToOwner}
                   showToOwner={showToOwner}
                   onPreview={() => setPreviewedCard(cardId)}
                 />
+              );
+              if (!canEditPlayed) return cardEl;
+              return (
+                <div
+                  key={uniqueKey}
+                  className="played-card-slot played-card-editable"
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('application/json', JSON.stringify({ fromIndex: index }));
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setDragImage(e.currentTarget, 0, 0);
+                  }}
+                  onDragEnd={() => {
+                    dragJustEndedRef.current = true;
+                    setTimeout(() => { dragJustEndedRef.current = false; }, 0);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    e.currentTarget.classList.add('played-card-drop-target');
+                  }}
+                  onDragLeave={(e) => e.currentTarget.classList.remove('played-card-drop-target')}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('played-card-drop-target');
+                    try {
+                      const d = JSON.parse(e.dataTransfer.getData('application/json'));
+                      const from = d.fromIndex as number;
+                      if (typeof from === 'number' && from !== index) onReorderCards?.(from, index);
+                    } catch (_) {}
+                  }}
+                  onClick={() => {
+                    if (!dragJustEndedRef.current) onRemoveCard?.(cardId);
+                  }}
+                >
+                  {cardEl}
+                </div>
               );
             })}
           </div>
@@ -143,11 +186,11 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({
         <div className="player-hand">
           <h4>Hand ({hand.length} cards)</h4>
           <div className="cards-row">
-            {hand.map(cardId => {
+            {hand.map((cardId, index) => {
               const card = getCardById(cardId);
               return card ? (
                 <Card
-                  key={cardId}
+                  key={`hand-${index}-${cardId}`}
                   card={card}
                   size="small"
                   onClick={() => onCardClick?.(cardId)}

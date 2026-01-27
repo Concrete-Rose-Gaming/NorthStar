@@ -430,6 +430,26 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+.replace-meal-prompt {
+  font-size: 0.9rem;
+  color: #D4AF37;
+  font-weight: 500;
+}
+
+.cancel-replace-button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  background: rgba(139, 69, 69, 0.4);
+  color: #F7EFE2;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cancel-replace-button:hover {
+  background: rgba(139, 69, 69, 0.6);
 }
 
 .hand-header h4 {
@@ -734,30 +754,43 @@
   width: 100%;
 }
 
+/* Wrapper around Card in mulligan hand */
 .mulligan-overlay-content .mulligan-card {
-  padding: clamp(10px, 1.5vw, 14px) clamp(16px, 2vw, 24px);
-  background: rgba(247, 239, 226, 0.6);
+  padding: 4px;
+  background: transparent;
   border: 2px solid #8B6F47;
-  border-radius: 8px;
-  color: #2C2416;
-  font-weight: 600;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s;
-  font-size: clamp(0.9rem, 1.2vw, 1rem);
   box-shadow: 0 2px 4px rgba(44, 36, 22, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mulligan-overlay-content .mulligan-card:hover {
-  background: rgba(247, 239, 226, 0.9);
   border-color: #C9734B;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(44, 36, 22, 0.15);
 }
 
 .mulligan-overlay-content .mulligan-card.selected {
-  background: rgba(212, 175, 55, 0.3);
   border-color: #D4AF37;
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+}
+
+.mulligan-overlay-content .mulligan-card-fallback {
+  min-width: 80px;
+  min-height: 112px;
+  color: #2C2416;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(247, 239, 226, 0.6);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .mulligan-overlay-content .mulligan-actions {

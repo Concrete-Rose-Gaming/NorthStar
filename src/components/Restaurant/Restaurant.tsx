@@ -10,6 +10,10 @@ interface RestaurantProps {
   size?: 'small' | 'medium' | 'large';
   attachedMeals?: string[]; // Card IDs of attached meals
   isFaceDown?: boolean; // Whether the restaurant card is face-down
+  /** When true, attached meals are clickable to choose one for replacement */
+  replaceMealMode?: boolean;
+  /** Called when user clicks an attached meal in replaceMealMode. Pass the meal card ID to replace. */
+  onReplaceMeal?: (mealId: string) => void;
 }
 
 export const Restaurant: React.FC<RestaurantProps> = ({
@@ -18,7 +22,9 @@ export const Restaurant: React.FC<RestaurantProps> = ({
   stars = 0,
   size = 'medium',
   attachedMeals = [],
-  isFaceDown = false
+  isFaceDown = false,
+  replaceMealMode = false,
+  onReplaceMeal
 }) => {
   if (isFaceDown) {
     return (
@@ -61,13 +67,26 @@ export const Restaurant: React.FC<RestaurantProps> = ({
         )}
         {attachedMeals.length > 0 && (
           <div className="restaurant-attached-meals">
-            <div className="attached-meals-label">Attached Meals ({attachedMeals.length}/3):</div>
+            <div className="attached-meals-label">
+              Attached Meals ({attachedMeals.length}/3):
+              {replaceMealMode && (
+                <span className="replace-meal-hint"> — Click one to replace with a meal from your hand</span>
+              )}
+            </div>
             <div className="attached-meals-list">
               {attachedMeals.map(mealId => {
                 const mealCard = getCardById(mealId) as MealCard | undefined;
                 if (!mealCard) return null;
+                const isClickable = replaceMealMode && onReplaceMeal;
                 return (
-                  <div key={mealId} className="attached-meal-item">
+                  <div
+                    key={mealId}
+                    className={`attached-meal-item ${isClickable ? 'attached-meal-item-clickable' : ''}`}
+                    role={isClickable ? 'button' : undefined}
+                    tabIndex={isClickable ? 0 : undefined}
+                    onClick={isClickable ? () => onReplaceMeal(mealId) : undefined}
+                    onKeyDown={isClickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onReplaceMeal(mealId); } } : undefined}
+                  >
                     <span className="attached-meal-name">{mealCard.name}</span>
                     <span className="attached-meal-value">+{mealCard.value}</span>
                   </div>
